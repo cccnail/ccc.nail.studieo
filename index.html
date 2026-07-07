@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCC.Nail.Studieo 預約記帳系統</title>
+    <style>
+        /* 韓系奶油風：溫柔、低飽和度的燕麥、奶茶與摩卡色調 */
+        :root {
+            --bg-cream: #FDFBF7;
+            --card-cream: #F5EFEB;
+            --soft-oat: #E8DCD3;
+            --warm-mocha: #8C7A6B;
+            --deep-mocha: #5A4E44;
+            --accent-rose: #D9C3B0;
+            --text-dark: #4A3E3D;
+            --white: #FFFFFF;
+            --tag-new: #E8D5C4;
+            --tag-old: #D2E0D6;
+            --shadow: 0 8px 24px rgba(140, 122, 107, 0.06);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-cream);
+            color: var(--text-dark);
+            padding-bottom: 40px;
+        }
+
+        /* 頂部店名 */
+        header {
+            text-align: center;
+            padding: 25px 20px 15px 20px;
+        }
+        
+        header h1 {
+            font-size: 1.4rem;
+            letter-spacing: 2px;
+            color: var(--deep-mocha);
+            font-weight: 600;
+        }
+
+        header p {
+            font-size: 0.8rem;
+            color: var(--warm-mocha);
+            margin-top: 4px;
+            letter-spacing: 1px;
+        }
+
+        /* 頂部快選列 Quick Toolbar */
+        .toolbar {
+            display: flex;
+            justify-content: space-around;
+            background-color: var(--card-cream);
+            margin: 0 16px 20px 16px;
+            padding: 6px;
+            border-radius: 30px;
+            box-shadow: 0 4px 12px rgba(140, 122, 107, 0.08);
+            position: sticky;
+            top: 10px;
+            z-index: 100;
+        }
+
+        .tool-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 12px 0;
+            font-size: 0.95rem;
+            color: var(--warm-mocha);
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 25px;
+            transition: all 0.2s ease;
+        }
+
+        .tool-btn.active {
+            background-color: var(--white);
+            color: var(--deep-mocha);
+            font-weight: 600;
+            box-shadow: 0 2px 6px rgba(140, 122, 107, 0.1);
+        }
+
+        /* 頁面切換內容 */
+        .page {
+            display: none;
+            padding: 0 16px;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* 圓弧方框 */
+        .content-card {
+            background-color: var(--white);
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(232, 220, 211, 0.5);
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            color: var(--deep-mocha);
+            margin-bottom: 15px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* --- 頁面 1: 月曆 --- */
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .calendar-nav button {
+            background: none;
+            border: none;
+            color: var(--warm-mocha);
+            font-size: 1.2rem;
+            padding: 0 15px;
+            cursor: pointer;
+        }
+
+        .calendar-title {
+            font-weight: 600;
+            color: var(--deep-mocha);
+            font-size: 1.1rem;
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--warm-mocha);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            row-gap: 10px;
+            text-align: center;
+        }
+
+        .day-cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            height: 42px;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .day-cell.other-month {
+            color: #D1C7BD;
+        }
+
+        /* 日期圓圈樣式 */
+        .day-number {
+            width: 34px;
+            height: 34px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        /* 點選中/當日的深色圓形 */
+        .day-cell.target-active .day-number {
+            background-color: var(--deep-mocha);
+            color: var(--bg-cream) !important;
+            font-weight: bold;
+        }
+
+        /* 當日圓圈但未被點選時的淡淡外框 */
+        .day-cell.is-today:not(.target-active) .day-number {
+            border: 1.5px solid var(--warm-mocha);
+            color: var(--deep-mocha);
+        }
+
+        /* 有紀錄的小圓點提示 */
+        .has-record::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            width: 4px;
+            height: 4px;
+            background-color: var(--warm-mocha);
+            border-radius: 50%;
+        }
+        .day-cell.target-active.has-record::after {
+            background-color: var(--bg-cream);
+        }
+
+        /* 記帳與預約輸入表單 */
+        .quick-add-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed var(--soft-oat);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .form-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--warm-mocha);
+        }
+
+        input[type="text"], input[type="number"], select {
+            background-color: var(--bg-cream);
+            border: 1px solid var(--soft-oat);
+            padding: 10px 12px;
+            border-radius: 12px;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+            outline: none;
+            width: 100%;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--warm-mocha);
+        }
+
+        /* 勾選方塊美化群組 */
+        .checkbox-group, .radio-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            background-color: var(--bg-cream);
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid var(--soft-oat);
+        }
+
+        .check-label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.85rem;
+            color: var(--text-dark);
+            cursor: pointer;
+            padding: 2px 6px;
+        }
+
+        .check-label input {
+            accent-color: var(--warm-mocha);
+            width: 16px;
+            height: 16px;
+        }
+
+        .btn-submit {
+            background-color: var(--warm-mocha);
+            color: var(--white);
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 5px;
+            font-size: 0.95rem;
+        }
+        .btn-submit:active { background-color: var(--deep-mocha); }
+
+        /* 條列式紀錄清單 */
+        .record-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .record-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 14px 16px;
+            background-color: var(--bg-cream);
+            border-radius: 16px;
+            border-left: 5px solid var(--soft-oat);
+        }
+
+        .record-item.income { border-left-color: #C3D3C4; } /* 韓系質感綠 */
+        .record-item.expense { border-left-color: #E3C3C3; } /* 韓系復古粉 */
+
+        .record-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            padding-right: 10px;
+        }
+
+        .record-main {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .record-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* 客戶狀態與項目的標籤樣式 */
+        .tag {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .tag.new-cust { background-color: var(--tag-new); color: #7A583A; }
+        .tag.old-cust { background-color: var(--tag-old); color: #3A5440; }
+        
+        .tag-item {
+            font-size: 0.75rem;
+            background-color: #EFECE8;
+            color: var(--warm-mocha);
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+
+        .record-details {
+            font-size: 0.8rem;
+            color: var(--warm-mocha);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 2px;
+        }
+
+        .record-amount {
+            font-size: 0.95rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        
+        .income .record-amount { color: #5A735B; }
+        .expense .record-amount { color: #A66363; }
+
+        .btn-delete {
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 2px;
+            opacity: 0.5;
+            align-self: center;
+        }
+        .btn-delete:active { opacity: 1; }
+
+        .no-data {
+            text-align: center;
+            color: var(--warm-mocha);
+            font-size: 0.9rem;
+            padding: 25px 0;
+            font-style: italic;
+        }
+
+        /* --- 頁面 2: 總紀錄 --- */
+        .all-records-container {
+            max-height: 55vh;
+            overflow-y: auto;
+        }
+
+        .record-group-title {
+            font-size: 0.85rem;
+            color: var(--warm-mocha);
+            margin: 15px 0 6px 4px;
+            font-weight: 600;
+        }
+
+        .backup-zone {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-backup {
+            flex: 1;
+            background-color: var(--card-cream);
+            color: var(--deep-mocha);
+            border: 1px solid var(--soft-oat);
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        /* --- 頁面 3: 報表 --- */
+        .report-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .summary-box {
+            background-color: var(--bg-cream);
+            padding: 15px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .summary-box p {
+            font-size: 0.8rem;
+            color: var(--warm-mocha);
+            margin-bottom: 5px;
+        }
+
+        .summary-box h3 {
+            font-size: 1.2rem;
+            color: var(--deep-mocha);
+        }
+
+        .summary-box.profit {
+            grid-column: span 2;
+            background-color: var(--card-cream);
+        }
+
+        .chart-container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-top: 10px;
+        }
+
+        .chart-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+
+        .chart-label {
+            width: 50px;
+            color: var(--warm-mocha);
+        }
+
+        .chart-bar-bg {
+            flex: 1;
+            background-color: var(--bg-cream);
+            height: 16px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .chart-bar-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s ease;
+            border-radius: 8px;
+        }
+        .chart-bar-fill.income-bar { background-color: #C3D3C4; }
+        .chart-bar-fill.expense-bar { background-color: #E3C3C3; }
+
+        .chart-val {
+            width: 45px;
+            color: var(--deep-mocha);
+            font-weight: 500;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>CCC.Nail.Studieo</h1>
+        <p>Accounting & Appointment</p>
+    </header>
+
+    <!-- 頂部快選列 Quick Toolbar -->
+    <div class="toolbar">
+        <button class="tool-btn active" onclick="switchPage('calendar')">月曆</button>
+        <button class="tool-btn" onclick="switchPage('all-records')">總紀錄</button>
+        <button class="tool-btn" onclick="switchPage('report')">報表</button>
+    </div>
+
+    <!-- 頁面 1: 月曆頁面 (預設) -->
+    <div id="page-calendar" class="page active">
+        <!-- 月曆方框 -->
+        <div class="content-card">
+            <div class="calendar-nav">
+                <button onclick="changeMonth(-1)">❮</button>
+                <div class="calendar-title" id="calendar-title-text">2026 年 7 月</div>
+                <button onclick="changeMonth(1)">❯</button>
+            </div>
+            <div class="weekdays">
+                <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+            </div>
+            <div class="days-grid" id="calendar-days-box">
+                <!-- JS 自動生成 -->
+            </div>
+        </div>
+
+        <!-- 當日明細方框 (四邊圓弧處理) -->
+        <div class="content-card">
+            <div class="card-title">
+                <span id="day-box-title">本日收支紀錄</span>
+                <span style="font-size: 0.85rem; color: var(--warm-mocha);" id="day-box-date">2026-07-07</span>
+            </div>
+            
+            <div class="record-list" id="day-records-list">
+                <!-- JS 條列清單 -->
+            </div>
+
+            <!-- 升級版：預約與記帳複合式表單 -->
+            <div class="quick-add-form">
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1;">
+                        <span class="form-label">收支類型</span>
+                        <select id="add-type" onchange="toggleFormFields()">
+                            <option value="income">＋ 營業收入 (預約/服務)</option>
+                            <option value="expense">－ 項目支出 (進貨/雜支)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <span class="form-label">金額</span>
+                        <input type="number" id="add-amount" placeholder="輸入金額" inputmode="numeric">
+                    </div>
+                </div>
+
+                <!-- 收入專用欄位群組（支出時自動隱藏維持簡潔） -->
+                <div id="income-fields-group">
+                    <div class="form-row" style="margin-bottom: 10px;">
+                        <div class="form-group" style="flex: 1.2;">
+                            <span class="form-label">客戶名稱</span>
+                            <input type="text" id="add-customer" placeholder="例如：怡君">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <span class="form-label">客戶狀態</span>
+                            <div class="radio-group" style="padding: 9px 10px;">
+                                <label class="check-label"><input type="radio" name="cust-status" value="新客" checked> 新客</label>
+                                <label class="check-label"><input type="radio" name="cust-status" value="舊客"> 舊客</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <span class="form-label">施作項目 (可複選)</span>
+                        <div class="checkbox-group">
+                            <label class="check-label"><input type="checkbox" name="nail-item" value="本店卸甲"> 本店卸甲</label>
+                            <label class="check-label"><input type="checkbox" name="nail-item" value="他店卸甲"> 他店卸甲</label>
+                            <label class="check-label"><input type="checkbox" name="nail-item" value="手"> 手</label>
+                            <label class="check-label"><input type="checkbox" name="nail-item" value="足"> 足</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <span class="form-label" id="note-label">其他備註</span>
+                    <input type="text" id="add-note" placeholder="例如：款式特殊設計、進貨甲油膠等">
+                </div>
+
+                <button class="btn-submit" onclick="addNewRecord()">儲存此筆紀錄</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 頁面 2: 總紀錄頁面 -->
+    <div id="page-all-records" class="page">
+        <div class="content-card">
+            <div class="card-title">歷史明細總覽</div>
+            <div class="all-records-container" id="all-records-list">
+                <!-- JS 自動分類呈現 -->
+            </div>
+        </div>
+
+        <!-- 跨裝置同步工具 -->
+        <div class="content-card">
+            <div class="card-title" style="font-size: 1rem;">跨裝置紀錄轉移</div>
+            <p style="font-size: 0.8rem; color: var(--warm-mocha); margin-bottom: 12px; line-height: 1.4;">
+                若要更換手機或在電腦上查看，請先點擊「匯出檔案」傳送至新裝置，並在新裝置點擊「匯入檔案」即可同步。
+            </p>
+            <div class="backup-zone">
+                <div class="btn-backup" onclick="exportData()">📤 匯出備份檔案</div>
+                <label class="btn-backup" style="display: block;">
+                    📥 匯入歷史紀錄
+                    <input type="file" id="import-file-input" accept=".json" onchange="importData(event)" style="display: none;">
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- 頁面 3: 報表頁面 -->
+    <div id="page-report" class="page">
+        <div class="content-card">
+            <div class="card-title">
+                <span>營運數據報表</span>
+                <select id="report-month-select" onchange="calculateReport()" style="width: auto; padding: 4px 10px; border-radius: 8px;">
+                    <!-- JS 自動塞入月份 -->
+                </select>
+            </div>
+            
+            <div class="report-summary">
+                <div class="summary-box">
+                    <p>當月總收入</p>
+                    <h3 id="rep-income-text" style="color: #5A735B;">$0</h3>
+                </div>
+                <div class="summary-box">
+                    <p>當月總支出</p>
+                    <h3 id="rep-expense-text" style="color: #A66363;">$0</h3>
+                </div>
+                <div class="summary-box profit">
+                    <p>淨利潤 (收入 - 支出)</p>
+                    <h3 id="rep-profit-text">$0</h3>
+                </div>
+            </div>
+
+            <div class="card-title" style="font-size: 0.95rem; margin-top: 10px;">營運收支比</div>
+            <div class="chart-container">
+                <div class="chart-row">
+                    <div class="chart-label">總收入</div>
+                    <div class="chart-bar-bg">
+                        <div id="bar-income-fill" class="chart-bar-fill income-bar"></div>
+                    </div>
+                    <div class="chart-val" id="pct-income-text">0%</div>
+                </div>
+                <div class="chart-row">
+                    <div class="chart-label">總支出</div>
+                    <div class="chart-bar-bg">
+                        <div id="bar-expense-fill" class="chart-bar-fill expense-bar"></div>
+                    </div>
+                    <div class="chart-val" id="pct-expense-text">0%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 資料載入核心
+        let appData = JSON.parse(localStorage.getItem('ccc_nail_system_data')) || [];
+
+        // 時間核心變數
+        const todayObj = new Date();
+        let viewYear = todayObj.getFullYear();
+        let viewMonth = todayObj.getMonth(); // 0-11
+        
+        // 被點選的日期，預設就是今天
+        let chosenDate = new Date(todayObj.getFullYear(), todayObj.getMonth(), todayObj.getDate());
+
+        // 頁面切換機制
+        function switchPage(targetPage) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(`page-${targetPage}`).classList.add('active');
+            
+            const btnMap = { 'calendar': 0, 'all-records': 1, 'report': 2 };
+            document.querySelectorAll('.tool-btn')[btnMap[targetPage]].classList.add('active');
+
+            if (targetPage === 'calendar') {
+                renderCalendarView();
+                renderDayRecordsView();
+            } else if (targetPage === 'all-records') {
+                renderAllRecordsView();
+            } else if (targetPage === 'report') {
+                setupReportDropdown();
+                calculateReport();
+            }
+        }
+
+        // 根據收支類型動態切換表單欄位顯示
+        function toggleFormFields() {
+            const type = document.getElementById('add-type').value;
+            const incGroup = document.getElementById('income-fields-group');
+            const noteLabel = document.getElementById('note-label');
+            
+            if (type === 'income') {
+                incGroup.style.display = 'block';
+                noteLabel.innerText = '其他備註';
+            } else {
+                incGroup.style.display = 'none';
+                noteLabel.innerText = '支出項目說明';
+            }
+        }
+
+        // 格式化日期為本地 YYYY-MM-DD
+        function toDateStr(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function saveData() {
+            localStorage.setItem('ccc_nail_system_data', JSON.stringify(appData));
+        }
+
+        /* --- 頁面 1: 月曆與點擊面板邏輯 --- */
+        function renderCalendarView() {
+            document.getElementById('calendar-title-text').innerText = `${viewYear} 年 ${viewMonth + 1} 月`;
+            const box = document.getElementById('calendar-days-box');
+            box.innerHTML = '';
+
+            const firstDayWk = new Date(viewYear, viewMonth, 1).getDay();
+            const daysInMo = new Date(viewYear, viewMonth + 1, 0).getDate();
+            const daysInPrevMo = new Date(viewYear, viewMonth, 0).getDate();
+
+            // 補上個月尾巴
+            for (let i = firstDayWk; i > 0; i--) {
+                const dNum = daysInPrevMo - i + 1;
+                buildCell(new Date(viewYear, viewMonth - 1, dNum), dNum, true, box);
+            }
+            // 本月日期
+            for (let i = 1; i <= daysInMo; i++) {
+                buildCell(new Date(viewYear, viewMonth, i), i, false, box);
+            }
+            // 補下個月開頭
+            const currentCells = firstDayWk + daysInMo;
+            const nextBlankCells = currentCells % 7 === 0 ? 0 : 7 - (currentCells % 7);
+            for (let i = 1; i <= nextBlankCells; i++) {
+                buildCell(new Date(viewYear, viewMonth + 1, i), i, true, box);
+            }
+        }
+
+        function buildCell(dateObj, dNum, isOther, targetDiv) {
+            const cell = document.createElement('div');
+            cell.className = 'day-cell';
+            if (isOther) cell.classList.add('other-month');
+
+            const span = document.createElement('span');
+            span.className = 'day-number';
+            span.innerText = dNum;
+            cell.appendChild(span);
+
+            const sStr = toDateStr(dateObj);
+            
+            if (sStr === toDateStr(todayObj)) cell.classList.add('is-today');
+            if (sStr === toDateStr(chosenDate)) cell.classList.add('target-active');
+            if (appData.some(r => r.date === sStr)) cell.classList.add('has-record');
+
+            cell.onclick = () => {
+                chosenDate = dateObj;
+                viewYear = dateObj.getFullYear();
+                viewMonth = dateObj.getMonth();
+                renderCalendarView();
+                renderDayRecordsView();
+            };
+            targetDiv.appendChild(cell);
+        }
+
+        function changeMonth(delta) {
+            viewMonth += delta;
+            if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+            else if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+            renderCalendarView();
+        }
+
+        // 生成每筆紀錄的 HTML 結構
+        function generateRecordHtml(r) {
+            const sign = r.type === 'income' ? '+$' : '-$';
+            
+            if (r.type === 'income') {
+                // 客戶美甲收入
+                const custName = cleanHtml(r.customer) || '未註名客戶';
+                const statusClass = r.customerStatus === '新客' ? 'new-cust' : 'old-cust';
+                
+                // 處理施作項目標籤
+                let itemsHtml = '';
+                if (r.items && r.items.length > 0) {
+                    itemsHtml = r.items.map(i => `<span class="tag-item">${cleanHtml(i)}</span>`).join('');
+                }
+
+                return `
+                    <div class="record-info">
+                        <div class="record-main">
+                            <span class="record-title">${custName}</span>
+                            <span class="tag ${statusClass}">${r.customerStatus || '新客'}</span>
+                            ${itemsHtml}
+                        </div>
+                        ${r.note ? `<div class="record-details">📝 ${cleanHtml(r.note)}</div>` : ''}
+                    </div>
+                    <span class="record-amount">${sign}${r.amount}</span>
+                    <button class="btn-delete" onclick="removeRecord('${r.id}', 'day')">🗑️</button>
+                `;
+            } else {
+                // 一般支出
+                return `
+                    <div class="record-info">
+                        <div class="record-main">
+                            <span class="record-title">${cleanHtml(r.note) || '日常項目支出'}</span>
+                        </div>
+                    </div>
+                    <span class="record-amount">${sign}${r.amount}</span>
+                    <button class="btn-delete" onclick="removeRecord('${r.id}', 'day')">🗑️</button>
+                `;
+            }
+        }
+
+        function renderDayRecordsView() {
+            const sStr = toDateStr(chosenDate);
+            document.getElementById('day-box-date').innerText = sStr;
+            document.getElementById('day-box-title').innerText = (sStr === toDateStr(todayObj)) ? '本日收支紀錄' : '該日收支紀錄';
+
+            const list = document.getElementById('day-records-list');
+            list.innerHTML = '';
+
+            const matches = appData.filter(r => r.date === sStr);
+            if (matches.length === 0) {
+                list.innerHTML = '<div class="no-data">這天沒有任何預約記帳紀錄喔 ☕</div>';
+                return;
+            }
+
+            matches.forEach(r => {
+                const item = document.createElement('div');
+                item.className = `record-item ${r.type}`;
+                item.innerHTML = generateRecordHtml(r);
+                list.appendChild(item);
+            });
+        }
+
+        function addNewRecord() {
+            const amtIn = document.getElementById('add-amount');
+            const amt = parseInt(amtIn.value);
+            const type = document.getElementById('add-type').value;
+            const noteIn = document.getElementById('add-note');
+            
+            if (!amt || amt <= 0) {
+                alert('請填入大於 0 的有效金額唷！');
+                return;
+            }
+
+            let newRec = {
+                id: 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                date: toDateStr(chosenDate),
+                type: type,
+                amount: amt,
+                note: noteIn.value.trim()
+            };
+
+            // 如果是收入，額外收集客戶相關的勾選欄位
+            if (type === 'income') {
+                const custIn = document.getElementById('add-customer');
+                const statusRadio = document.querySelector('input[name="cust-status"]:checked');
+                
+                // 收集被勾選的施作項目
+                const checkedItems = [];
+                document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => {
+                    checkedItems.push(cb.value);
+                });
+
+                newRec.customer = custIn.value.trim();
+                newRec.customerStatus = statusRadio ? statusRadio.value : '新客';
+                newRec.items = checkedItems;
+
+                // 重置收入專用欄位
+                custIn.value = '';
+                document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => cb.checked = false);
+                document.querySelector('input[name="cust-status"][value="新客"]').checked = true;
+            }
+
+            appData.push(newRec);
+            saveData();
+
+            amtIn.value = '';
+            noteIn.value = '';
+            
+            renderCalendarView();
+            renderDayRecordsView();
+        }
+
+        function removeRecord(id, refPage) {
+            if (confirm('確定要刪除這筆明細紀錄嗎？')) {
+                appData = appData.filter(r => r.id !== id);
+                saveData();
+                if (refPage === 'day') {
+                    renderCalendarView();
+                    renderDayRecordsView();
+                } else {
+                    renderAllRecordsView();
+                }
+            }
+        }
+
+        /* --- 頁面 2: 總紀錄與備份轉移 --- */
+        function renderAllRecordsView() {
+            const list = document.getElementById('all-records-list');
+            list.innerHTML = '';
+
+            if (appData.length === 0) {
+                list.innerHTML = '<div class="no-data">目前沒有任何歷史帳目</div>';
+                return;
+            }
+
+            const sorted = [...appData].sort((a, b) => b.date.localeCompare(a.date));
+            let lastDate = '';
+            let subContainer = null;
+
+            sorted.forEach(r => {
+                if (r.date !== lastDate) {
+                    lastDate = r.date;
+                    const title = document.createElement('div');
+                    title.className = 'record-group-title';
+                    title.innerText = lastDate;
+                    list.appendChild(title);
+
+                    subContainer = document.createElement('div');
+                    subContainer.className = 'record-list';
+                    list.appendChild(subContainer);
+                }
+
+                const item = document.createElement('div');
+                item.className = `record-item ${r.type}`;
+                
+                // 複用產生 HTML，並修正刪除按鈕重新導向總頁面渲染
+                item.innerHTML = generateRecordHtml(r);
+                const delBtn = item.querySelector('.btn-delete');
+                if(delBtn) {
+                    delBtn.setAttribute('onclick', `removeRecord('${r.id}', 'all')`);
+                }
+                
+                subContainer.appendChild(item);
+            });
+        }
+
+        function exportData() {
+            if (appData.length === 0) {
+                alert('目前沒有資料可以導出喔！');
+                return;
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `CCC_Nail_SystemBackup_${toDateStr(todayObj)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importData(event) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (Array.isArray(parsed)) {
+                        if (confirm('導入會將此裝置目前的紀錄覆蓋，確定要執行嗎？')) {
+                            appData = parsed;
+                            saveData();
+                            renderAllRecordsView();
+                            alert('紀錄成功匯入！');
+                        }
+                    } else {
+                        alert('檔案格式不符，請確認是否為本系統導出的 JSON 備份檔。');
+                    }
+                } catch (err) {
+                    alert('檔案解析出錯了。');
+                }
+            };
+            if(event.target.files[0]) {
+                reader.readAsText(event.target.files[0]);
+            }
+        }
+
+        /* --- 頁面 3: 月度報表邏輯 --- */
+        function setupReportDropdown() {
+            const dropdown = document.getElementById('report-month-select');
+            dropdown.innerHTML = '';
+
+            const set = new Set();
+            set.add(toDateStr(todayObj).substring(0, 7)); // 確保有本月
+            appData.forEach(r => set.add(r.date.substring(0, 7)));
+
+            const sortedMonths = Array.from(set).sort((a, b) => b.localeCompare(a));
+            sortedMonths.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m;
+                const p = m.split('-');
+                opt.innerText = `${p[0]} 年 ${p[1]} 月`;
+                dropdown.appendChild(opt);
+            });
+        }
+
+        function calculateReport() {
+            const mo = document.getElementById('report-month-select').value;
+            if (!mo) return;
+
+            const targets = appData.filter(r => r.date.startsWith(mo));
+            let inc = 0, exp = 0;
+
+            targets.forEach(r => {
+                if (r.type === 'income') inc += r.amount;
+                if (r.type === 'expense') exp += r.amount;
+            });
+
+            const net = inc - exp;
+            document.getElementById('rep-income-text').innerText = `$${inc.toLocaleString()}`;
+            document.getElementById('rep-expense-text').innerText = `$${exp.toLocaleString()}`;
+            document.getElementById('rep-profit-text').innerText = `${net >= 0 ? '' : '-'}$${Math.abs(net).toLocaleString()}`;
+            document.getElementById('rep-profit-text').style.color = net >= 0 ? 'var(--deep-mocha)' : '#A66363';
+
+            const sum = inc + exp;
+            let incPct = 0, expPct = 0;
+            if (sum > 0) {
+                incPct = Math.round((inc / sum) * 100);
+                expPct = Math.round((exp / sum) * 100);
+            }
+
+            document.getElementById('bar-income-fill').style.width = `${incPct}%`;
+            document.getElementById('bar-expense-fill').style.width = `${expPct}%`;
+            document.getElementById('pct-income-text').innerText = `${incPct}%`;
+            document.getElementById('pct-expense-text').innerText = `${expPct}%`;
+        }
+
+        function cleanHtml(str) {
+            if(!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // 初始化啟動
+        window.onload = function() {
+            toggleFormFields();
+            renderCalendarView();
+            renderDayRecordsView();
+        }
+    </script>
+</body>
+</html>
