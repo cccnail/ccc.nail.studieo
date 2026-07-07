@@ -17,7 +17,7 @@
             --white: #FFFFFF;
             --tag-new: #E8D5C4;
             --tag-old: #D2E0D6;
-            --shadow: 0 8px 24px rgba(140, 122, 107, 0.06);
+            --shadow: 0 nudge 24px rgba(140, 122, 107, 0.06);
         }
 
         * {
@@ -190,13 +190,13 @@
             font-weight: bold;
         }
 
-        /* 當日圓圈但未被點選時的淡淡外框 */
+        /* 當日外框標記 */
         .day-cell.is-today:not(.target-active) .day-number {
             border: 1.5px solid var(--warm-mocha);
             color: var(--deep-mocha);
         }
 
-        /* 有紀錄的小圓點提示 */
+        /* 有紀錄的小圓點 */
         .has-record::after {
             content: '';
             position: absolute;
@@ -210,7 +210,7 @@
             background-color: var(--bg-cream);
         }
 
-        /* 記帳與預約輸入表單 */
+        /* 輸入表單 */
         .quick-add-form {
             display: flex;
             flex-direction: column;
@@ -254,7 +254,6 @@
             border-color: var(--warm-mocha);
         }
 
-        /* 勾選方塊美化群組 */
         .checkbox-group, .radio-group {
             display: flex;
             flex-wrap: wrap;
@@ -272,7 +271,7 @@
             font-size: 0.85rem;
             color: var(--text-dark);
             cursor: pointer;
-            padding: 2px 6px;
+            padding: 2px 4px;
         }
 
         .check-label input {
@@ -312,8 +311,8 @@
             border-left: 5px solid var(--soft-oat);
         }
 
-        .record-item.income { border-left-color: #C3D3C4; } /* 韓系質感綠 */
-        .record-item.expense { border-left-color: #E3C3C3; } /* 韓系復古粉 */
+        .record-item.income { border-left-color: #C3D3C4; } 
+        .record-item.expense { border-left-color: #E3C3C3; } 
 
         .record-info {
             display: flex;
@@ -336,7 +335,6 @@
             color: var(--text-dark);
         }
 
-        /* 客戶狀態與項目的標籤樣式 */
         .tag {
             font-size: 0.7rem;
             padding: 2px 6px;
@@ -357,10 +355,8 @@
         .record-details {
             font-size: 0.8rem;
             color: var(--warm-mocha);
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
             margin-top: 2px;
+            line-height: 1.4;
         }
 
         .record-amount {
@@ -391,7 +387,7 @@
             font-style: italic;
         }
 
-        /* --- 頁面 2: 總紀錄 --- */
+        /* 總紀錄與報表樣式 */
         .all-records-container {
             max-height: 55vh;
             overflow-y: auto;
@@ -423,7 +419,6 @@
             text-align: center;
         }
 
-        /* --- 頁面 3: 報表 --- */
         .report-summary {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -502,12 +497,12 @@
 
     <header>
         <h1>CCC.Nail.Studieo</h1>
-        <p>Accounting & Appointment</p>
+        <p>Accounting & Appointment System</p>
     </header>
 
     <!-- 頂部快選列 Quick Toolbar -->
     <div class="toolbar">
-        <button class="tool-btn active" onclick="switchPage('calendar')">月曆</button>
+        <button class="tool-btn active" onclick="switchPage('calendar')">年月日曆</button>
         <button class="tool-btn" onclick="switchPage('all-records')">總紀錄</button>
         <button class="tool-btn" onclick="switchPage('report')">報表</button>
     </div>
@@ -540,14 +535,14 @@
                 <!-- JS 條列清單 -->
             </div>
 
-            <!-- 升級版：預約與記帳複合式表單 -->
+            <!-- 預約與記帳複合式表單 -->
             <div class="quick-add-form">
                 <div class="form-row">
                     <div class="form-group" style="flex: 1;">
                         <span class="form-label">收支類型</span>
                         <select id="add-type" onchange="toggleFormFields()">
-                            <option value="income">＋ 營業收入 (預約/服務)</option>
-                            <option value="expense">－ 項目支出 (進貨/雜支)</option>
+                            <option value="income">＋ 營業收入 (客戶預約)</option>
+                            <option value="expense">－ 項目支出 (日常雜支)</option>
                         </select>
                     </div>
                     <div class="form-group" style="flex: 1;">
@@ -556,12 +551,12 @@
                     </div>
                 </div>
 
-                <!-- 收入專用欄位群組（支出時自動隱藏維持簡潔） -->
+                <!-- 收入專用欄位群組 -->
                 <div id="income-fields-group">
                     <div class="form-row" style="margin-bottom: 10px;">
                         <div class="form-group" style="flex: 1.2;">
                             <span class="form-label">客戶名稱</span>
-                            <input type="text" id="add-customer" placeholder="例如：怡君">
+                            <input type="text" id="add-customer" placeholder="輸入客戶姓名">
                         </div>
                         <div class="form-group" style="flex: 1;">
                             <span class="form-label">客戶狀態</span>
@@ -581,11 +576,16 @@
                             <label class="check-label"><input type="checkbox" name="nail-item" value="足"> 足</label>
                         </div>
                     </div>
+
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <span class="form-label">客戶備註 (喜好/膚況/特徵)</span>
+                        <input type="text" id="add-customer-pref" placeholder="如：指緣易流血、喜歡厚建構">
+                    </div>
                 </div>
 
                 <div class="form-group">
                     <span class="form-label" id="note-label">其他備註</span>
-                    <input type="text" id="add-note" placeholder="例如：款式特殊設計、進貨甲油膠等">
+                    <input type="text" id="add-note" placeholder="如：LINE Pay 轉帳、工作室材料進貨等">
                 </div>
 
                 <button class="btn-submit" onclick="addNewRecord()">儲存此筆紀錄</button>
@@ -606,7 +606,7 @@
         <div class="content-card">
             <div class="card-title" style="font-size: 1rem;">跨裝置紀錄轉移</div>
             <p style="font-size: 0.8rem; color: var(--warm-mocha); margin-bottom: 12px; line-height: 1.4;">
-                若要更換手機或在電腦上查看，請先點擊「匯出檔案」傳送至新裝置，並在新裝置點擊「匯入檔案」即可同步。
+                除了可以使用 GitHub 網址開啟外，若要將此裝置的手機紀錄完美備份到電腦或其他手機，可以使用下方的匯出與匯入功能。
             </p>
             <div class="backup-zone">
                 <div class="btn-backup" onclick="exportData()">📤 匯出備份檔案</div>
@@ -664,18 +664,16 @@
     </div>
 
     <script>
-        // 資料載入核心
-        let appData = JSON.parse(localStorage.getItem('ccc_nail_system_data')) || [];
+        // 資料儲存庫 key
+        const STORAGE_KEY = 'ccc_nail_master_v3_data';
+        let appData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
-        // 時間核心變數
+        // 時間變數
         const todayObj = new Date();
         let viewYear = todayObj.getFullYear();
-        let viewMonth = todayObj.getMonth(); // 0-11
-        
-        // 被點選的日期，預設就是今天
+        let viewMonth = todayObj.getMonth();
         let chosenDate = new Date(todayObj.getFullYear(), todayObj.getMonth(), todayObj.getDate());
 
-        // 頁面切換機制
         function switchPage(targetPage) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
@@ -696,7 +694,6 @@
             }
         }
 
-        // 根據收支類型動態切換表單欄位顯示
         function toggleFormFields() {
             const type = document.getElementById('add-type').value;
             const incGroup = document.getElementById('income-fields-group');
@@ -711,19 +708,15 @@
             }
         }
 
-        // 格式化日期為本地 YYYY-MM-DD
         function toDateStr(date) {
-            const y = date.getFullYear();
-            const m = String(date.getMonth() + 1).padStart(2, '0');
-            const d = String(date.getDate()).padStart(2, '0');
-            return `${y}-${m}-${d}`;
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         }
 
         function saveData() {
-            localStorage.setItem('ccc_nail_system_data', JSON.stringify(appData));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
         }
 
-        /* --- 頁面 1: 月曆與點擊面板邏輯 --- */
+        /* --- 頁面 1 的渲染機制 --- */
         function renderCalendarView() {
             document.getElementById('calendar-title-text').innerText = `${viewYear} 年 ${viewMonth + 1} 月`;
             const box = document.getElementById('calendar-days-box');
@@ -733,16 +726,12 @@
             const daysInMo = new Date(viewYear, viewMonth + 1, 0).getDate();
             const daysInPrevMo = new Date(viewYear, viewMonth, 0).getDate();
 
-            // 補上個月尾巴
             for (let i = firstDayWk; i > 0; i--) {
-                const dNum = daysInPrevMo - i + 1;
-                buildCell(new Date(viewYear, viewMonth - 1, dNum), dNum, true, box);
+                buildCell(new Date(viewYear, viewMonth - 1, daysInPrevMo - i + 1), daysInPrevMo - i + 1, true, box);
             }
-            // 本月日期
             for (let i = 1; i <= daysInMo; i++) {
                 buildCell(new Date(viewYear, viewMonth, i), i, false, box);
             }
-            // 補下個月開頭
             const currentCells = firstDayWk + daysInMo;
             const nextBlankCells = currentCells % 7 === 0 ? 0 : 7 - (currentCells % 7);
             for (let i = 1; i <= nextBlankCells; i++) {
@@ -761,7 +750,6 @@
             cell.appendChild(span);
 
             const sStr = toDateStr(dateObj);
-            
             if (sStr === toDateStr(todayObj)) cell.classList.add('is-today');
             if (sStr === toDateStr(chosenDate)) cell.classList.add('target-active');
             if (appData.some(r => r.date === sStr)) cell.classList.add('has-record');
@@ -783,20 +771,12 @@
             renderCalendarView();
         }
 
-        // 生成每筆紀錄的 HTML 結構
         function generateRecordHtml(r) {
             const sign = r.type === 'income' ? '+$' : '-$';
-            
             if (r.type === 'income') {
-                // 客戶美甲收入
                 const custName = cleanHtml(r.customer) || '未註名客戶';
                 const statusClass = r.customerStatus === '新客' ? 'new-cust' : 'old-cust';
-                
-                // 處理施作項目標籤
-                let itemsHtml = '';
-                if (r.items && r.items.length > 0) {
-                    itemsHtml = r.items.map(i => `<span class="tag-item">${cleanHtml(i)}</span>`).join('');
-                }
+                let itemsHtml = (r.items && r.items.length > 0) ? r.items.map(i => `<span class="tag-item">${cleanHtml(i)}</span>`).join('') : '';
 
                 return `
                     <div class="record-info">
@@ -805,13 +785,13 @@
                             <span class="tag ${statusClass}">${r.customerStatus || '新客'}</span>
                             ${itemsHtml}
                         </div>
-                        ${r.note ? `<div class="record-details">📝 ${cleanHtml(r.note)}</div>` : ''}
+                        ${r.customerPref ? `<div class="record-details" style="color: #A38F81;">❤️ <b>喜好：</b>${cleanHtml(r.customerPref)}</div>` : ''}
+                        ${r.note ? `<div class="record-details">📝 <b>備註：</b>${cleanHtml(r.note)}</div>` : ''}
                     </div>
                     <span class="record-amount">${sign}${r.amount}</span>
                     <button class="btn-delete" onclick="removeRecord('${r.id}', 'day')">🗑️</button>
                 `;
             } else {
-                // 一般支出
                 return `
                     <div class="record-info">
                         <div class="record-main">
@@ -853,7 +833,7 @@
             const noteIn = document.getElementById('add-note');
             
             if (!amt || amt <= 0) {
-                alert('請填入大於 0 的有效金額唷！');
+                alert('請填入有效的消費金額唷！');
                 return;
             }
 
@@ -865,12 +845,11 @@
                 note: noteIn.value.trim()
             };
 
-            // 如果是收入，額外收集客戶相關的勾選欄位
             if (type === 'income') {
                 const custIn = document.getElementById('add-customer');
+                const prefIn = document.getElementById('add-customer-pref');
                 const statusRadio = document.querySelector('input[name="cust-status"]:checked');
                 
-                // 收集被勾選的施作項目
                 const checkedItems = [];
                 document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => {
                     checkedItems.push(cb.value);
@@ -879,9 +858,11 @@
                 newRec.customer = custIn.value.trim();
                 newRec.customerStatus = statusRadio ? statusRadio.value : '新客';
                 newRec.items = checkedItems;
+                newRec.customerPref = prefIn.value.trim();
 
-                // 重置收入專用欄位
+                // 重置
                 custIn.value = '';
+                prefIn.value = '';
                 document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => cb.checked = false);
                 document.querySelector('input[name="cust-status"][value="新客"]').checked = true;
             }
@@ -909,7 +890,7 @@
             }
         }
 
-        /* --- 頁面 2: 總紀錄與備份轉移 --- */
+        /* --- 頁面 2 & 3 邏輯 --- */
         function renderAllRecordsView() {
             const list = document.getElementById('all-records-list');
             list.innerHTML = '';
@@ -938,13 +919,10 @@
 
                 const item = document.createElement('div');
                 item.className = `record-item ${r.type}`;
-                
-                // 複用產生 HTML，並修正刪除按鈕重新導向總頁面渲染
                 item.innerHTML = generateRecordHtml(r);
+                
                 const delBtn = item.querySelector('.btn-delete');
-                if(delBtn) {
-                    delBtn.setAttribute('onclick', `removeRecord('${r.id}', 'all')`);
-                }
+                if(delBtn) delBtn.setAttribute('onclick', `removeRecord('${r.id}', 'all')`);
                 
                 subContainer.appendChild(item);
             });
@@ -958,7 +936,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `CCC_Nail_SystemBackup_${toDateStr(todayObj)}.json`);
+            downloadAnchor.setAttribute("download", `CCC_Nail_DataBackup_${toDateStr(todayObj)}.json`);
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
@@ -970,31 +948,27 @@
                 try {
                     const parsed = JSON.parse(e.target.result);
                     if (Array.isArray(parsed)) {
-                        if (confirm('導入會將此裝置目前的紀錄覆蓋，確定要執行嗎？')) {
+                        if (confirm('匯入將會覆蓋此裝置目前的紀錄，確定嗎？')) {
                             appData = parsed;
                             saveData();
                             renderAllRecordsView();
-                            alert('紀錄成功匯入！');
+                            alert('歷史紀錄成功匯入！');
                         }
                     } else {
-                        alert('檔案格式不符，請確認是否為本系統導出的 JSON 備份檔。');
+                        alert('檔案格式不相符。');
                     }
                 } catch (err) {
-                    alert('檔案解析出錯了。');
+                    alert('檔案解析失敗。');
                 }
             };
-            if(event.target.files[0]) {
-                reader.readAsText(event.target.files[0]);
-            }
+            if(event.target.files[0]) reader.readAsText(event.target.files[0]);
         }
 
-        /* --- 頁面 3: 月度報表邏輯 --- */
         function setupReportDropdown() {
             const dropdown = document.getElementById('report-month-select');
             dropdown.innerHTML = '';
-
             const set = new Set();
-            set.add(toDateStr(todayObj).substring(0, 7)); // 確保有本月
+            set.add(toDateStr(todayObj).substring(0, 7));
             appData.forEach(r => set.add(r.date.substring(0, 7)));
 
             const sortedMonths = Array.from(set).sort((a, b) => b.localeCompare(a));
@@ -1043,7 +1017,6 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        // 初始化啟動
         window.onload = function() {
             toggleFormFields();
             renderCalendarView();
