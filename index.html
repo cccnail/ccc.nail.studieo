@@ -17,7 +17,7 @@
             --white: #FFFFFF;
             --tag-new: #E8D5C4;
             --tag-old: #D2E0D6;
-            --shadow: 0 nudge 24px rgba(140, 122, 107, 0.06);
+            --shadow: 0 8px 24px rgba(140, 122, 107, 0.06);
         }
 
         * {
@@ -172,7 +172,6 @@
             color: #D1C7BD;
         }
 
-        /* 日期圓圈樣式 */
         .day-number {
             width: 34px;
             height: 34px;
@@ -183,20 +182,17 @@
             transition: all 0.2s ease;
         }
 
-        /* 點選中/當日的深色圓形 */
         .day-cell.target-active .day-number {
             background-color: var(--deep-mocha);
             color: var(--bg-cream) !important;
             font-weight: bold;
         }
 
-        /* 當日外框標記 */
         .day-cell.is-today:not(.target-active) .day-number {
             border: 1.5px solid var(--warm-mocha);
             color: var(--deep-mocha);
         }
 
-        /* 有紀錄的小圓點 */
         .has-record::after {
             content: '';
             position: absolute;
@@ -231,6 +227,7 @@
             flex-direction: column;
             gap: 6px;
             width: 100%;
+            position: relative;
         }
 
         .form-label {
@@ -278,6 +275,19 @@
             accent-color: var(--warm-mocha);
             width: 16px;
             height: 16px;
+        }
+
+        /* 歷史喜好貼心提示小框 */
+        .history-pref-hint {
+            display: none;
+            background-color: #F4EFEA;
+            border-left: 3px solid var(--accent-rose);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: #7A6250;
+            margin-top: -4px;
+            line-height: 1.4;
         }
 
         .btn-submit {
@@ -387,7 +397,7 @@
             font-style: italic;
         }
 
-        /* 總紀錄與報表樣式 */
+        /* 總紀錄與報表 */
         .all-records-container {
             max-height: 55vh;
             overflow-y: auto;
@@ -524,7 +534,7 @@
             </div>
         </div>
 
-        <!-- 當日明細方框 (四邊圓弧處理) -->
+        <!-- 當日明細方框 -->
         <div class="content-card">
             <div class="card-title">
                 <span id="day-box-title">本日收支紀錄</span>
@@ -535,7 +545,7 @@
                 <!-- JS 條列清單 -->
             </div>
 
-            <!-- 預約與記帳複合式表單 -->
+            <!-- 智慧預約與記帳表單 -->
             <div class="quick-add-form">
                 <div class="form-row">
                     <div class="form-group" style="flex: 1;">
@@ -551,21 +561,26 @@
                     </div>
                 </div>
 
-                <!-- 收入專用欄位群組 -->
+                <!-- 收入專用欄位 -->
                 <div id="income-fields-group">
                     <div class="form-row" style="margin-bottom: 10px;">
                         <div class="form-group" style="flex: 1.2;">
                             <span class="form-label">客戶名稱</span>
-                            <input type="text" id="add-customer" placeholder="輸入客戶姓名">
+                            <input type="text" id="add-customer" placeholder="輸入姓名" list="customer-datalist" oninput="autoLoadCustomerPreference()">
+                            <!-- 自動記憶的客人名單下拉選單 -->
+                            <datalist id="customer-datalist"></datalist>
                         </div>
                         <div class="form-group" style="flex: 1;">
                             <span class="form-label">客戶狀態</span>
                             <div class="radio-group" style="padding: 9px 10px;">
-                                <label class="check-label"><input type="radio" name="cust-status" value="新客" checked> 新客</label>
-                                <label class="check-label"><input type="radio" name="cust-status" value="舊客"> 舊客</label>
+                                <label class="check-label"><input type="radio" name="cust-status" value="新客" checked id="status-new"> 新客</label>
+                                <label class="check-label"><input type="radio" name="cust-status" value="舊客" id="status-old"> 舊客</label>
                             </div>
                         </div>
                     </div>
+
+                    <!-- 貼心小提示：下次預約時自動顯示該客人上次的喜好 -->
+                    <div id="pref-hint-box" class="history-pref-hint"></div>
 
                     <div class="form-group" style="margin-bottom: 10px;">
                         <span class="form-label">施作項目 (可複選)</span>
@@ -606,7 +621,7 @@
         <div class="content-card">
             <div class="card-title" style="font-size: 1rem;">跨裝置紀錄轉移</div>
             <p style="font-size: 0.8rem; color: var(--warm-mocha); margin-bottom: 12px; line-height: 1.4;">
-                除了可以使用 GitHub 網址開啟外，若要將此裝置的手機紀錄完美備份到電腦或其他手機，可以使用下方的匯出與匯入功能。
+                若要將此裝置的手機紀錄完美備份到電腦或其他手機，可以使用下方的匯出與匯入功能。
             </p>
             <div class="backup-zone">
                 <div class="btn-backup" onclick="exportData()">📤 匯出備份檔案</div>
@@ -665,7 +680,7 @@
 
     <script>
         // 資料儲存庫 key
-        const STORAGE_KEY = 'ccc_nail_master_v3_data';
+        const STORAGE_KEY = 'ccc_nail_master_v4_data';
         let appData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
         // 時間變數
@@ -686,6 +701,7 @@
             if (targetPage === 'calendar') {
                 renderCalendarView();
                 renderDayRecordsView();
+                updateCustomerDatalist();
             } else if (targetPage === 'all-records') {
                 renderAllRecordsView();
             } else if (targetPage === 'report') {
@@ -702,9 +718,73 @@
             if (type === 'income') {
                 incGroup.style.display = 'block';
                 noteLabel.innerText = '其他備註';
+                autoLoadCustomerPreference();
             } else {
                 incGroup.style.display = 'none';
                 noteLabel.innerText = '支出項目說明';
+                document.getElementById('pref-hint-box').style.display = 'none';
+            }
+        }
+
+        // 更新客人名單（自動從舊資料中抓出不重複的名字）
+        function updateCustomerDatalist() {
+            const datalist = document.getElementById('customer-datalist');
+            datalist.innerHTML = '';
+            
+            const nameSet = new Set();
+            appData.forEach(r => {
+                if (r.type === 'income' && r.customer) {
+                    nameSet.add(r.customer.trim());
+                }
+            });
+
+            nameSet.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                datalist.appendChild(opt);
+            });
+        }
+
+        // 貼心核心功能：當輸入名字時，自動搜尋她「最新的喜好」並顯示與自動帶入
+        function autoLoadCustomerPreference() {
+            const currentName = document.getElementById('add-customer').value.trim();
+            const hintBox = document.getElementById('pref-hint-box');
+            const prefInput = document.getElementById('add-customer-pref');
+            const radioOld = document.getElementById('status-old');
+
+            if (!currentName) {
+                hintBox.style.display = 'none';
+                return;
+            }
+
+            // 由新到舊搜尋這個客人的歷史收入紀錄
+            const customerHistory = appData
+                .filter(r => r.type === 'income' && r.customer && r.customer.trim() === currentName)
+                .sort((a, b) => b.date.localeCompare(a.date));
+
+            if (customerHistory.length > 0) {
+                // 找到過去有紀錄，自動幫忙切換成「舊客」
+                if(radioOld) radioOld.checked = true;
+
+                // 找尋她最近一次寫的喜好備註
+                const latestPrefRecord = customerHistory.find(r => r.customerPref && r.customerPref.trim() !== '');
+                
+                if (latestPrefRecord && latestPrefRecord.customerPref) {
+                    const savedPref = latestPrefRecord.customerPref;
+                    hintBox.innerHTML = `✨ <b>歷史喜好紀錄：</b>${cleanHtml(savedPref)}`;
+                    hintBox.style.display = 'block';
+                    
+                    // 如果當前的喜好輸入框是空的，自動幫忙填入上次的喜好（省去重複輸入的麻煩）
+                    if (prefInput && prefInput.value.trim() === '') {
+                        prefInput.value = savedPref;
+                    }
+                } else {
+                    hintBox.innerHTML = `✨ <b>回頭客提示：</b>此客人先前有來過，但無特別喜好紀錄。`;
+                    hintBox.style.display = 'block';
+                }
+            } else {
+                // 完全沒來過，隱藏提示小框
+                hintBox.style.display = 'none';
             }
         }
 
@@ -865,6 +945,7 @@
                 prefIn.value = '';
                 document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => cb.checked = false);
                 document.querySelector('input[name="cust-status"][value="新客"]').checked = true;
+                document.getElementById('pref-hint-box').style.display = 'none';
             }
 
             appData.push(newRec);
@@ -875,6 +956,7 @@
             
             renderCalendarView();
             renderDayRecordsView();
+            updateCustomerDatalist();
         }
 
         function removeRecord(id, refPage) {
@@ -884,6 +966,7 @@
                 if (refPage === 'day') {
                     renderCalendarView();
                     renderDayRecordsView();
+                    updateCustomerDatalist();
                 } else {
                     renderAllRecordsView();
                 }
@@ -952,6 +1035,7 @@
                             appData = parsed;
                             saveData();
                             renderAllRecordsView();
+                            updateCustomerDatalist();
                             alert('歷史紀錄成功匯入！');
                         }
                     } else {
@@ -1021,6 +1105,7 @@
             toggleFormFields();
             renderCalendarView();
             renderDayRecordsView();
+            updateCustomerDatalist();
         }
     </script>
 </body>
