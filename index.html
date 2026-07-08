@@ -279,6 +279,11 @@
         .custom-dropdown-item:active {
             background-color: var(--card-cream);
         }
+        .dropdown-item-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
         .dropdown-item-handle {
             font-size: 0.75rem;
             color: var(--warm-mocha);
@@ -337,11 +342,7 @@
             transition: background-color 0.2s ease;
         }
         .btn-submit:active { background-color: var(--deep-mocha); }
-        
-        /* 正在編輯中的狀態樣式亮色 */
-        .btn-submit.editing-mode {
-            background-color: #7E8E7F; /* 質感莫蘭迪綠色提示正在更新 */
-        }
+        .btn-submit.editing-mode { background-color: #7E8E7F; }
 
         /* 紀錄清單 */
         .record-list {
@@ -376,6 +377,11 @@
             align-items: center;
             gap: 6px;
             flex-wrap: wrap;
+        }
+
+        .avatar-emojo {
+            font-size: 1.15rem;
+            line-height: 1;
         }
 
         .record-title {
@@ -482,6 +488,7 @@
             text-align: center;
         }
 
+        /* --- 報表分頁樣式 --- */
         .report-summary {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -527,7 +534,7 @@
         }
 
         .chart-label {
-            width: 50px;
+            width: 55px;
             color: var(--warm-mocha);
         }
 
@@ -547,6 +554,10 @@
         }
         .chart-bar-fill.income-bar { background-color: #C3D3C4; }
         .chart-bar-fill.expense-bar { background-color: #E3C3C3; }
+        
+        /* 男女比例專屬色條（浪漫莫蘭迪粉 與 溫柔燕麥灰藍） */
+        .chart-bar-fill.female-bar { background-color: #EAC7C7; }
+        .chart-bar-fill.male-bar { background-color: #C7D4EA; }
 
         .chart-val {
             width: 45px;
@@ -629,6 +640,14 @@
                         </div>
                     </div>
 
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <span class="form-label">客戶性別</span>
+                        <div class="radio-group" style="padding: 9px 12px; gap: 20px;">
+                            <label class="check-label"><input type="radio" name="cust-gender" value="女" checked> 👩‍🦰 女生 (Q版)</label>
+                            <label class="check-label"><input type="radio" name="cust-gender" value="男"> 👨‍🦱 男生 (Q版)</label>
+                        </div>
+                    </div>
+
                     <!-- 貼心回客提示 -->
                     <div id="pref-hint-box" class="history-pref-hint"></div>
 
@@ -704,7 +723,7 @@
             <div class="card-title">
                 <span>營運數據報表</span>
                 <select id="report-month-select" onchange="calculateReport()" style="width: auto; padding: 4px 10px; border-radius: 8px;">
-                    <!-- JS 自動塞入月份 -->
+                    <!-- JS 自動月份 -->
                 </select>
             </div>
             
@@ -723,8 +742,9 @@
                 </div>
             </div>
 
+            <!-- 圖表 1：收支財務比例 -->
             <div class="card-title" style="font-size: 0.95rem; margin-top: 10px;">營運收支比</div>
-            <div class="chart-container">
+            <div class="chart-container" style="margin-bottom: 25px;">
                 <div class="chart-row">
                     <div class="chart-label">總收入</div>
                     <div class="chart-bar-bg">
@@ -740,14 +760,32 @@
                     <div class="chart-val" id="pct-expense-text">0%</div>
                 </div>
             </div>
+
+            <!-- 🌟 全新追加圖表 2：客群性別比例分析 -->
+            <div class="card-title" style="font-size: 0.95rem; border-top: 1px dashed var(--soft-oat); padding-top: 15px;">客群性別比例</div>
+            <div class="chart-container">
+                <div class="chart-row">
+                    <div class="chart-label">👩‍🦰 女生</div>
+                    <div class="chart-bar-bg">
+                        <div id="bar-female-fill" class="chart-bar-fill female-bar"></div>
+                    </div>
+                    <div class="chart-val" id="pct-female-text">0%</div>
+                </div>
+                <div class="chart-row">
+                    <div class="chart-label">👨‍🦱 男生</div>
+                    <div class="chart-bar-bg">
+                        <div id="bar-male-fill" class="chart-bar-fill male-bar"></div>
+                    </div>
+                    <div class="chart-val" id="pct-male-text">0%</div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        const STORAGE_KEY = 'ccc_nail_master_v8_data';
+        const STORAGE_KEY = 'ccc_nail_master_v10_data';
         let appData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
-        // 全局狀態：記錄當前是不是正在「修改舊資料模式」
         let editingRecordId = null;
 
         const todayObj = new Date();
@@ -790,6 +828,12 @@
             }
         }
 
+        function getAvatar(gender) {
+            if (gender === '女') return '👩‍🦰';
+            if (gender === '男') return '👨‍🦱';
+            return '👤';
+        }
+
         function showCustomDropdown() {
             const inputVal = document.getElementById('add-customer').value.trim().toLowerCase();
             const dropdown = document.getElementById('custom-dropdown');
@@ -800,8 +844,9 @@
                 if (r.type === 'income' && r.customer) {
                     const nameKey = r.customer.trim();
                     const handleVal = r.customerHandle ? r.customerHandle.trim() : '';
+                    const genderVal = r.customerGender || '女';
                     const uniqueKey = `${nameKey}_____${handleVal}`;
-                    clientMap.set(uniqueKey, { name: nameKey, handle: handleVal });
+                    clientMap.set(uniqueKey, { name: nameKey, handle: handleVal, gender: genderVal });
                 }
             });
 
@@ -813,7 +858,15 @@
                     item.className = 'custom-dropdown-item';
                     
                     const handleLabel = info.handle ? `<span class="dropdown-item-handle">(${info.handle})</span>` : '<span class="dropdown-item-handle">(無帳號)</span>';
-                    item.innerHTML = `<span>👤 <b>${cleanHtml(info.name)}</b></span> ${handleLabel}`;
+                    const av = getAvatar(info.gender);
+                    
+                    item.innerHTML = `
+                        <div class="dropdown-item-info">
+                            <span class="avatar-emojo">${av}</span>
+                            <span><b>${cleanHtml(info.name)}</b></span>
+                        </div> 
+                        ${handleLabel}
+                    `;
                     
                     item.onclick = function() {
                         document.getElementById('add-customer').value = info.name;
@@ -837,7 +890,6 @@
         });
 
         function autoLoadCustomerPreference(targetName, targetHandle) {
-            // 如果正在編輯模式中，跳過聯想，避免蓋掉正在修改的舊喜好
             if (editingRecordId !== null) return;
 
             const hintBox = document.getElementById('pref-hint-box');
@@ -855,15 +907,21 @@
                 if(radioOld) radioOld.checked = true;
                 const latestPref = history.find(r => r.customerPref && r.customerPref.trim() !== '');
                 const latestSource = history.find(r => r.customerSource);
+                const latestGender = history.find(r => r.customerGender);
 
                 if (handleInput) handleInput.value = targetHandle || '';
                 if (latestSource) {
                     const srcRadio = document.querySelector(`input[name="cust-source"][value="${latestSource.customerSource}"]`);
                     if (srcRadio) srcRadio.checked = true;
                 }
+                
+                if (latestGender) {
+                    const genRadio = document.querySelector(`input[name="cust-gender"][value="${latestGender.customerGender}"]`);
+                    if (genRadio) genRadio.checked = true;
+                }
 
                 let hintText = `✨ <b>回頭客歷史資料：</b><br>`;
-                hintText += `🏷️ 來源：${latestSource ? latestSource.customerSource : '未設定'} (${targetHandle || '無'})<br>`;
+                hintText += `🏷️ 來源：${latestSource ? latestSource.customerSource : '未設定'} (${targetHandle || '無'})｜性別：${latestGender ? latestGender.customerGender : '女'}<br>`;
                 
                 if (latestPref && latestPref.customerPref) {
                     hintText += `❤️ 喜好：${latestPref.customerPref}`;
@@ -942,7 +1000,6 @@
             renderCalendarView();
         }
 
-        // 產生含有 🗑️ 和 ✏️ 雙按鈕的明細 HTML
         function generateRecordHtml(r) {
             const sign = r.type === 'income' ? '+$' : '-$';
             if (r.type === 'income') {
@@ -957,10 +1014,12 @@
                 const handleText = r.customerHandle ? `<span style="font-size:0.8rem; color:var(--warm-mocha); font-style:italic;">(${cleanHtml(r.customerHandle)})</span>` : '';
 
                 let itemsHtml = (r.items && r.items.length > 0) ? r.items.map(i => `<span class="tag-item">${cleanHtml(i)}</span>`).join('') : '';
+                const av = getAvatar(r.customerGender || '女');
 
                 return `
                     <div class="record-info">
                         <div class="record-main">
+                            <span class="avatar-emojo">${av}</span>
                             <span class="record-title">${custName}</span>
                             ${handleText}
                             <span class="tag ${statusClass}">${r.customerStatus || '新客'}</span>
@@ -1018,18 +1077,13 @@
             });
         }
 
-        // 🌟 核心新功能：點擊 ✏️ 進入編輯狀態
         function startEditRecord(id) {
             const target = appData.find(r => r.id === id);
             if (!target) return;
 
-            // 1. 切換到日曆預設頁面，方便填寫表單
             switchPage('calendar');
-
-            // 2. 鎖定當前正在編輯的 ID 狀態
             editingRecordId = id;
 
-            // 3. 將日曆的時間焦點強制移到這筆紀錄的指定日期上
             const parts = target.date.split('-');
             chosenDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
             viewYear = chosenDate.getFullYear();
@@ -1037,45 +1091,39 @@
             renderCalendarView();
             renderDayRecordsView();
 
-            // 4. 把舊資料全數倒回表單輸入框中
             document.getElementById('add-type').value = target.type;
             document.getElementById('add-amount').value = target.amount;
             document.getElementById('add-note').value = target.note || '';
 
-            toggleFormFields(); // 動態切換收入/支出面板
+            toggleFormFields();
 
             if (target.type === 'income') {
                 document.getElementById('add-customer').value = target.customer || '';
                 document.getElementById('add-customer-pref').value = target.customerPref || '';
                 document.getElementById('add-customer-handle').value = target.customerHandle || '';
                 
-                // 代入客戶新舊狀態
                 const statusRadio = document.querySelector(`input[name="cust-status"][value="${target.customerStatus || '新客'}"]`);
                 if(statusRadio) statusRadio.checked = true;
 
-                // 代入客源
                 const sourceRadio = document.querySelector(`input[name="cust-source"][value="${target.customerSource || 'IG'}"]`);
                 if(sourceRadio) sourceRadio.checked = true;
+                
+                const genderRadio = document.querySelector(`input[name="cust-gender"][value="${target.customerGender || '女'}"]`);
+                if(genderRadio) genderRadio.checked = true;
 
-                // 代入施作項目的多選勾選框
                 document.querySelectorAll('input[name="nail-item"]').forEach(cb => {
                     cb.checked = target.items && target.items.includes(cb.value);
                 });
                 
-                // 關閉回客提示小框，避免視覺混淆
                 document.getElementById('pref-hint-box').style.display = 'none';
             }
 
-            // 5. 改變大按鈕的文字與顏色外觀
             const submitBtn = document.getElementById('btn-submit-main');
             submitBtn.innerText = '確認更新此筆紀錄 ✏️';
             submitBtn.classList.add('editing-mode');
-
-            // 6. 手機畫面流暢滾動到表單區塊，方便直接修改
             document.getElementById('accounting-form-anchor').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // 儲存按鈕的觸發機制（自動判定是要「新增」還是「更新」）
         function addNewRecord() {
             const amtIn = document.getElementById('add-amount');
             const amt = parseInt(amtIn.value);
@@ -1088,7 +1136,6 @@
             }
 
             if (editingRecordId !== null) {
-                // 【模式 A：更新舊資料】
                 const targetIdx = appData.findIndex(r => r.id === editingRecordId);
                 if (targetIdx !== -1) {
                     appData[targetIdx].type = type;
@@ -1103,21 +1150,21 @@
                         appData[targetIdx].customerStatus = document.querySelector('input[name="cust-status"]:checked').value;
                         appData[targetIdx].customerSource = document.querySelector('input[name="cust-source"]:checked').value;
                         appData[targetIdx].customerHandle = document.getElementById('add-customer-handle').value.trim();
+                        appData[targetIdx].customerGender = document.querySelector('input[name="cust-gender"]:checked').value;
                         appData[targetIdx].items = checkedItems;
                         appData[targetIdx].customerPref = document.getElementById('add-customer-pref').value.trim();
                     } else {
-                        // 如果原本是收入後來被改成支出，把收入專用欄位清空
                         delete appData[targetIdx].customer;
                         delete appData[targetIdx].customerStatus;
                         delete appData[targetIdx].customerSource;
                         delete appData[targetIdx].customerHandle;
+                        delete appData[targetIdx].customerGender;
                         delete appData[targetIdx].items;
                         delete appData[targetIdx].customerPref;
                     }
                 }
-                editingRecordId = null; // 解除編輯鎖定
+                editingRecordId = null;
             } else {
-                // 【模式 B：正常新增一筆紀錄】
                 let newRec = {
                     id: 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
                     date: toDateStr(chosenDate),
@@ -1134,16 +1181,15 @@
                     newRec.customerStatus = document.querySelector('input[name="cust-status"]:checked').value;
                     newRec.customerSource = document.querySelector('input[name="cust-source"]:checked').value;
                     newRec.customerHandle = document.getElementById('add-customer-handle').value.trim();
+                    newRec.customerGender = document.querySelector('input[name="cust-gender"]:checked').value;
                     newRec.items = checkedItems;
                     newRec.customerPref = document.getElementById('add-customer-pref').value.trim();
                 }
                 appData.push(newRec);
             }
 
-            // 共通步驟：存檔、恢復原狀
             saveData();
 
-            // 重置所有表單輸入
             amtIn.value = '';
             noteIn.value = '';
             document.getElementById('add-customer').value = '';
@@ -1152,20 +1198,18 @@
             document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => cb.checked = false);
             document.querySelector('input[name="cust-status"][value="新客"]').checked = true;
             document.querySelector('input[name="cust-source"][value="IG"]').checked = true;
+            document.querySelector('input[name="cust-gender"][value="女"]').checked = true;
             document.getElementById('pref-hint-box').style.display = 'none';
 
-            // 恢復大按鈕樣式
             const submitBtn = document.getElementById('btn-submit-main');
             submitBtn.innerText = '儲存此筆紀錄';
             submitBtn.classList.remove('editing-mode');
 
-            // 刷新畫面
             renderCalendarView();
             renderDayRecordsView();
         }
 
         function removeRecord(id, refPage) {
-            // 如果這筆資料正在被編輯中，禁止直接刪除
             if (editingRecordId === id) {
                 alert('這筆資料正在下方的編輯面板中修改，請先完成更新或清空唷！');
                 return;
@@ -1182,7 +1226,6 @@
             }
         }
 
-        /* --- 總紀錄與報表邏輯 --- */
         function renderAllRecordsView() {
             const list = document.getElementById('all-records-list');
             list.innerHTML = '';
@@ -1213,7 +1256,6 @@
                 item.className = `record-item ${r.type}`;
                 item.innerHTML = generateRecordHtml(r);
                 
-                // 修正總紀錄分頁中的刪除與編輯按鈕觸發事件導向
                 const delBtn = item.querySelector('.btn-delete');
                 if(delBtn) delBtn.setAttribute('onclick', `removeRecord('${r.id}', 'all')`);
                 
@@ -1274,35 +1316,60 @@
             });
         }
 
+        // 🌟 核心功能修正：同步計算男女比例數據
         function calculateReport() {
             const mo = document.getElementById('report-month-select').value;
             if (!mo) return;
 
             const targets = appData.filter(r => r.date.startsWith(mo));
+            
             let inc = 0, exp = 0;
+            let femaleCount = 0, maleCount = 0;
 
             targets.forEach(r => {
-                if (r.type === 'income') inc += r.amount;
-                if (r.type === 'expense') exp += r.amount;
+                if (r.type === 'income') {
+                    inc += r.amount;
+                    
+                    // 統計性別人數（預設沒有寫的話當成女生女客）
+                    const gender = r.customerGender || '女';
+                    if (gender === '女') femaleCount++;
+                    if (gender === '男') maleCount++;
+                }
+                if (r.type === 'expense') {
+                    exp += r.amount;
+                }
             });
 
+            // 1. 計算財務利潤
             const net = inc - exp;
             document.getElementById('rep-income-text').innerText = `$${inc.toLocaleString()}`;
             document.getElementById('rep-expense-text').innerText = `$${exp.toLocaleString()}`;
             document.getElementById('rep-profit-text').innerText = `${net >= 0 ? '' : '-'}$${Math.abs(net).toLocaleString()}`;
             document.getElementById('rep-profit-text').style.color = net >= 0 ? 'var(--deep-mocha)' : '#A66363';
 
-            const sum = inc + exp;
+            // 2. 計算營運收支百分比
+            const financialSum = inc + exp;
             let incPct = 0, expPct = 0;
-            if (sum > 0) {
-                incPct = Math.round((inc / sum) * 100);
-                expPct = Math.round((exp / sum) * 100);
+            if (financialSum > 0) {
+                incPct = Math.round((inc / financialSum) * 100);
+                expPct = Math.round((exp / financialSum) * 100);
             }
-
             document.getElementById('bar-income-fill').style.width = `${incPct}%`;
             document.getElementById('bar-expense-fill').style.width = `${expPct}%`;
             document.getElementById('pct-income-text').innerText = `${incPct}%`;
             document.getElementById('pct-expense-text').innerText = `${expPct}%`;
+
+            // 3. 計算男女客群百分比
+            const totalCustomers = femaleCount + maleCount;
+            let femalePct = 0, malePct = 0;
+            if (totalCustomers > 0) {
+                femalePct = Math.round((femaleCount / totalCustomers) * 100);
+                malePct = Math.round((maleCount / totalCustomers) * 100);
+            }
+            document.getElementById('bar-female-fill').style.width = `${femalePct}%`;
+            document.getElementById('bar-male-fill').style.width = `${malePct}%`;
+            document.getElementById('pct-female-text').innerText = `${femalePct}% (共${femaleCount}人)`;
+            document.getElementById('pct-male-text').innerText = `${malePct}% (共${maleCount}人)`;
         }
 
         function cleanHtml(str) {
