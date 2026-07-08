@@ -379,7 +379,7 @@
             flex-wrap: wrap;
         }
 
-        /* 🌟 精緻 Q 版真實大頭貼容器與樣式 */
+        /* 🌟 核心防跑位修正：限縮大頭貼在任何地方都完美等比例 */
         .avatar-q-container {
             width: 28px;
             height: 28px;
@@ -393,8 +393,11 @@
             flex-shrink: 0;
         }
         .avatar-q-container img {
-            width: 100%;
-            height: 100%;
+            width: 100% !important;
+            height: 100% !important;
+            max-width: 100% !important;
+            max-height: 100% !important;
+            display: block !important;
             object-fit: cover;
         }
 
@@ -655,12 +658,11 @@
                         </div>
                     </div>
 
-                    <!-- 🌟 修正：字面上拿掉(Q版)字樣，維持乾淨美感 -->
                     <div class="form-group" style="margin-bottom: 10px;">
                         <span class="form-label">客戶性別</span>
                         <div class="radio-group" style="padding: 9px 12px; gap: 20px;">
-                            <label class="check-label"><input type="radio" name="cust-gender" value="女" checked> 👩‍🦰 女生</label>
-                            <label class="check-label"><input type="radio" name="cust-gender" value="男"> 👨‍🦱 男生</label>
+                            <label class="check-label"><input type="radio" name="cust-gender" value="女" checked> 女生</label>
+                            <label class="check-label"><input type="radio" name="cust-gender" value="男"> 男生</label>
                         </div>
                     </div>
 
@@ -799,7 +801,7 @@
     </div>
 
     <script>
-        const STORAGE_KEY = 'ccc_nail_master_v11_data';
+        const STORAGE_KEY = 'ccc_nail_master_v12_data';
         let appData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
         let editingRecordId = null;
@@ -809,7 +811,7 @@
         let viewMonth = todayObj.getMonth();
         let chosenDate = new Date(todayObj.getFullYear(), todayObj.getMonth(), todayObj.getDate());
 
-        // 🌟 核心升級：精緻高畫質韓系莫蘭迪 Q 版手繪風格大頭貼 (SVG 貼紙格式)
+        // 精緻手繪莫蘭迪 SVG Q版頭像
         const AVATAR_URLS = {
             '女': 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="%23F4EBE1"/><path d="M50,22 C32,22 26,35 26,52 C26,59 29,66 33,70 C33,52 40,46 50,46 C60,46 67,52 67,70 C71,66 74,59 74,52 C74,35 68,22 50,22 Z" fill="%238C6D58"/><circle cx="50" cy="52" r="20" fill="%23E5C2A4"/><path d="M26,52 C24,42 32,26 50,26 C68,26 76,42 74,52 C74,54 70,44 50,44 C30,44 26,54 26,52 Z" fill="%23664E3E"/><circle cx="43" cy="52" r="2" fill="%234A3E3D"/><circle cx="57" cy="52" r="2" fill="%234A3E3D"/><ellipse cx="40" cy="55" rx="3" ry="1.5" fill="%23EFAFAF" opacity="0.7"/><ellipse cx="60" cy="55" rx="3" ry="1.5" fill="%23EFAFAF" opacity="0.7"/><path d="M47,58 Q50,60 53,58" stroke="%234A3E3D" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M33,70 C33,85 40,90 50,90 C60,90 67,85 67,70 C60,74 55,75 50,75 C45,75 40,74 33,70 Z" fill="%23D69A85"/></svg>',
             '男': 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="%23E9EFF4"/><path d="M50,18 C33,18 28,28 28,45 C35,42 42,35 45,28 Q50,38 58,28 C65,34 70,42 72,45 C72,28 67,18 50,18 Z" fill="%23556270"/><circle cx="50" cy="50" r="19" fill="%23E2C4A8"/><path d="M28,45 C28,45 32,24 50,24 C68,24 72,45 72,45 C72,45 65,35 50,35 C35,35 28,45 28,45 Z" fill="%23434E5A"/><circle cx="43" cy="49" r="2" fill="%233D444A"/><circle cx="57" cy="49" r="2" fill="%233D444A"/><ellipse cx="39" cy="52" rx="2.5" ry="1.2" fill="%23EAA7A7" opacity="0.6"/><ellipse cx="61" cy="52" rx="2.5" ry="1.2" fill="%23EAA7A7" opacity="0.6"/><path d="M47,55 Q50,57 53,55" stroke="%233D444A" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M32,74 C32,86 40,88 50,88 C60,88 68,86 68,74 C62,77 56,77 50,77 C44,77 38,77 32,74 Z" fill="%237D94A6"/></svg>'
@@ -850,7 +852,6 @@
             }
         }
 
-        // 智慧返回真實精緻 Q 版大頭貼圖檔代碼
         function getAvatarHtml(gender) {
             const src = AVATAR_URLS[gender] || AVATAR_URLS['女'];
             return `<div class="avatar-q-container"><img src="${src}" alt="avatar"></div>`;
@@ -880,7 +881,7 @@
                     item.className = 'custom-dropdown-item';
                     
                     const handleLabel = info.handle ? `<span class="dropdown-item-handle">(${info.handle})</span>` : '<span class="dropdown-item-handle">(無帳號)</span>';
-                    const avHtml = getAvatarHtml(info.gender); // 吐出高解析度 Q 版大頭貼
+                    const avHtml = getAvatarHtml(info.gender);
                     
                     item.innerHTML = `
                         <div class="dropdown-item-info">
@@ -1036,8 +1037,6 @@
                 const handleText = r.customerHandle ? `<span style="font-size:0.8rem; color:var(--warm-mocha); font-style:italic;">(${cleanHtml(r.customerHandle)})</span>` : '';
 
                 let itemsHtml = (r.items && r.items.length > 0) ? r.items.map(i => `<span class="tag-item">${cleanHtml(i)}</span>`).join('') : '';
-                
-                // 🌟 使用真實 Q 版手繪風格大頭貼圖片代碼
                 const avHtml = getAvatarHtml(r.customerGender || '女');
 
                 return `
