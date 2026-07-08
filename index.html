@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CCC.Nail.Studieo 預約記帳系統</title>
+    <title>CCC.Nail.Studieo 預約記帳系統 (雲端連動版)</title>
     <style>
         /* 韓系奶油風：溫柔、低飽和度的燕麥、奶茶與摩卡色調 */
         :root {
@@ -131,7 +131,6 @@
             cursor: pointer;
         }
 
-        /* 🌟 月曆選單按鈕精緻化 */
         .calendar-title-selectors {
             display: flex;
             align-items: center;
@@ -441,6 +440,7 @@
         .tag.new-cust { background-color: var(--tag-new); color: #7A583A; }
         .tag.old-cust { background-color: var(--tag-old); color: #3A5440; }
         .tag.source-tag { background-color: #E6E1DA; color: var(--deep-mocha); }
+        .tag.expense-tag { background-color: #F0E6E6; color: #A66363; }
         
         .tag-item {
             font-size: 0.75rem;
@@ -511,105 +511,20 @@
             font-weight: 600;
         }
 
-        .backup-zone {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .btn-backup {
-            flex: 1;
+        /* 雲端載入提示 */
+        .cloud-loading-banner {
             background-color: var(--card-cream);
-            color: var(--deep-mocha);
-            border: 1px solid var(--soft-oat);
-            padding: 12px;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
             text-align: center;
-        }
-
-        /* --- 報表分頁樣式 --- */
-        .report-summary {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .summary-box {
-            background-color: var(--bg-cream);
-            padding: 15px;
-            border-radius: 16px;
-            text-align: center;
-        }
-
-        .summary-box p {
             font-size: 0.8rem;
             color: var(--warm-mocha);
-            margin-bottom: 5px;
-        }
-
-        .summary-box h3 {
-            font-size: 1.2rem;
-            color: var(--deep-mocha);
-        }
-
-        .summary-box.profit {
-            grid-column: span 2;
-            background-color: var(--card-cream);
-        }
-
-        .chart-container {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            margin-top: 10px;
-        }
-
-        .chart-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.85rem;
-        }
-
-        .chart-label {
-            width: 55px;
-            color: var(--warm-mocha);
-        }
-
-        .chart-bar-bg {
-            flex: 1;
-            background-color: var(--bg-cream);
-            height: 16px;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .chart-bar-fill {
-            height: 100%;
-            width: 0%;
-            transition: width 0.4s ease;
-            border-radius: 8px;
-        }
-        .chart-bar-fill.income-bar { background-color: #C3D3C4; }
-        .chart-bar-fill.expense-bar { background-color: #E3C3C3; }
-        
-        /* 男女比例專屬色條 */
-        .chart-bar-fill.female-bar { background-color: #EAC7C7; }
-        .chart-bar-fill.male-bar { background-color: #C7D4EA; }
-
-        .chart-val {
-            width: 45px;
-            color: var(--deep-mocha);
-            font-weight: 500;
-            text-align: right;
+            padding: 4px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
+
+    <div id="loading-banner" class="cloud-loading-banner">☁️ 雲端資料同步中...</div>
 
     <header>
         <h1>CCC.Nail.Studieo</h1>
@@ -622,18 +537,15 @@
         <button class="tool-btn" onclick="switchPage('report')">報表</button>
     </div>
 
-    <!-- 頁面 1: 月曆頁面 (預設) -->
+    <!-- 頁面 1: 月曆頁面 -->
     <div id="page-calendar" class="page active">
         <div class="content-card">
             <div class="calendar-nav">
                 <button onclick="changeMonth(-1)">❮</button>
-                
-                <!-- 🌟 升級：直接把原本的死文字，重構成可以「點年選年、點月選月」的複合微調選單 -->
                 <div class="calendar-title-selectors">
                     <select id="cal-year-select" class="select-subtle" onchange="onCalendarSelectorChange()"></select>
                     <select id="cal-month-select" class="select-subtle" onchange="onCalendarSelectorChange()"></select>
                 </div>
-
                 <button onclick="changeMonth(1)">❯</button>
             </div>
             <div class="weekdays">
@@ -738,6 +650,14 @@
                     </div>
                 </div>
 
+                <!-- 支出專用欄位組 -->
+                <div id="expense-fields-group" style="display: none; margin-bottom: 10px;">
+                    <div class="form-group">
+                        <span class="form-label">購買店家 / 來源</span>
+                        <input type="text" id="add-expense-merchant" placeholder="如：蝦皮、淘寶、XX材料行、大潤發">
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <span class="form-label" id="note-label">其他備註</span>
                     <input type="text" id="add-note" placeholder="如：LINE Pay 轉帳、材料進貨等">
@@ -753,21 +673,7 @@
         <div class="content-card">
             <div class="card-title">歷史明細總覽</div>
             <div class="all-records-container" id="all-records-list">
-                <!-- JS 自動分類呈現 -->
-            </div>
-        </div>
-
-        <div class="content-card">
-            <div class="card-title" style="font-size: 1rem;">跨裝置紀錄轉移</div>
-            <p style="font-size: 0.8rem; color: var(--warm-mocha); margin-bottom: 12px; line-height: 1.4;">
-                若要將此裝置的手機紀錄完美備份到電腦或其他手機，可以使用下方的匯出與匯入功能。
-            </p>
-            <div class="backup-zone">
-                <div class="btn-backup" onclick="exportData()">📤 匯出備份檔案</div>
-                <label class="btn-backup" style="display: block;">
-                    📥 匯入歷史紀錄
-                    <input type="file" id="import-file-input" accept=".json" onchange="importData(event)" style="display: none;">
-                </label>
+                <!-- 自動分類呈現 -->
             </div>
         </div>
     </div>
@@ -778,7 +684,7 @@
             <div class="card-title">
                 <span>營運數據報表</span>
                 <select id="report-month-select" onchange="calculateReport()" style="width: auto; padding: 4px 10px; border-radius: 8px;">
-                    <!-- JS 自動月份 -->
+                    <!-- 自動月份 -->
                 </select>
             </div>
             
@@ -797,7 +703,7 @@
                 </div>
             </div>
 
-            <!-- 圖表 1：收支財務比例 -->
+            <!-- 圖表 1 -->
             <div class="card-title" style="font-size: 0.95rem; margin-top: 10px;">營運收支比</div>
             <div class="chart-container" style="margin-bottom: 25px;">
                 <div class="chart-row">
@@ -816,7 +722,7 @@
                 </div>
             </div>
 
-            <!-- 圖表 2：客群性別比例分析 -->
+            <!-- 圖表 2 -->
             <div class="card-title" style="font-size: 0.95rem; border-top: 1px dashed var(--soft-oat); padding-top: 15px;">客群性別比例</div>
             <div class="chart-container">
                 <div class="chart-row">
@@ -837,66 +743,82 @@
         </div>
     </div>
 
-    <script>
-        const STORAGE_KEY = 'ccc_nail_master_v14_data';
-        let appData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    <!-- 引入 Firebase 核心 SDK 與 Firestore 功能 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        let editingRecordId = null;
+        // ⚠️ 已自動替換成 Claire 的專屬 Firebase config 設定值
+        const firebaseConfig = {
+            apiKey: "AIzaSyArhVMBzEVlpZeuHdeYK5_VO0NjERlst7k",
+            authDomain: "ccc-nail-system.firebaseapp.com",
+            projectId: "ccc-nail-system",
+            storageBucket: "ccc-nail-system.firebasestorage.app",
+            messagingSenderId: "762564904502",
+            appId: "1:762564904502:web:6c638cff9994b8632c3a97"
+        };
+
+        // 初始化 Firebase & Firestore
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const recordsCollection = collection(db, "nail_records");
+
+        // 全域變數
+        window.appData = [];
+        window.editingRecordId = null;
 
         const todayObj = new Date();
-        let viewYear = todayObj.getFullYear();
-        let viewMonth = todayObj.getMonth();
-        let chosenDate = new Date(todayObj.getFullYear(), todayObj.getMonth(), todayObj.getDate());
+        window.viewYear = todayObj.getFullYear();
+        window.viewMonth = todayObj.getMonth();
+        window.chosenDate = new Date(todayObj.getFullYear(), todayObj.getMonth(), todayObj.getDate());
+
+        // 雲端即時監聽即時同步 (手機一改，電腦秒變)
+        onSnapshot(recordsCollection, (snapshot) => {
+            window.appData = [];
+            snapshot.forEach((doc) => {
+                window.appData.push({ id: doc.id, ...doc.data() });
+            });
+            document.getElementById('loading-banner').innerText = "🟢 雲端連線成功：資料已即時同步";
+            
+            // 重新刷新目前頁面視覺
+            renderCalendarView();
+            renderDayRecordsView();
+            renderAllRecordsView();
+            setupReportDropdown();
+            calculateReport();
+        }, (error) => {
+            console.error("雲端同步失敗: ", error);
+            document.getElementById('loading-banner').innerText = "🔴 雲端同步失敗，請檢查金鑰設定";
+        });
 
         // 記憶體 Canvas 動態繪圖
-        function drawAvatarToCanvas(canvas, gender) {
+        window.drawAvatarToCanvas = function(canvas, gender) {
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, 100, 100);
 
             if (gender === '男') {
-                ctx.fillStyle = "#E4ECF0";
-                ctx.beginPath(); ctx.arc(50, 50, 50, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = "#55606E";
-                ctx.beginPath(); ctx.arc(50, 42, 26, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = "#F5D6BD";
-                ctx.beginPath(); ctx.arc(50, 52, 20, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = "#434D59";
-                ctx.beginPath(); ctx.moveTo(28, 44); ctx.quadraticCurveTo(50, 26, 72, 44); ctx.quadraticCurveTo(50, 36, 28, 44); ctx.fill();
-                ctx.fillStyle = "#333E4A";
-                ctx.beginPath(); ctx.arc(43, 50, 2.5, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(57, 50, 2.5, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = "rgba(235, 160, 160, 0.6)";
-                ctx.beginPath(); ctx.ellipse(38, 54, 3, 1.5, 0, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.ellipse(62, 54, 3, 1.5, 0, 0, Math.PI * 2); ctx.fill();
-                ctx.strokeStyle = "#333E4A"; ctx.lineWidth = 2; ctx.lineCap = "round";
-                ctx.beginPath(); ctx.arc(50, 55, 3, 0, Math.PI); ctx.stroke();
-                ctx.fillStyle = "#7C8D9C";
-                ctx.beginPath(); ctx.moveTo(34, 72); ctx.lineTo(50, 88); ctx.lineTo(66, 72); ctx.lineTo(50, 92); ctx.closePath(); ctx.fill();
+                ctx.fillStyle = "#E4ECF0"; ctx.beginPath(); ctx.arc(50, 50, 50, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "#55606E"; ctx.beginPath(); ctx.arc(50, 42, 26, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "#F5D6BD"; ctx.beginPath(); ctx.arc(50, 52, 20, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "#434D59"; ctx.beginPath(); ctx.moveTo(28, 44); ctx.quadraticCurveTo(50, 26, 72, 44); ctx.quadraticCurveTo(50, 36, 28, 44); ctx.fill();
+                ctx.fillStyle = "#333E4A"; ctx.beginPath(); ctx.arc(43, 50, 2.5, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(57, 50, 2.5, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "rgba(235, 160, 160, 0.6)"; ctx.beginPath(); ctx.ellipse(38, 54, 3, 1.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(62, 54, 3, 1.5, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = "#333E4A"; ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.beginPath(); ctx.arc(50, 55, 3, 0, Math.PI); ctx.stroke();
+                ctx.fillStyle = "#7C8D9C"; ctx.beginPath(); ctx.moveTo(34, 72); ctx.lineTo(50, 88); ctx.lineTo(66, 72); ctx.lineTo(50, 92); ctx.closePath(); ctx.fill();
             } else {
-                ctx.fillStyle = "#F6EDE4";
-                ctx.beginPath(); ctx.arc(50, 50, 50, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = "#8F725E";
-                ctx.beginPath(); ctx.arc(50, 44, 27, 0, Math.PI * 2); ctx.fill();
-                ctx.fillRect(23, 44, 54, 30);
-                ctx.fillStyle = "#F5D7C4";
-                ctx.beginPath(); ctx.arc(50, 52, 19, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = "#6B5344";
-                ctx.beginPath(); ctx.moveTo(27, 46); ctx.quadraticCurveTo(50, 28, 73, 46); ctx.quadraticCurveTo(50, 42, 27, 46); ctx.fill();
-                ctx.fillStyle = "#4A3D35";
-                ctx.beginPath(); ctx.arc(43, 51, 2.5, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(57, 51, 2.5, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = "rgba(240, 170, 170, 0.7)";
-                ctx.beginPath(); ctx.ellipse(38, 55, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.ellipse(62, 55, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
-                ctx.strokeStyle = "#4A3D35"; ctx.lineWidth = 2; ctx.lineCap = "round";
-                ctx.beginPath(); ctx.arc(50, 56, 3, 0, Math.PI); ctx.stroke();
-                ctx.fillStyle = "#D69C87";
-                ctx.beginPath(); ctx.moveTo(32, 74); ctx.lineTo(50, 90); ctx.lineTo(68, 74); ctx.lineTo(50, 94); ctx.closePath(); ctx.fill();
+                ctx.fillStyle = "#F6EDE4"; ctx.beginPath(); ctx.arc(50, 50, 50, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "#8F725E"; ctx.beginPath(); ctx.arc(50, 44, 27, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(23, 44, 54, 30);
+                ctx.fillStyle = "#F5D7C4"; ctx.beginPath(); ctx.arc(50, 52, 19, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "#6B5344"; ctx.beginPath(); ctx.moveTo(27, 46); ctx.quadraticCurveTo(50, 28, 73, 46); ctx.quadraticCurveTo(50, 42, 27, 46); ctx.fill();
+                ctx.fillStyle = "#4A3D35"; ctx.beginPath(); ctx.arc(43, 51, 2.5, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(57, 51, 2.5, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "rgba(240, 170, 170, 0.7)"; ctx.beginPath(); ctx.ellipse(38, 55, 4, 2, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(62, 55, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = "#4A3D35"; ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.beginPath(); ctx.arc(50, 56, 3, 0, Math.PI); ctx.stroke();
+                ctx.fillStyle = "#D69C87"; ctx.beginPath(); ctx.moveTo(32, 74); ctx.lineTo(50, 90); ctx.lineTo(68, 74); ctx.lineTo(50, 94); ctx.closePath(); ctx.fill();
             }
         }
 
-        function createAvatarCanvasElement(gender) {
+        window.createAvatarCanvasElement = function(gender) {
             const wrapper = document.createElement('div');
             wrapper.className = 'avatar-canvas-box';
             const canvas = document.createElement('canvas');
@@ -906,10 +828,47 @@
             return wrapper;
         }
 
+        // 異步儲存/更新到雲端資料庫
+        window.saveDataToCloud = async function(id, dataPayload) {
+            try {
+                await setDoc(doc(db, "nail_records", id), dataPayload);
+            } catch (e) {
+                alert("寫入雲端失敗，請確認 Firebase 規則設定！");
+            }
+        }
+
+        // 從雲端刪除
+        window.deleteDataFromCloud = async function(id) {
+            try {
+                await deleteDoc(doc(db, "nail_records", id));
+            } catch (e) {
+                alert("從雲端刪除失敗！");
+            }
+        }
+
+        // 綁定全域函式供 HTML onClick 呼叫
+        window.switchPage = switchPage;
+        window.changeMonth = changeMonth;
+        window.onCalendarSelectorChange = onCalendarSelectorChange;
+        window.toggleFormFields = toggleFormFields;
+        window.addNewRecord = addNewRecord;
+        window.removeRecord = removeRecord;
+        window.startEditRecord = startEditRecord;
+        window.showCustomDropdown = showCustomDropdown;
+
+        // 初始化畫布貼紙預覽
+        const femBox = document.getElementById('preview-gender-female');
+        if(femBox) femBox.appendChild(createAvatarCanvasElement('女'));
+        const maleBox = document.getElementById('preview-gender-male');
+        if(maleBox) maleBox.appendChild(createAvatarCanvasElement('男'));
+        toggleFormFields();
+    </script>
+
+    <script>
+        // 以下為共用核心UI流程與對齊邏輯
         function switchPage(targetPage) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-            
             document.getElementById(`page-${targetPage}`).classList.add('active');
             
             const btnMap = { 'calendar': 0, 'all-records': 1, 'report': 2 };
@@ -929,13 +888,16 @@
         function toggleFormFields() {
             const type = document.getElementById('add-type').value;
             const incGroup = document.getElementById('income-fields-group');
+            const expGroup = document.getElementById('expense-fields-group');
             const noteLabel = document.getElementById('note-label');
             
             if (type === 'income') {
                 incGroup.style.display = 'block';
+                expGroup.style.display = 'none';
                 noteLabel.innerText = '其他備註';
             } else {
                 incGroup.style.display = 'none';
+                expGroup.style.display = 'block';
                 noteLabel.innerText = '支出項目說明';
                 document.getElementById('pref-hint-box').style.display = 'none';
             }
@@ -947,7 +909,7 @@
             dropdown.innerHTML = '';
 
             const clientMap = new Map();
-            appData.forEach(r => {
+            window.appData.forEach(r => {
                 if (r.type === 'income' && r.customer) {
                     const nameKey = r.customer.trim();
                     const handleVal = r.customerHandle ? r.customerHandle.trim() : '';
@@ -966,7 +928,7 @@
                     
                     const leftInfoBox = document.createElement('div');
                     leftInfoBox.className = 'dropdown-item-info';
-                    leftInfoBox.appendChild(createAvatarCanvasElement(info.gender));
+                    leftInfoBox.appendChild(window.createAvatarCanvasElement(info.gender));
                     
                     const nameSpan = document.createElement('span');
                     nameSpan.innerHTML = `<b>${cleanHtml(info.name)}</b>`;
@@ -1000,14 +962,14 @@
         });
 
         function autoLoadCustomerPreference(targetName, targetHandle) {
-            if (editingRecordId !== null) return;
+            if (window.editingRecordId !== null) return;
 
             const hintBox = document.getElementById('pref-hint-box');
             const prefInput = document.getElementById('add-customer-pref');
             const handleInput = document.getElementById('add-customer-handle');
             const radioOld = document.getElementById('status-old');
 
-            const history = appData.filter(r => 
+            const history = window.appData.filter(r => 
                 r.type === 'income' && 
                 r.customer && r.customer.trim() === targetName && 
                 ((!targetHandle && !r.customerHandle) || (r.customerHandle && r.customerHandle.trim() === targetHandle))
@@ -1051,69 +1013,58 @@
             return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         }
 
-        function saveData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-        }
-
-        // 🌟 核心升級：初始化與渲染「點年選年、點月選月」選單選項
         function renderCalendarView() {
-            setupCalendarSelectors(); // 先同步下拉快選單的數值
-
+            setupCalendarSelectors();
             const box = document.getElementById('calendar-days-box');
+            if(!box) return;
             box.innerHTML = '';
 
-            const firstDayWk = new Date(viewYear, viewMonth, 1).getDay();
-            const daysInMo = new Date(viewYear, viewMonth + 1, 0).getDate();
-            const daysInPrevMo = new Date(viewYear, viewMonth, 0).getDate();
+            const firstDayWk = new Date(window.viewYear, window.viewMonth, 1).getDay();
+            const daysInMo = new Date(window.viewYear, window.viewMonth + 1, 0).getDate();
+            const daysInPrevMo = new Date(window.viewYear, window.viewMonth, 0).getDate();
 
             for (let i = firstDayWk; i > 0; i--) {
-                buildCell(new Date(viewYear, viewMonth - 1, daysInPrevMo - i + 1), daysInPrevMo - i + 1, true, box);
+                buildCell(new Date(window.viewYear, window.viewMonth - 1, daysInPrevMo - i + 1), daysInPrevMo - i + 1, true, box);
             }
             for (let i = 1; i <= daysInMo; i++) {
-                buildCell(new Date(viewYear, viewMonth, i), i, false, box);
+                buildCell(new Date(window.viewYear, window.viewMonth, i), i, false, box);
             }
             const currentCells = firstDayWk + daysInMo;
             const nextBlankCells = currentCells % 7 === 0 ? 0 : 7 - (currentCells % 7);
             for (let i = 1; i <= nextBlankCells; i++) {
-                buildCell(new Date(viewYear, viewMonth + 1, i), i, true, box);
+                buildCell(new Date(window.viewYear, window.viewMonth + 1, i), i, true, box);
             }
         }
 
-        // 動態生成與對齊年月的 Option 選項
         function setupCalendarSelectors() {
             const yrSelect = document.getElementById('cal-year-select');
             const moSelect = document.getElementById('cal-month-select');
+            if(!yrSelect || !moSelect) return;
 
-            // 1. 年份：生成當前年份前後各 5 年的寬廣選擇空間
-            yrSelect.innerHTML = '';
-            const currentYr = new Date().getFullYear();
-            for (let y = currentYr - 5; y <= currentYr + 5; y++) {
-                const opt = document.createElement('option');
-                opt.value = y;
-                opt.innerText = `${y} 年`;
-                if (y === viewYear) opt.selected = true;
-                yrSelect.appendChild(opt);
+            if(yrSelect.innerHTML === "") {
+                const currentYr = new Date().getFullYear();
+                for (let y = currentYr - 5; y <= currentYr + 5; y++) {
+                    const opt = document.createElement('option');
+                    opt.value = y; opt.innerText = `${y} 年`;
+                    yrSelect.appendChild(opt);
+                }
             }
+            yrSelect.value = window.viewYear;
 
-            // 2. 月份：固定的 1 ~ 12 月
-            moSelect.innerHTML = '';
-            for (let m = 0; m < 12; m++) {
-                const opt = document.createElement('option');
-                opt.value = m;
-                opt.innerText = `${m + 1} 月`;
-                if (m === viewMonth) opt.selected = true;
-                moSelect.appendChild(opt);
+            if(moSelect.innerHTML === "") {
+                for (let m = 0; m < 12; m++) {
+                    const opt = document.createElement('option');
+                    opt.value = m; opt.innerText = `${m + 1} 月`;
+                    moSelect.appendChild(opt);
+                }
             }
+            moSelect.value = window.viewMonth;
         }
 
-        // 當使用者在上方直接點選了特定的年或月
         function onCalendarSelectorChange() {
-            viewYear = parseInt(document.getElementById('cal-year-select').value);
-            viewMonth = parseInt(document.getElementById('cal-month-select').value);
-            
-            // 當選單變更時，自動將日曆選取焦點移到該月 1 號
-            chosenDate = new Date(viewYear, viewMonth, 1);
-            
+            window.viewYear = parseInt(document.getElementById('cal-year-select').value);
+            window.viewMonth = parseInt(document.getElementById('cal-month-select').value);
+            window.chosenDate = new Date(window.viewYear, window.viewMonth, 1);
             renderCalendarView();
             renderDayRecordsView();
         }
@@ -1129,14 +1080,15 @@
             cell.appendChild(span);
 
             const sStr = toDateStr(dateObj);
-            if (sStr === toDateStr(todayObj)) cell.classList.add('is-today');
-            if (sStr === toDateStr(chosenDate)) cell.classList.add('target-active');
-            if (appData.some(r => r.date === sStr)) cell.classList.add('has-record');
+            const todayStr = toDateStr(new Date());
+            if (sStr === todayStr) cell.classList.add('is-today');
+            if (sStr === toDateStr(window.chosenDate)) cell.classList.add('target-active');
+            if (window.appData.some(r => r.date === sStr)) cell.classList.add('has-record');
 
             cell.onclick = () => {
-                chosenDate = dateObj;
-                viewYear = dateObj.getFullYear();
-                viewMonth = dateObj.getMonth();
+                window.chosenDate = dateObj;
+                window.viewYear = dateObj.getFullYear();
+                window.viewMonth = dateObj.getMonth();
                 renderCalendarView();
                 renderDayRecordsView();
             };
@@ -1144,9 +1096,9 @@
         }
 
         function changeMonth(delta) {
-            viewMonth += delta;
-            if (viewMonth > 11) { viewMonth = 0; viewYear++; }
-            else if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+            window.viewMonth += delta;
+            if (window.viewMonth > 11) { window.viewMonth = 0; window.viewYear++; }
+            else if (window.viewMonth < 0) { window.viewMonth = 11; window.viewYear--; }
             renderCalendarView();
         }
 
@@ -1161,7 +1113,7 @@
                 const mainDiv = document.createElement('div');
                 mainDiv.className = 'record-main';
 
-                mainDiv.appendChild(createAvatarCanvasElement(r.customerGender || '女'));
+                mainDiv.appendChild(window.createAvatarCanvasElement(r.customerGender || '女'));
 
                 const titleSpan = document.createElement('span');
                 titleSpan.className = 'record-title';
@@ -1221,10 +1173,19 @@
                 infoDiv.className = 'record-info';
                 const mainDiv = document.createElement('div');
                 mainDiv.className = 'record-main';
+                
                 const titleSpan = document.createElement('span');
                 titleSpan.className = 'record-title';
                 titleSpan.innerText = r.note || '日常項目支出';
                 mainDiv.appendChild(titleSpan);
+
+                if (r.expenseMerchant) {
+                    const merchantSpan = document.createElement('span');
+                    merchantSpan.className = 'tag expense-tag';
+                    merchantSpan.innerText = `🛒 ${r.expenseMerchant}`;
+                    mainDiv.appendChild(merchantSpan);
+                }
+
                 infoDiv.appendChild(mainDiv);
                 item.appendChild(infoDiv);
             }
@@ -1259,14 +1220,18 @@
         }
 
         function renderDayRecordsView() {
-            const sStr = toDateStr(chosenDate);
-            document.getElementById('day-box-date').innerText = sStr;
-            document.getElementById('day-box-title').innerText = (sStr === toDateStr(todayObj)) ? '本日收支紀錄' : '該日收支紀錄';
+            const sStr = toDateStr(window.chosenDate);
+            const dayBoxDate = document.getElementById('day-box-date');
+            if(!dayBoxDate) return;
+            dayBoxDate.innerText = sStr;
+            
+            const todayStr = toDateStr(new Date());
+            document.getElementById('day-box-title').innerText = (sStr === todayStr) ? '本日收支紀錄' : '該日收支紀錄';
 
             const list = document.getElementById('day-records-list');
             list.innerHTML = '';
 
-            const matches = appData.filter(r => r.date === sStr);
+            const matches = window.appData.filter(r => r.date === sStr);
             if (matches.length === 0) {
                 list.innerHTML = '<div class="no-data">這天沒有任何預約記帳紀錄喔 ☕</div>';
                 return;
@@ -1278,16 +1243,16 @@
         }
 
         function startEditRecord(id) {
-            const target = appData.find(r => r.id === id);
+            const target = window.appData.find(r => r.id === id);
             if (!target) return;
 
             switchPage('calendar');
-            editingRecordId = id;
+            window.editingRecordId = id;
 
             const parts = target.date.split('-');
-            chosenDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-            viewYear = chosenDate.getFullYear();
-            viewMonth = chosenDate.getMonth();
+            window.chosenDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            window.viewYear = window.chosenDate.getFullYear();
+            window.viewMonth = window.chosenDate.getMonth();
             renderCalendarView();
             renderDayRecordsView();
 
@@ -1314,8 +1279,9 @@
                 document.querySelectorAll('input[name="nail-item"]').forEach(cb => {
                     cb.checked = target.items && target.items.includes(cb.value);
                 });
-                
                 document.getElementById('pref-hint-box').style.display = 'none';
+            } else {
+                document.getElementById('add-expense-merchant').value = target.expenseMerchant || '';
             }
 
             const submitBtn = document.getElementById('btn-submit-main');
@@ -1335,66 +1301,40 @@
                 return;
             }
 
-            if (editingRecordId !== null) {
-                const targetIdx = appData.findIndex(r => r.id === editingRecordId);
-                if (targetIdx !== -1) {
-                    appData[targetIdx].type = type;
-                    appData[targetIdx].amount = amt;
-                    appData[targetIdx].note = noteIn.value.trim();
+            let docId = window.editingRecordId || 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+            
+            let dataPayload = {
+                date: toDateStr(window.chosenDate),
+                type: type,
+                amount: amt,
+                note: noteIn.value.trim()
+            };
 
-                    if (type === 'income') {
-                        const checkedItems = [];
-                        document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => checkedItems.push(cb.value));
+            if (type === 'income') {
+                const checkedItems = [];
+                document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => checkedItems.push(cb.value));
 
-                        appData[targetIdx].customer = document.getElementById('add-customer').value.trim();
-                        appData[targetIdx].customerStatus = document.querySelector('input[name="cust-status"]:checked').value;
-                        appData[targetIdx].customerSource = document.querySelector('input[name="cust-source"]:checked').value;
-                        appData[targetIdx].customerHandle = document.getElementById('add-customer-handle').value.trim();
-                        appData[targetIdx].customerGender = document.querySelector('input[name="cust-gender"]:checked').value;
-                        appData[targetIdx].items = checkedItems;
-                        appData[targetIdx].customerPref = document.getElementById('add-customer-pref').value.trim();
-                    } else {
-                        delete appData[targetIdx].customer;
-                        delete appData[targetIdx].customerStatus;
-                        delete appData[targetIdx].customerSource;
-                        delete appData[targetIdx].customerHandle;
-                        delete appData[targetIdx].customerGender;
-                        delete appData[targetIdx].items;
-                        delete appData[targetIdx].customerPref;
-                    }
-                }
-                editingRecordId = null;
+                dataPayload.customer = document.getElementById('add-customer').value.trim();
+                dataPayload.customerStatus = document.querySelector('input[name="cust-status"]:checked').value;
+                dataPayload.customerSource = document.querySelector('input[name="cust-source"]:checked').value;
+                dataPayload.customerHandle = document.getElementById('add-customer-handle').value.trim();
+                dataPayload.customerGender = document.querySelector('input[name="cust-gender"]:checked').value;
+                dataPayload.items = checkedItems;
+                dataPayload.customerPref = document.getElementById('add-customer-pref').value.trim();
             } else {
-                let newRec = {
-                    id: 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-                    date: toDateStr(chosenDate),
-                    type: type,
-                    amount: amt,
-                    note: noteIn.value.trim()
-                };
-
-                if (type === 'income') {
-                    const checkedItems = [];
-                    document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => checkedItems.push(cb.value));
-
-                    newRec.customer = document.getElementById('add-customer').value.trim();
-                    newRec.customerStatus = document.querySelector('input[name="cust-status"]:checked').value;
-                    newRec.customerSource = document.querySelector('input[name="cust-source"]:checked').value;
-                    newRec.customerHandle = document.getElementById('add-customer-handle').value.trim();
-                    newRec.customerGender = document.querySelector('input[name="cust-gender"]:checked').value;
-                    newRec.items = checkedItems;
-                    newRec.customerPref = document.getElementById('add-customer-pref').value.trim();
-                }
-                appData.push(newRec);
+                dataPayload.expenseMerchant = document.getElementById('add-expense-merchant').value.trim();
             }
 
-            saveData();
+            // 傳送雲端
+            window.saveDataToCloud(docId, dataPayload);
+            window.editingRecordId = null;
 
-            amtIn.value = '';
-            noteIn.value = '';
+            // 表單清空
+            amtIn.value = ''; noteIn.value = '';
             document.getElementById('add-customer').value = '';
             document.getElementById('add-customer-pref').value = '';
             document.getElementById('add-customer-handle').value = '';
+            document.getElementById('add-expense-merchant').value = '';
             document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => cb.checked = false);
             document.querySelector('input[name="cust-status"][value="新客"]').checked = true;
             document.querySelector('input[name="cust-source"][value="IG"]').checked = true;
@@ -1404,38 +1344,29 @@
             const submitBtn = document.getElementById('btn-submit-main');
             submitBtn.innerText = '儲存此筆紀錄';
             submitBtn.classList.remove('editing-mode');
-
-            renderCalendarView();
-            renderDayRecordsView();
         }
 
         function removeRecord(id, refPage) {
-            if (editingRecordId === id) {
+            if (window.editingRecordId === id) {
                 alert('這筆資料正在下方的編輯面板中修改，請先完成更新或清空唷！');
                 return;
             }
             if (confirm('確定要刪除這筆明細紀錄嗎？')) {
-                appData = appData.filter(r => r.id !== id);
-                saveData();
-                if (refPage === 'day') {
-                    renderCalendarView();
-                    renderDayRecordsView();
-                } else {
-                    renderAllRecordsView();
-                }
+                window.deleteDataFromCloud(id);
             }
         }
 
         function renderAllRecordsView() {
             const list = document.getElementById('all-records-list');
+            if(!list) return;
             list.innerHTML = '';
 
-            if (appData.length === 0) {
-                list.innerHTML = '<div class="no-data">目前沒有任何歷史帳目</div>';
+            if (window.appData.length === 0) {
+                list.innerHTML = '<div class="no-data">目前雲端沒有任何歷史帳目</div>';
                 return;
             }
 
-            const sorted = [...appData].sort((a, b) => b.date.localeCompare(a.date));
+            const sorted = [...window.appData].sort((a, b) => b.date.localeCompare(a.date));
             let lastDate = '';
             let subContainer = null;
 
@@ -1460,48 +1391,17 @@
             });
         }
 
-        function exportData() {
-            if (appData.length === 0) {
-                alert('目前沒有資料可以導出喔！');
-                return;
-            }
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `CCC_Nail_DataBackup_${toDateStr(todayObj)}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        }
-
-        function importData(event) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const parsed = JSON.parse(e.target.result);
-                    if (Array.isArray(parsed)) {
-                        if (confirm('匯入將會覆蓋此裝置目前的紀錄，確定嗎？')) {
-                            appData = parsed;
-                            saveData();
-                            renderAllRecordsView();
-                            alert('歷史紀錄成功匯入！');
-                        }
-                    } else {
-                        alert('檔案格式不相符。');
-                    }
-                } catch (err) {
-                    alert('檔案解析失敗。');
-                }
-            };
-            if(event.target.files[0]) reader.readAsText(event.target.files[0]);
-        }
-
         function setupReportDropdown() {
             const dropdown = document.getElementById('report-month-select');
+            if(!dropdown) return;
+            
+            const currentSelected = dropdown.value;
             dropdown.innerHTML = '';
+            
             const set = new Set();
-            set.add(toDateStr(todayObj).substring(0, 7));
-            appData.forEach(r => set.add(r.date.substring(0, 7)));
+            const todayStr = toDateStr(new Date());
+            set.add(todayStr.substring(0, 7));
+            window.appData.forEach(r => set.add(r.date.substring(0, 7)));
 
             const sortedMonths = Array.from(set).sort((a, b) => b.localeCompare(a));
             sortedMonths.forEach(m => {
@@ -1511,14 +1411,19 @@
                 opt.innerText = `${p[0]} 年 ${p[1]} 月`;
                 dropdown.appendChild(opt);
             });
+            
+            if(currentSelected && set.has(currentSelected)) {
+                dropdown.value = currentSelected;
+            }
         }
 
         function calculateReport() {
-            const mo = document.getElementById('report-month-select').value;
+            const dropdown = document.getElementById('report-month-select');
+            if(!dropdown) return;
+            const mo = dropdown.value;
             if (!mo) return;
 
-            const targets = appData.filter(r => r.date.startsWith(mo));
-            
+            const targets = window.appData.filter(r => r.date.startsWith(mo));
             let inc = 0, exp = 0;
             let femaleCount = 0, maleCount = 0;
 
@@ -1566,18 +1471,6 @@
         function cleanHtml(str) {
             if(!str) return '';
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-        }
-
-        window.onload = function() {
-            toggleFormFields();
-            renderCalendarView();
-            renderDayRecordsView();
-            
-            const femBox = document.getElementById('preview-gender-female');
-            if(femBox) femBox.appendChild(createAvatarCanvasElement('女'));
-            
-            const maleBox = document.getElementById('preview-gender-male');
-            if(maleBox) maleBox.appendChild(createAvatarCanvasElement('男'));
         }
     </script>
 </body>
