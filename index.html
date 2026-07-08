@@ -131,10 +131,33 @@
             cursor: pointer;
         }
 
-        .calendar-title {
-            font-weight: 600;
+        /* 🌟 月曆選單按鈕精緻化 */
+        .calendar-title-selectors {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .select-subtle {
+            background-color: var(--card-cream);
+            border: 1px solid transparent;
             color: var(--deep-mocha);
-            font-size: 1.1rem;
+            font-size: 1.05rem;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            outline: none;
+            width: auto;
+            text-align: center;
+            transition: all 0.2s ease;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        .select-subtle:focus {
+            border-color: var(--warm-mocha);
+            background-color: var(--white);
         }
 
         .weekdays {
@@ -316,7 +339,6 @@
             height: 16px;
         }
 
-        /* 🌟 性別選項內的小圖案容器 */
         .gender-label-with-avatar {
             display: inline-flex;
             align-items: center;
@@ -386,7 +408,6 @@
             flex-wrap: wrap;
         }
 
-        /* 🌟 V13 畫布頭像外框：完美正圓、絕不變形跑位 */
         .avatar-canvas-box {
             width: 32px;
             height: 32px;
@@ -606,7 +627,13 @@
         <div class="content-card">
             <div class="calendar-nav">
                 <button onclick="changeMonth(-1)">❮</button>
-                <div class="calendar-title" id="calendar-title-text">2026 年 7 月</div>
+                
+                <!-- 🌟 升級：直接把原本的死文字，重構成可以「點年選年、點月選月」的複合微調選單 -->
+                <div class="calendar-title-selectors">
+                    <select id="cal-year-select" class="select-subtle" onchange="onCalendarSelectorChange()"></select>
+                    <select id="cal-month-select" class="select-subtle" onchange="onCalendarSelectorChange()"></select>
+                </div>
+
                 <button onclick="changeMonth(1)">❯</button>
             </div>
             <div class="weekdays">
@@ -621,7 +648,7 @@
         <div class="content-card">
             <div class="card-title">
                 <span id="day-box-title">本日收支紀錄</span>
-                <span style="font-size: 0.85rem; color: var(--warm-mocha);" id="day-box-date">2026-07-07</span>
+                <span style="font-size: 0.85rem; color: var(--warm-mocha);" id="day-box-date">2026-07-08</span>
             </div>
             
             <div class="record-list" id="day-records-list">
@@ -811,7 +838,7 @@
     </div>
 
     <script>
-        const STORAGE_KEY = 'ccc_nail_master_v13_data';
+        const STORAGE_KEY = 'ccc_nail_master_v14_data';
         let appData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
         let editingRecordId = null;
@@ -821,87 +848,60 @@
         let viewMonth = todayObj.getMonth();
         let chosenDate = new Date(todayObj.getFullYear(), todayObj.getMonth(), todayObj.getDate());
 
-        // 🌟 記憶體內建 Canvas 動態繪圖技術：徹底防範任何破圖跑位衝突
+        // 記憶體 Canvas 動態繪圖
         function drawAvatarToCanvas(canvas, gender) {
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, 100, 100);
 
             if (gender === '男') {
-                // 男生：清爽帥氣莫蘭迪灰藍底色
                 ctx.fillStyle = "#E4ECF0";
                 ctx.beginPath(); ctx.arc(50, 50, 50, 0, Math.PI * 2); ctx.fill();
-                // 栗子短髮背底
                 ctx.fillStyle = "#55606E";
                 ctx.beginPath(); ctx.arc(50, 42, 26, 0, Math.PI * 2); ctx.fill();
-                // 小正太鵝蛋臉
                 ctx.fillStyle = "#F5D6BD";
                 ctx.beginPath(); ctx.arc(50, 52, 20, 0, Math.PI * 2); ctx.fill();
-                // 帥氣小斜瀏海短髮
                 ctx.fillStyle = "#434D59";
-                ctx.beginPath();
-                ctx.moveTo(28, 44); ctx.quadraticCurveTo(50, 26, 72, 44);
-                ctx.quadraticCurveTo(50, 36, 28, 44); ctx.fill();
-                // 靈魂小雙眼
+                ctx.beginPath(); ctx.moveTo(28, 44); ctx.quadraticCurveTo(50, 26, 72, 44); ctx.quadraticCurveTo(50, 36, 28, 44); ctx.fill();
                 ctx.fillStyle = "#333E4A";
                 ctx.beginPath(); ctx.arc(43, 50, 2.5, 0, Math.PI * 2); ctx.fill();
                 ctx.beginPath(); ctx.arc(57, 50, 2.5, 0, Math.PI * 2); ctx.fill();
-                // 羞澀小微腮紅
                 ctx.fillStyle = "rgba(235, 160, 160, 0.6)";
                 ctx.beginPath(); ctx.ellipse(38, 54, 3, 1.5, 0, 0, Math.PI * 2); ctx.fill();
                 ctx.beginPath(); ctx.ellipse(62, 54, 3, 1.5, 0, 0, Math.PI * 2); ctx.fill();
-                // 微笑暖嘴
                 ctx.strokeStyle = "#333E4A"; ctx.lineWidth = 2; ctx.lineCap = "round";
                 ctx.beginPath(); ctx.arc(50, 55, 3, 0, Math.PI); ctx.stroke();
-                // 小和服燕麥衣領
                 ctx.fillStyle = "#7C8D9C";
                 ctx.beginPath(); ctx.moveTo(34, 72); ctx.lineTo(50, 88); ctx.lineTo(66, 72); ctx.lineTo(50, 92); ctx.closePath(); ctx.fill();
             } else {
-                // 女生：溫柔甜美浪漫莫蘭迪粉橘底色
                 ctx.fillStyle = "#F6EDE4";
                 ctx.beginPath(); ctx.arc(50, 50, 50, 0, Math.PI * 2); ctx.fill();
-                // 氣質咖啡色蓬鬆長髮背底
                 ctx.fillStyle = "#8F725E";
                 ctx.beginPath(); ctx.arc(50, 44, 27, 0, Math.PI * 2); ctx.fill();
                 ctx.fillRect(23, 44, 54, 30);
-                // 溫柔女孩瓜子臉
-                ctx.fillStyle = "#F7DC67"; // 修正偏白皙的粉嫩膚色
                 ctx.fillStyle = "#F5D7C4";
                 ctx.beginPath(); ctx.arc(50, 52, 19, 0, Math.PI * 2); ctx.fill();
-                // 氣質妹妹頭平瀏海
                 ctx.fillStyle = "#6B5344";
-                ctx.beginPath();
-                ctx.moveTo(27, 46); ctx.quadraticCurveTo(50, 28, 73, 46);
-                ctx.quadraticCurveTo(50, 42, 27, 46); ctx.fill();
-                // 溫柔笑眼
+                ctx.beginPath(); ctx.moveTo(27, 46); ctx.quadraticCurveTo(50, 28, 73, 46); ctx.quadraticCurveTo(50, 42, 27, 46); ctx.fill();
                 ctx.fillStyle = "#4A3D35";
                 ctx.beginPath(); ctx.arc(43, 51, 2.5, 0, Math.PI * 2); ctx.fill();
                 ctx.beginPath(); ctx.arc(57, 51, 2.5, 0, Math.PI * 2); ctx.fill();
-                // 粉嫩欲滴少女小腮紅
                 ctx.fillStyle = "rgba(240, 170, 170, 0.7)";
                 ctx.beginPath(); ctx.ellipse(38, 55, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
                 ctx.beginPath(); ctx.ellipse(62, 55, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
-                // 甜美微張微笑小紅唇
                 ctx.strokeStyle = "#4A3D35"; ctx.lineWidth = 2; ctx.lineCap = "round";
                 ctx.beginPath(); ctx.arc(50, 56, 3, 0, Math.PI); ctx.stroke();
-                // 溫柔粉色針織毛衣領
                 ctx.fillStyle = "#D69C87";
                 ctx.beginPath(); ctx.moveTo(32, 74); ctx.lineTo(50, 90); ctx.lineTo(68, 74); ctx.lineTo(50, 94); ctx.closePath(); ctx.fill();
             }
         }
 
-        // 動態生成一尊保證不跑位的畫布貼紙元件
         function createAvatarCanvasElement(gender) {
             const wrapper = document.createElement('div');
             wrapper.className = 'avatar-canvas-box';
-            
             const canvas = document.createElement('canvas');
-            canvas.width = 100;
-            canvas.height = 100;
-            
+            canvas.width = 100; canvas.height = 100;
             wrapper.appendChild(canvas);
-            
-            // 延遲一幀確保元素渲染完成再作畫
             requestAnimationFrame(() => drawAvatarToCanvas(canvas, gender));
             return wrapper;
         }
@@ -941,7 +941,6 @@
             }
         }
 
-        // 🌟 修正：重寫下拉選單，完全使用 DOM 節點塞入 Canvas
         function showCustomDropdown() {
             const inputVal = document.getElementById('add-customer').value.trim().toLowerCase();
             const dropdown = document.getElementById('custom-dropdown');
@@ -962,21 +961,16 @@
             clientMap.forEach((info, key) => {
                 if (inputVal === '' || info.name.toLowerCase().includes(inputVal) || info.handle.toLowerCase().includes(inputVal)) {
                     matchCount++;
-                    
                     const item = document.createElement('div');
                     item.className = 'custom-dropdown-item';
                     
                     const leftInfoBox = document.createElement('div');
                     leftInfoBox.className = 'dropdown-item-info';
-                    
-                    // 用 Canvas 畫出頭像並塞入
-                    const avEl = createAvatarCanvasElement(info.gender);
-                    leftInfoBox.appendChild(avEl);
+                    leftInfoBox.appendChild(createAvatarCanvasElement(info.gender));
                     
                     const nameSpan = document.createElement('span');
                     nameSpan.innerHTML = `<b>${cleanHtml(info.name)}</b>`;
                     leftInfoBox.appendChild(nameSpan);
-                    
                     item.appendChild(leftInfoBox);
                     
                     const rightHandleBox = document.createElement('span');
@@ -989,7 +983,6 @@
                         dropdown.style.display = 'none';
                         autoLoadCustomerPreference(info.name, info.handle);
                     };
-                    
                     dropdown.appendChild(item);
                 }
             });
@@ -1031,7 +1024,6 @@
                     const srcRadio = document.querySelector(`input[name="cust-source"][value="${latestSource.customerSource}"]`);
                     if (srcRadio) srcRadio.checked = true;
                 }
-                
                 if (latestGender) {
                     const genRadio = document.querySelector(`input[name="cust-gender"][value="${latestGender.customerGender}"]`);
                     if (genRadio) genRadio.checked = true;
@@ -1063,8 +1055,10 @@
             localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
         }
 
+        // 🌟 核心升級：初始化與渲染「點年選年、點月選月」選單選項
         function renderCalendarView() {
-            document.getElementById('calendar-title-text').innerText = `${viewYear} 年 ${viewMonth + 1} 月`;
+            setupCalendarSelectors(); // 先同步下拉快選單的數值
+
             const box = document.getElementById('calendar-days-box');
             box.innerHTML = '';
 
@@ -1083,6 +1077,45 @@
             for (let i = 1; i <= nextBlankCells; i++) {
                 buildCell(new Date(viewYear, viewMonth + 1, i), i, true, box);
             }
+        }
+
+        // 動態生成與對齊年月的 Option 選項
+        function setupCalendarSelectors() {
+            const yrSelect = document.getElementById('cal-year-select');
+            const moSelect = document.getElementById('cal-month-select');
+
+            // 1. 年份：生成當前年份前後各 5 年的寬廣選擇空間
+            yrSelect.innerHTML = '';
+            const currentYr = new Date().getFullYear();
+            for (let y = currentYr - 5; y <= currentYr + 5; y++) {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.innerText = `${y} 年`;
+                if (y === viewYear) opt.selected = true;
+                yrSelect.appendChild(opt);
+            }
+
+            // 2. 月份：固定的 1 ~ 12 月
+            moSelect.innerHTML = '';
+            for (let m = 0; m < 12; m++) {
+                const opt = document.createElement('option');
+                opt.value = m;
+                opt.innerText = `${m + 1} 月`;
+                if (m === viewMonth) opt.selected = true;
+                moSelect.appendChild(opt);
+            }
+        }
+
+        // 當使用者在上方直接點選了特定的年或月
+        function onCalendarSelectorChange() {
+            viewYear = parseInt(document.getElementById('cal-year-select').value);
+            viewMonth = parseInt(document.getElementById('cal-month-select').value);
+            
+            // 當選單變更時，自動將日曆選取焦點移到該月 1 號
+            chosenDate = new Date(viewYear, viewMonth, 1);
+            
+            renderCalendarView();
+            renderDayRecordsView();
         }
 
         function buildCell(dateObj, dNum, isOther, targetDiv) {
@@ -1117,31 +1150,24 @@
             renderCalendarView();
         }
 
-        // 🌟 修正：流水帳明細列表完全重構為 DOM Node 形式，確保 Canvas 完美嵌入
         function createRecordRowNode(r) {
             const item = document.createElement('div');
             item.className = `record-item ${r.type}`;
-
             const sign = r.type === 'income' ? '+$' : '-$';
 
             if (r.type === 'income') {
                 const infoDiv = document.createElement('div');
                 infoDiv.className = 'record-info';
-
                 const mainDiv = document.createElement('div');
                 mainDiv.className = 'record-main';
 
-                // 塞入精緻不跑位畫布頭像
-                const avEl = createAvatarCanvasElement(r.customerGender || '女');
-                mainDiv.appendChild(avEl);
+                mainDiv.appendChild(createAvatarCanvasElement(r.customerGender || '女'));
 
-                // 塞入名字
                 const titleSpan = document.createElement('span');
                 titleSpan.className = 'record-title';
                 titleSpan.innerText = r.customer || '未註名客戶';
                 mainDiv.appendChild(titleSpan);
 
-                // 社群帳號
                 if (r.customerHandle) {
                     const handleSpan = document.createElement('span');
                     handleSpan.style = 'font-size:0.8rem; color:var(--warm-mocha); font-style:italic;';
@@ -1149,13 +1175,11 @@
                     mainDiv.appendChild(handleSpan);
                 }
 
-                // 新客/舊客標籤
                 const statusSpan = document.createElement('span');
                 statusSpan.className = `tag ${r.customerStatus === '新客' ? 'new-cust' : 'old-cust'}`;
                 statusSpan.innerText = r.customerStatus || '新客';
                 mainDiv.appendChild(statusSpan);
 
-                // 來源標籤
                 if (r.customerSource) {
                     let srcIcon = '📸 ';
                     if(r.customerSource === 'FB') srcIcon = '👥 ';
@@ -1167,7 +1191,6 @@
                     mainDiv.appendChild(srcSpan);
                 }
 
-                // 施作項目子標籤
                 if (r.items && r.items.length > 0) {
                     r.items.forEach(it => {
                         const itSpan = document.createElement('span');
@@ -1176,10 +1199,8 @@
                         mainDiv.appendChild(itSpan);
                     });
                 }
-
                 infoDiv.appendChild(mainDiv);
 
-                // 喜好說明
                 if (r.customerPref) {
                     const prefDiv = document.createElement('div');
                     prefDiv.className = 'record-details';
@@ -1188,18 +1209,14 @@
                     infoDiv.appendChild(prefDiv);
                 }
 
-                // 其他備註
                 if (r.note) {
                     const noteDiv = document.createElement('div');
                     noteDiv.className = 'record-details';
                     noteDiv.innerHTML = `📝 <b>備註：</b>${cleanHtml(r.note)}`;
                     infoDiv.appendChild(noteDiv);
                 }
-
                 item.appendChild(infoDiv);
-
             } else {
-                // 支出類型
                 const infoDiv = document.createElement('div');
                 infoDiv.className = 'record-info';
                 const mainDiv = document.createElement('div');
@@ -1212,7 +1229,6 @@
                 item.appendChild(infoDiv);
             }
 
-            // 金額與雙操作按鈕區
             const amtZone = document.createElement('div');
             amtZone.className = 'record-amount-zone';
             
@@ -1227,14 +1243,12 @@
             const editBtn = document.createElement('button');
             editBtn.className = 'btn-action';
             editBtn.innerText = '✏️';
-            editBtn.title = '編輯修改';
             editBtn.onclick = () => startEditRecord(r.id);
             btnGroup.appendChild(editBtn);
 
             const delBtn = document.createElement('button');
             delBtn.className = 'btn-action';
             delBtn.innerText = '🗑️';
-            delBtn.title = '刪除紀錄';
             delBtn.onclick = () => removeRecord(r.id, 'day');
             btnGroup.appendChild(delBtn);
 
@@ -1259,8 +1273,7 @@
             }
 
             matches.forEach(r => {
-                const rowNode = createRecordRowNode(r);
-                list.appendChild(rowNode);
+                list.appendChild(createRecordRowNode(r));
             });
         }
 
@@ -1440,8 +1453,6 @@
                 }
 
                 const rowNode = createRecordRowNode(r);
-                
-                // 修正跨頁面的刪除重定向
                 const delBtn = rowNode.querySelector('.record-amount-zone .action-btns button:last-child');
                 if(delBtn) delBtn.onclick = () => removeRecord(r.id, 'all');
                 
@@ -1557,13 +1568,11 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        // 初始化：預先在輸入面板的性別選項旁邊繪製靜態預覽頭像
         window.onload = function() {
             toggleFormFields();
             renderCalendarView();
             renderDayRecordsView();
             
-            // 塞入性別單選框旁邊的貼紙
             const femBox = document.getElementById('preview-gender-female');
             if(femBox) femBox.appendChild(createAvatarCanvasElement('女'));
             
