@@ -247,7 +247,7 @@
             border-color: var(--warm-mocha);
         }
 
-        /* 🌟 精緻韓系客製化浮動下拉選單 */
+        /* 客製化浮動下拉選單 */
         .custom-dropdown-menu {
             display: none;
             position: absolute;
@@ -334,8 +334,14 @@
             width: 100%;
             margin-top: 5px;
             font-size: 0.95rem;
+            transition: background-color 0.2s ease;
         }
         .btn-submit:active { background-color: var(--deep-mocha); }
+        
+        /* 正在編輯中的狀態樣式亮色 */
+        .btn-submit.editing-mode {
+            background-color: #7E8E7F; /* 質感莫蘭迪綠色提示正在更新 */
+        }
 
         /* 紀錄清單 */
         .record-list {
@@ -403,6 +409,14 @@
             line-height: 1.4;
         }
 
+        .record-amount-zone {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            justify-content: center;
+        }
+
         .record-amount {
             font-size: 0.95rem;
             font-weight: 700;
@@ -412,16 +426,22 @@
         .income .record-amount { color: #5A735B; }
         .expense .record-amount { color: #A66363; }
 
-        .btn-delete {
+        .action-btns {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-action {
             background: none;
             border: none;
-            font-size: 1.1rem;
+            font-size: 1rem;
             cursor: pointer;
             padding: 2px;
-            opacity: 0.5;
-            align-self: center;
+            opacity: 0.4;
+            transition: opacity 0.2s;
         }
-        .btn-delete:active { opacity: 1; }
+        .btn-action:active, .btn-action:hover { opacity: 1; }
 
         .no-data {
             text-align: center;
@@ -577,7 +597,7 @@
             </div>
 
             <!-- 智慧複合式表單 -->
-            <div class="quick-add-form">
+            <div id="accounting-form-anchor" class="quick-add-form">
                 <div class="form-row">
                     <div class="form-group" style="flex: 1;">
                         <span class="form-label">收支類型</span>
@@ -597,10 +617,7 @@
                     <div class="form-row" style="margin-bottom: 10px; position: relative;">
                         <div class="form-group" style="flex: 1.2;">
                             <span class="form-label">客戶名稱</span>
-                            <!-- 移除原本不聽話的 list，改用完全手寫客製浮動清單 -->
                             <input type="text" id="add-customer" placeholder="輸入姓名" oninput="showCustomDropdown()" onfocus="showCustomDropdown()" autocomplete="off">
-                            
-                            <!-- 🌟 全新客製化浮動下拉選單 -->
                             <div id="custom-dropdown" class="custom-dropdown-menu"></div>
                         </div>
                         <div class="form-group" style="flex: 1;">
@@ -652,7 +669,7 @@
                     <input type="text" id="add-note" placeholder="如：LINE Pay 轉帳、材料進貨等">
                 </div>
 
-                <button class="btn-submit" onclick="addNewRecord()">儲存此筆紀錄</button>
+                <button id="btn-submit-main" class="btn-submit" onclick="addNewRecord()">儲存此筆紀錄</button>
             </div>
         </div>
     </div>
@@ -727,8 +744,11 @@
     </div>
 
     <script>
-        const STORAGE_KEY = 'ccc_nail_master_v7_data';
+        const STORAGE_KEY = 'ccc_nail_master_v8_data';
         let appData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+        // 全局狀態：記錄當前是不是正在「修改舊資料模式」
+        let editingRecordId = null;
 
         const todayObj = new Date();
         let viewYear = todayObj.getFullYear();
@@ -770,28 +790,23 @@
             }
         }
 
-        // 🌟 核心功能修正：手寫高相容浮動下拉選單
         function showCustomDropdown() {
             const inputVal = document.getElementById('add-customer').value.trim().toLowerCase();
             const dropdown = document.getElementById('custom-dropdown');
             dropdown.innerHTML = '';
 
-            // 1. 搜集所有不重複的客戶組合（名字 + 帳號）
             const clientMap = new Map();
             appData.forEach(r => {
                 if (r.type === 'income' && r.customer) {
                     const nameKey = r.customer.trim();
                     const handleVal = r.customerHandle ? r.customerHandle.trim() : '';
-                    // 用 名字+帳號 當作唯一值組合
                     const uniqueKey = `${nameKey}_____${handleVal}`;
                     clientMap.set(uniqueKey, { name: nameKey, handle: handleVal });
                 }
             });
 
-            // 2. 根據當前輸入的文字篩選出符合的客戶
             let matchCount = 0;
             clientMap.forEach((info, key) => {
-                // 如果輸入框是空的，顯示所有歷史客人；如果有打字，進行名字或帳號的模糊比對
                 if (inputVal === '' || info.name.toLowerCase().includes(inputVal) || info.handle.toLowerCase().includes(inputVal)) {
                     matchCount++;
                     const item = document.createElement('div');
@@ -800,25 +815,19 @@
                     const handleLabel = info.handle ? `<span class="dropdown-item-handle">(${info.handle})</span>` : '<span class="dropdown-item-handle">(無帳號)</span>';
                     item.innerHTML = `<span>👤 <b>${cleanHtml(info.name)}</b></span> ${handleLabel}`;
                     
-                    // 當點選下拉選單其中一個人時
                     item.onclick = function() {
                         document.getElementById('add-customer').value = info.name;
-                        dropdown.style.display = 'none'; // 隱藏選單
-                        autoLoadCustomerPreference(info.name, info.handle); // 自動帶入所有歷史資料
+                        dropdown.style.display = 'none';
+                        autoLoadCustomerPreference(info.name, info.handle);
                     };
                     dropdown.appendChild(item);
                 }
             });
 
-            // 如果有符合的客人群，就把浮動選單秀出來
-            if (matchCount > 0) {
-                dropdown.style.display = 'block';
-            } else {
-                dropdown.style.display = 'none';
-            }
+            if (matchCount > 0) dropdown.style.display = 'block';
+            else dropdown.style.display = 'none';
         }
 
-        // 點擊網頁其他地方時，自動把浮動下拉選單收起來
         document.addEventListener('click', function(e) {
             const dropdown = document.getElementById('custom-dropdown');
             const input = document.getElementById('add-customer');
@@ -827,14 +836,15 @@
             }
         });
 
-        // 當選定某位特定的回頭客後，精準帶入喜好、帳號與來源
         function autoLoadCustomerPreference(targetName, targetHandle) {
+            // 如果正在編輯模式中，跳過聯想，避免蓋掉正在修改的舊喜好
+            if (editingRecordId !== null) return;
+
             const hintBox = document.getElementById('pref-hint-box');
             const prefInput = document.getElementById('add-customer-pref');
             const handleInput = document.getElementById('add-customer-handle');
             const radioOld = document.getElementById('status-old');
 
-            // 撈出完全符合該名字與帳號的歷史紀錄（由新到舊排）
             const history = appData.filter(r => 
                 r.type === 'income' && 
                 r.customer && r.customer.trim() === targetName && 
@@ -842,21 +852,16 @@
             ).sort((a, b) => b.date.localeCompare(a.date));
 
             if (history.length > 0) {
-                if(radioOld) radioOld.checked = true; // 自動勾選舊客
-
+                if(radioOld) radioOld.checked = true;
                 const latestPref = history.find(r => r.customerPref && r.customerPref.trim() !== '');
                 const latestSource = history.find(r => r.customerSource);
 
-                // 填入社群帳號
                 if (handleInput) handleInput.value = targetHandle || '';
-
-                // 填入/切換來源按鈕
                 if (latestSource) {
                     const srcRadio = document.querySelector(`input[name="cust-source"][value="${latestSource.customerSource}"]`);
                     if (srcRadio) srcRadio.checked = true;
                 }
 
-                // 顯示愛心喜好提示小框
                 let hintText = `✨ <b>回頭客歷史資料：</b><br>`;
                 hintText += `🏷️ 來源：${latestSource ? latestSource.customerSource : '未設定'} (${targetHandle || '無'})<br>`;
                 
@@ -937,6 +942,7 @@
             renderCalendarView();
         }
 
+        // 產生含有 🗑️ 和 ✏️ 雙按鈕的明細 HTML
         function generateRecordHtml(r) {
             const sign = r.type === 'income' ? '+$' : '-$';
             if (r.type === 'income') {
@@ -964,8 +970,13 @@
                         ${r.customerPref ? `<div class="record-details" style="color: #A38F81;">❤️ <b>喜好：</b>${cleanHtml(r.customerPref)}</div>` : ''}
                         ${r.note ? `<div class="record-details">📝 <b>備註：</b>${cleanHtml(r.note)}</div>` : ''}
                     </div>
-                    <span class="record-amount">${sign}${r.amount}</span>
-                    <button class="btn-delete" onclick="removeRecord('${r.id}', 'day')">🗑️</button>
+                    <div class="record-amount-zone">
+                        <span class="record-amount">${sign}${r.amount}</span>
+                        <div class="action-btns">
+                            <button class="btn-action" onclick="startEditRecord('${r.id}')" title="編輯修改">✏️</button>
+                            <button class="btn-action" onclick="removeRecord('${r.id}', 'day')" title="刪除紀錄">🗑️</button>
+                        </div>
+                    </div>
                 `;
             } else {
                 return `
@@ -974,8 +985,13 @@
                             <span class="record-title">${cleanHtml(r.note) || '日常項目支出'}</span>
                         </div>
                     </div>
-                    <span class="record-amount">${sign}${r.amount}</span>
-                    <button class="btn-delete" onclick="removeRecord('${r.id}', 'day')">🗑️</button>
+                    <div class="record-amount-zone">
+                        <span class="record-amount">${sign}${r.amount}</span>
+                        <div class="action-btns">
+                            <button class="btn-action" onclick="startEditRecord('${r.id}')" title="編輯修改">✏️</button>
+                            <button class="btn-action" onclick="removeRecord('${r.id}', 'day')" title="刪除紀錄">🗑️</button>
+                        </div>
+                    </div>
                 `;
             }
         }
@@ -1002,6 +1018,64 @@
             });
         }
 
+        // 🌟 核心新功能：點擊 ✏️ 進入編輯狀態
+        function startEditRecord(id) {
+            const target = appData.find(r => r.id === id);
+            if (!target) return;
+
+            // 1. 切換到日曆預設頁面，方便填寫表單
+            switchPage('calendar');
+
+            // 2. 鎖定當前正在編輯的 ID 狀態
+            editingRecordId = id;
+
+            // 3. 將日曆的時間焦點強制移到這筆紀錄的指定日期上
+            const parts = target.date.split('-');
+            chosenDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            viewYear = chosenDate.getFullYear();
+            viewMonth = chosenDate.getMonth();
+            renderCalendarView();
+            renderDayRecordsView();
+
+            // 4. 把舊資料全數倒回表單輸入框中
+            document.getElementById('add-type').value = target.type;
+            document.getElementById('add-amount').value = target.amount;
+            document.getElementById('add-note').value = target.note || '';
+
+            toggleFormFields(); // 動態切換收入/支出面板
+
+            if (target.type === 'income') {
+                document.getElementById('add-customer').value = target.customer || '';
+                document.getElementById('add-customer-pref').value = target.customerPref || '';
+                document.getElementById('add-customer-handle').value = target.customerHandle || '';
+                
+                // 代入客戶新舊狀態
+                const statusRadio = document.querySelector(`input[name="cust-status"][value="${target.customerStatus || '新客'}"]`);
+                if(statusRadio) statusRadio.checked = true;
+
+                // 代入客源
+                const sourceRadio = document.querySelector(`input[name="cust-source"][value="${target.customerSource || 'IG'}"]`);
+                if(sourceRadio) sourceRadio.checked = true;
+
+                // 代入施作項目的多選勾選框
+                document.querySelectorAll('input[name="nail-item"]').forEach(cb => {
+                    cb.checked = target.items && target.items.includes(cb.value);
+                });
+                
+                // 關閉回客提示小框，避免視覺混淆
+                document.getElementById('pref-hint-box').style.display = 'none';
+            }
+
+            // 5. 改變大按鈕的文字與顏色外觀
+            const submitBtn = document.getElementById('btn-submit-main');
+            submitBtn.innerText = '確認更新此筆紀錄 ✏️';
+            submitBtn.classList.add('editing-mode');
+
+            // 6. 手機畫面流暢滾動到表單區塊，方便直接修改
+            document.getElementById('accounting-form-anchor').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 儲存按鈕的觸發機制（自動判定是要「新增」還是「更新」）
         function addNewRecord() {
             const amtIn = document.getElementById('add-amount');
             const amt = parseInt(amtIn.value);
@@ -1013,54 +1087,89 @@
                 return;
             }
 
-            let newRec = {
-                id: 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-                date: toDateStr(chosenDate),
-                type: type,
-                amount: amt,
-                note: noteIn.value.trim()
-            };
+            if (editingRecordId !== null) {
+                // 【模式 A：更新舊資料】
+                const targetIdx = appData.findIndex(r => r.id === editingRecordId);
+                if (targetIdx !== -1) {
+                    appData[targetIdx].type = type;
+                    appData[targetIdx].amount = amt;
+                    appData[targetIdx].note = noteIn.value.trim();
 
-            if (type === 'income') {
-                const custIn = document.getElementById('add-customer');
-                const prefIn = document.getElementById('add-customer-pref');
-                const handleIn = document.getElementById('add-customer-handle');
-                const statusRadio = document.querySelector('input[name="cust-status"]:checked');
-                const sourceRadio = document.querySelector('input[name="cust-source"]:checked');
-                
-                const checkedItems = [];
-                document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => {
-                    checkedItems.push(cb.value);
-                });
+                    if (type === 'income') {
+                        const checkedItems = [];
+                        document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => checkedItems.push(cb.value));
 
-                newRec.customer = custIn.value.trim();
-                newRec.customerStatus = statusRadio ? statusRadio.value : '新客';
-                newRec.customerSource = sourceRadio ? sourceRadio.value : 'IG';
-                newRec.customerHandle = handleIn.value.trim();
-                newRec.items = checkedItems;
-                newRec.customerPref = prefIn.value.trim();
+                        appData[targetIdx].customer = document.getElementById('add-customer').value.trim();
+                        appData[targetIdx].customerStatus = document.querySelector('input[name="cust-status"]:checked').value;
+                        appData[targetIdx].customerSource = document.querySelector('input[name="cust-source"]:checked').value;
+                        appData[targetIdx].customerHandle = document.getElementById('add-customer-handle').value.trim();
+                        appData[targetIdx].items = checkedItems;
+                        appData[targetIdx].customerPref = document.getElementById('add-customer-pref').value.trim();
+                    } else {
+                        // 如果原本是收入後來被改成支出，把收入專用欄位清空
+                        delete appData[targetIdx].customer;
+                        delete appData[targetIdx].customerStatus;
+                        delete appData[targetIdx].customerSource;
+                        delete appData[targetIdx].customerHandle;
+                        delete appData[targetIdx].items;
+                        delete appData[targetIdx].customerPref;
+                    }
+                }
+                editingRecordId = null; // 解除編輯鎖定
+            } else {
+                // 【模式 B：正常新增一筆紀錄】
+                let newRec = {
+                    id: 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                    date: toDateStr(chosenDate),
+                    type: type,
+                    amount: amt,
+                    note: noteIn.value.trim()
+                };
 
-                // 重置
-                custIn.value = '';
-                prefIn.value = '';
-                handleIn.value = '';
-                document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => cb.checked = false);
-                document.querySelector('input[name="cust-status"][value="新客"]').checked = true;
-                document.querySelector('input[name="cust-source"][value="IG"]').checked = true;
-                document.getElementById('pref-hint-box').style.display = 'none';
+                if (type === 'income') {
+                    const checkedItems = [];
+                    document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => checkedItems.push(cb.value));
+
+                    newRec.customer = document.getElementById('add-customer').value.trim();
+                    newRec.customerStatus = document.querySelector('input[name="cust-status"]:checked').value;
+                    newRec.customerSource = document.querySelector('input[name="cust-source"]:checked').value;
+                    newRec.customerHandle = document.getElementById('add-customer-handle').value.trim();
+                    newRec.items = checkedItems;
+                    newRec.customerPref = document.getElementById('add-customer-pref').value.trim();
+                }
+                appData.push(newRec);
             }
 
-            appData.push(newRec);
+            // 共通步驟：存檔、恢復原狀
             saveData();
 
+            // 重置所有表單輸入
             amtIn.value = '';
             noteIn.value = '';
-            
+            document.getElementById('add-customer').value = '';
+            document.getElementById('add-customer-pref').value = '';
+            document.getElementById('add-customer-handle').value = '';
+            document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => cb.checked = false);
+            document.querySelector('input[name="cust-status"][value="新客"]').checked = true;
+            document.querySelector('input[name="cust-source"][value="IG"]').checked = true;
+            document.getElementById('pref-hint-box').style.display = 'none';
+
+            // 恢復大按鈕樣式
+            const submitBtn = document.getElementById('btn-submit-main');
+            submitBtn.innerText = '儲存此筆紀錄';
+            submitBtn.classList.remove('editing-mode');
+
+            // 刷新畫面
             renderCalendarView();
             renderDayRecordsView();
         }
 
         function removeRecord(id, refPage) {
+            // 如果這筆資料正在被編輯中，禁止直接刪除
+            if (editingRecordId === id) {
+                alert('這筆資料正在下方的編輯面板中修改，請先完成更新或清空唷！');
+                return;
+            }
             if (confirm('確定要刪除這筆明細紀錄嗎？')) {
                 appData = appData.filter(r => r.id !== id);
                 saveData();
@@ -1073,6 +1182,7 @@
             }
         }
 
+        /* --- 總紀錄與報表邏輯 --- */
         function renderAllRecordsView() {
             const list = document.getElementById('all-records-list');
             list.innerHTML = '';
@@ -1103,6 +1213,7 @@
                 item.className = `record-item ${r.type}`;
                 item.innerHTML = generateRecordHtml(r);
                 
+                // 修正總紀錄分頁中的刪除與編輯按鈕觸發事件導向
                 const delBtn = item.querySelector('.btn-delete');
                 if(delBtn) delBtn.setAttribute('onclick', `removeRecord('${r.id}', 'all')`);
                 
