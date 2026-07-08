@@ -736,7 +736,6 @@
                 <div id="expense-fields-group" style="display: none; margin-bottom: 10px; position: relative;">
                     <div class="form-group">
                         <span class="form-label">購買店家 / 來源</span>
-                        <!-- 🌟 升級：支出店家加入智慧下拉選單提示功能 -->
                         <input type="text" id="add-expense-merchant" placeholder="如：蝦皮、淘寶、XX材料行、大潤發" oninput="showExpenseMerchantDropdown()" onfocus="showExpenseMerchantDropdown()" autocomplete="off">
                         <div id="expense-merchant-dropdown" class="custom-dropdown-menu"></div>
                     </div>
@@ -764,9 +763,31 @@
 
     <!-- 頁面 3: 報表頁面 -->
     <div id="page-report" class="page">
+        <!-- 🌟 新增：全期歷史總收支（累計看板） -->
+        <div class="content-card" style="background-color: #FAF4EE; border: 1.5px solid var(--accent-rose);">
+            <div class="card-title" style="color: var(--deep-mocha); font-size: 1.05rem;">
+                <span>✨ 全期歷史總收支 (累計)</span>
+            </div>
+            <div class="report-summary" style="margin-bottom: 0;">
+                <div class="summary-box" style="background-color: var(--white);">
+                    <p>歷史總收入</p>
+                    <h3 id="all-time-income-text" style="color: #5A735B;">$0</h3>
+                </div>
+                <div class="summary-box" style="background-color: var(--white);">
+                    <p>歷史總支出</p>
+                    <h3 id="all-time-expense-text" style="color: #A66363;">$0</h3>
+                </div>
+                <div class="summary-box profit" style="background-color: var(--soft-oat); grid-column: span 2;">
+                    <p>歷史總淨利潤</p>
+                    <h3 id="all-time-profit-text" style="color: var(--deep-mocha); font-size: 1.3rem;">$0</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- 原有月份報表 -->
         <div class="content-card">
             <div class="card-title">
-                <span>營運數據報表</span>
+                <span>📅 單月營運數據報表</span>
                 <select id="report-month-select" onchange="calculateReport()" style="width: auto; padding: 4px 10px; border-radius: 8px;">
                     <!-- 自動月份 -->
                 </select>
@@ -782,13 +803,13 @@
                     <h3 id="rep-expense-text" style="color: #A66363;">$0</h3>
                 </div>
                 <div class="summary-box profit">
-                    <p>淨利潤 (收入 - 支出)</p>
+                    <p>當月淨利潤 (收入 - 支出)</p>
                     <h3 id="rep-profit-text">$0</h3>
                 </div>
             </div>
 
-            <!-- 圖表 1：營運收支比 -->
-            <div class="card-title" style="font-size: 0.95rem; margin-top: 10px;">營運收支比</div>
+            <!-- 圖表 1：當月收支比 -->
+            <div class="card-title" style="font-size: 0.95rem; margin-top: 10px;">當月營運收支比</div>
             <div class="chart-container" style="margin-bottom: 25px;">
                 <div class="chart-row">
                     <div class="chart-label">總收入</div>
@@ -807,7 +828,7 @@
             </div>
 
             <!-- 圖表 2：客群性別比例 -->
-            <div class="card-title" style="font-size: 0.95rem; border-top: 1px dashed var(--soft-oat); padding-top: 15px;">客群性別比例</div>
+            <div class="card-title" style="font-size: 0.95rem; border-top: 1px dashed var(--soft-oat); padding-top: 15px;">當月客群性別比例</div>
             <div class="chart-container" style="margin-bottom: 25px;">
                 <div class="chart-row">
                     <div class="chart-label">👩‍🦰 女生</div>
@@ -825,10 +846,10 @@
                 </div>
             </div>
 
-            <!-- 🌟 圖表 3：當月店家購買比例報表區 -->
+            <!-- 圖表 3：店家購買比例 -->
             <div class="card-title" style="font-size: 0.95rem; border-top: 1px dashed var(--soft-oat); padding-top: 15px;">當月支出店家比例</div>
             <div class="chart-container" id="merchant-report-container">
-                <!-- JS 自動計算比率排序生成 -->
+                <!-- JS 自動生成 -->
             </div>
         </div>
     </div>
@@ -1030,13 +1051,12 @@
             else dropdown.style.display = 'none';
         }
 
-        // 🌟 核心升級功能一：支出歷史店家自動生成下拉清單
+        // 支出歷史店家下拉選單
         function showExpenseMerchantDropdown() {
             const inputVal = document.getElementById('add-expense-merchant').value.trim().toLowerCase();
             const dropdown = document.getElementById('expense-merchant-dropdown');
             dropdown.innerHTML = '';
 
-            // 從雲端資料包中撈出所有帶有「支出店家」的不重複名字
             const merchantSet = new Set();
             window.appData.forEach(r => {
                 if (r.type === 'expense' && r.expenseMerchant) {
@@ -1046,7 +1066,6 @@
 
             let matchCount = 0;
             merchantSet.forEach(merchantName => {
-                // 當輸入格為空，或是店家名稱包含輸入的關鍵字時顯示
                 if (inputVal === '' || merchantName.toLowerCase().includes(inputVal)) {
                     matchCount++;
                     const item = document.createElement('div');
@@ -1066,7 +1085,6 @@
             else dropdown.style.display = 'none';
         }
 
-        // 點擊空白處關閉選單
         document.addEventListener('click', function(e) {
             const custDropdown = document.getElementById('custom-dropdown');
             const custInput = document.getElementById('add-customer');
@@ -1442,7 +1460,6 @@
                 dataPayload.items = checkedItems;
                 dataPayload.customerPref = document.getElementById('add-customer-pref').value.trim();
             } else {
-                // 儲存時若沒有填寫店家，預設記為「未分類店家」
                 dataPayload.expenseMerchant = document.getElementById('add-expense-merchant').value.trim() || '未分類店家';
             }
 
@@ -1537,6 +1554,21 @@
         }
 
         function calculateReport() {
+            // 🌟 核心升級一：計算「不分月份」的全期歷史總收支
+            let allTimeInc = 0, allTimeExp = 0;
+            window.appData.forEach(r => {
+                if (r.type === 'income') allTimeInc += r.amount;
+                if (r.type === 'expense') allTimeExp += r.amount;
+            });
+            const allTimeNet = allTimeInc - allTimeExp;
+
+            document.getElementById('all-time-income-text').innerText = `$${allTimeInc.toLocaleString()}`;
+            document.getElementById('all-time-expense-text').innerText = `$${allTimeExp.toLocaleString()}`;
+            document.getElementById('all-time-profit-text').innerText = `${allTimeNet >= 0 ? '' : '-'}$${Math.abs(allTimeNet).toLocaleString()}`;
+            document.getElementById('all-time-profit-text').style.color = allTimeNet >= 0 ? 'var(--deep-mocha)' : '#A66363';
+
+            // ----------------------------------------
+            // 以下為原有單月報表計算邏輯
             const dropdown = document.getElementById('report-month-select');
             if(!dropdown) return;
             const mo = dropdown.value;
@@ -1546,7 +1578,6 @@
             let inc = 0, exp = 0;
             let femaleCount = 0, maleCount = 0;
 
-            // 🌟 核心升級功能二：統計當月店家的總支出金額與比率
             const merchantCostMap = new Map();
 
             targets.forEach(r => {
@@ -1558,8 +1589,6 @@
                 }
                 if (r.type === 'expense') {
                     exp += r.amount;
-                    
-                    // 店家加總邏輯
                     const merchant = r.expenseMerchant || '未分類店家';
                     const currentCost = merchantCostMap.get(merchant) || 0;
                     merchantCostMap.set(merchant, currentCost + r.amount);
@@ -1572,7 +1601,6 @@
             document.getElementById('rep-profit-text').innerText = `${net >= 0 ? '' : '-'}$${Math.abs(net).toLocaleString()}`;
             document.getElementById('rep-profit-text').style.color = net >= 0 ? 'var(--deep-mocha)' : '#A66363';
 
-            // 收支條形圖
             const financialSum = inc + exp;
             let incPct = 0, expPct = 0;
             if (financialSum > 0) {
@@ -1584,7 +1612,6 @@
             document.getElementById('pct-income-text').innerText = `${incPct}%`;
             document.getElementById('pct-expense-text').innerText = `${expPct}%`;
 
-            // 性別比例
             const totalCustomers = femaleCount + maleCount;
             let femalePct = 0, malePct = 0;
             if (totalCustomers > 0) {
@@ -1596,7 +1623,7 @@
             document.getElementById('pct-female-text').innerText = `${femalePct}% (共${femaleCount}人)`;
             document.getElementById('pct-male-text').innerText = `${malePct}% (共${maleCount}人)`;
 
-            // 🌟 動態渲染店家購買比例圖表
+            // 商家比例圖
             const merchantContainer = document.getElementById('merchant-report-container');
             merchantContainer.innerHTML = '';
 
@@ -1605,15 +1632,12 @@
                 return;
             }
 
-            // 轉成陣列並按照花費「由多到少」排序
             const sortedMerchants = Array.from(merchantCostMap.entries()).sort((a, b) => b[1] - a[1]);
 
             sortedMerchants.forEach(([merchantName, merchantAmount]) => {
                 const percentage = Math.round((merchantAmount / exp) * 100);
-                
                 const row = document.createElement('div');
                 row.className = 'chart-row';
-                
                 row.innerHTML = `
                     <div class="chart-label" title="${cleanHtml(merchantName)}">🛒 ${cleanHtml(merchantName)}</div>
                     <div class="chart-bar-bg">
