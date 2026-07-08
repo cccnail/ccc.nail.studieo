@@ -282,7 +282,7 @@
         .dropdown-item-info {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
         .dropdown-item-handle {
             font-size: 0.75rem;
@@ -303,7 +303,7 @@
         .check-label {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
             font-size: 0.85rem;
             color: var(--text-dark);
             cursor: pointer;
@@ -314,6 +314,13 @@
             accent-color: var(--warm-mocha);
             width: 16px;
             height: 16px;
+        }
+
+        /* 🌟 性別選項內的小圖案容器 */
+        .gender-label-with-avatar {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .history-pref-hint {
@@ -379,26 +386,22 @@
             flex-wrap: wrap;
         }
 
-        /* 🌟 核心防跑位修正：限縮大頭貼在任何地方都完美等比例 */
-        .avatar-q-container {
-            width: 28px;
-            height: 28px;
+        /* 🌟 V13 畫布頭像外框：完美正圓、絕不變形跑位 */
+        .avatar-canvas-box {
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            background-color: #EFE9E4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             overflow: hidden;
-            border: 1px solid rgba(140, 122, 107, 0.15);
+            display: inline-block;
+            vertical-align: middle;
             flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(140, 122, 107, 0.12);
+            border: 1.5px solid var(--white);
         }
-        .avatar-q-container img {
-            width: 100% !important;
-            height: 100% !important;
-            max-width: 100% !important;
-            max-height: 100% !important;
-            display: block !important;
-            object-fit: cover;
+        .avatar-canvas-box canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
         }
 
         .record-title {
@@ -658,11 +661,18 @@
                         </div>
                     </div>
 
+                    <!-- 客戶性別欄位 -->
                     <div class="form-group" style="margin-bottom: 10px;">
                         <span class="form-label">客戶性別</span>
                         <div class="radio-group" style="padding: 9px 12px; gap: 20px;">
-                            <label class="check-label"><input type="radio" name="cust-gender" value="女" checked> 女生</label>
-                            <label class="check-label"><input type="radio" name="cust-gender" value="男"> 男生</label>
+                            <label class="check-label">
+                                <input type="radio" name="cust-gender" value="女" checked> 
+                                <span class="gender-label-with-avatar"><span id="preview-gender-female"></span> 女生</span>
+                            </label>
+                            <label class="check-label">
+                                <input type="radio" name="cust-gender" value="男"> 
+                                <span class="gender-label-with-avatar"><span id="preview-gender-male"></span> 男生</span>
+                            </label>
                         </div>
                     </div>
 
@@ -801,7 +811,7 @@
     </div>
 
     <script>
-        const STORAGE_KEY = 'ccc_nail_master_v12_data';
+        const STORAGE_KEY = 'ccc_nail_master_v13_data';
         let appData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
         let editingRecordId = null;
@@ -811,11 +821,90 @@
         let viewMonth = todayObj.getMonth();
         let chosenDate = new Date(todayObj.getFullYear(), todayObj.getMonth(), todayObj.getDate());
 
-        // 精緻手繪莫蘭迪 SVG Q版頭像
-        const AVATAR_URLS = {
-            '女': 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="%23F4EBE1"/><path d="M50,22 C32,22 26,35 26,52 C26,59 29,66 33,70 C33,52 40,46 50,46 C60,46 67,52 67,70 C71,66 74,59 74,52 C74,35 68,22 50,22 Z" fill="%238C6D58"/><circle cx="50" cy="52" r="20" fill="%23E5C2A4"/><path d="M26,52 C24,42 32,26 50,26 C68,26 76,42 74,52 C74,54 70,44 50,44 C30,44 26,54 26,52 Z" fill="%23664E3E"/><circle cx="43" cy="52" r="2" fill="%234A3E3D"/><circle cx="57" cy="52" r="2" fill="%234A3E3D"/><ellipse cx="40" cy="55" rx="3" ry="1.5" fill="%23EFAFAF" opacity="0.7"/><ellipse cx="60" cy="55" rx="3" ry="1.5" fill="%23EFAFAF" opacity="0.7"/><path d="M47,58 Q50,60 53,58" stroke="%234A3E3D" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M33,70 C33,85 40,90 50,90 C60,90 67,85 67,70 C60,74 55,75 50,75 C45,75 40,74 33,70 Z" fill="%23D69A85"/></svg>',
-            '男': 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="%23E9EFF4"/><path d="M50,18 C33,18 28,28 28,45 C35,42 42,35 45,28 Q50,38 58,28 C65,34 70,42 72,45 C72,28 67,18 50,18 Z" fill="%23556270"/><circle cx="50" cy="50" r="19" fill="%23E2C4A8"/><path d="M28,45 C28,45 32,24 50,24 C68,24 72,45 72,45 C72,45 65,35 50,35 C35,35 28,45 28,45 Z" fill="%23434E5A"/><circle cx="43" cy="49" r="2" fill="%233D444A"/><circle cx="57" cy="49" r="2" fill="%233D444A"/><ellipse cx="39" cy="52" rx="2.5" ry="1.2" fill="%23EAA7A7" opacity="0.6"/><ellipse cx="61" cy="52" rx="2.5" ry="1.2" fill="%23EAA7A7" opacity="0.6"/><path d="M47,55 Q50,57 53,55" stroke="%233D444A" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M32,74 C32,86 40,88 50,88 C60,88 68,86 68,74 C62,77 56,77 50,77 C44,77 38,77 32,74 Z" fill="%237D94A6"/></svg>'
-        };
+        // 🌟 記憶體內建 Canvas 動態繪圖技術：徹底防範任何破圖跑位衝突
+        function drawAvatarToCanvas(canvas, gender) {
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 100, 100);
+
+            if (gender === '男') {
+                // 男生：清爽帥氣莫蘭迪灰藍底色
+                ctx.fillStyle = "#E4ECF0";
+                ctx.beginPath(); ctx.arc(50, 50, 50, 0, Math.PI * 2); ctx.fill();
+                // 栗子短髮背底
+                ctx.fillStyle = "#55606E";
+                ctx.beginPath(); ctx.arc(50, 42, 26, 0, Math.PI * 2); ctx.fill();
+                // 小正太鵝蛋臉
+                ctx.fillStyle = "#F5D6BD";
+                ctx.beginPath(); ctx.arc(50, 52, 20, 0, Math.PI * 2); ctx.fill();
+                // 帥氣小斜瀏海短髮
+                ctx.fillStyle = "#434D59";
+                ctx.beginPath();
+                ctx.moveTo(28, 44); ctx.quadraticCurveTo(50, 26, 72, 44);
+                ctx.quadraticCurveTo(50, 36, 28, 44); ctx.fill();
+                // 靈魂小雙眼
+                ctx.fillStyle = "#333E4A";
+                ctx.beginPath(); ctx.arc(43, 50, 2.5, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(57, 50, 2.5, 0, Math.PI * 2); ctx.fill();
+                // 羞澀小微腮紅
+                ctx.fillStyle = "rgba(235, 160, 160, 0.6)";
+                ctx.beginPath(); ctx.ellipse(38, 54, 3, 1.5, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.ellipse(62, 54, 3, 1.5, 0, 0, Math.PI * 2); ctx.fill();
+                // 微笑暖嘴
+                ctx.strokeStyle = "#333E4A"; ctx.lineWidth = 2; ctx.lineCap = "round";
+                ctx.beginPath(); ctx.arc(50, 55, 3, 0, Math.PI); ctx.stroke();
+                // 小和服燕麥衣領
+                ctx.fillStyle = "#7C8D9C";
+                ctx.beginPath(); ctx.moveTo(34, 72); ctx.lineTo(50, 88); ctx.lineTo(66, 72); ctx.lineTo(50, 92); ctx.closePath(); ctx.fill();
+            } else {
+                // 女生：溫柔甜美浪漫莫蘭迪粉橘底色
+                ctx.fillStyle = "#F6EDE4";
+                ctx.beginPath(); ctx.arc(50, 50, 50, 0, Math.PI * 2); ctx.fill();
+                // 氣質咖啡色蓬鬆長髮背底
+                ctx.fillStyle = "#8F725E";
+                ctx.beginPath(); ctx.arc(50, 44, 27, 0, Math.PI * 2); ctx.fill();
+                ctx.fillRect(23, 44, 54, 30);
+                // 溫柔女孩瓜子臉
+                ctx.fillStyle = "#F7DC67"; // 修正偏白皙的粉嫩膚色
+                ctx.fillStyle = "#F5D7C4";
+                ctx.beginPath(); ctx.arc(50, 52, 19, 0, Math.PI * 2); ctx.fill();
+                // 氣質妹妹頭平瀏海
+                ctx.fillStyle = "#6B5344";
+                ctx.beginPath();
+                ctx.moveTo(27, 46); ctx.quadraticCurveTo(50, 28, 73, 46);
+                ctx.quadraticCurveTo(50, 42, 27, 46); ctx.fill();
+                // 溫柔笑眼
+                ctx.fillStyle = "#4A3D35";
+                ctx.beginPath(); ctx.arc(43, 51, 2.5, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(57, 51, 2.5, 0, Math.PI * 2); ctx.fill();
+                // 粉嫩欲滴少女小腮紅
+                ctx.fillStyle = "rgba(240, 170, 170, 0.7)";
+                ctx.beginPath(); ctx.ellipse(38, 55, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.ellipse(62, 55, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
+                // 甜美微張微笑小紅唇
+                ctx.strokeStyle = "#4A3D35"; ctx.lineWidth = 2; ctx.lineCap = "round";
+                ctx.beginPath(); ctx.arc(50, 56, 3, 0, Math.PI); ctx.stroke();
+                // 溫柔粉色針織毛衣領
+                ctx.fillStyle = "#D69C87";
+                ctx.beginPath(); ctx.moveTo(32, 74); ctx.lineTo(50, 90); ctx.lineTo(68, 74); ctx.lineTo(50, 94); ctx.closePath(); ctx.fill();
+            }
+        }
+
+        // 動態生成一尊保證不跑位的畫布貼紙元件
+        function createAvatarCanvasElement(gender) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'avatar-canvas-box';
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = 100;
+            canvas.height = 100;
+            
+            wrapper.appendChild(canvas);
+            
+            // 延遲一幀確保元素渲染完成再作畫
+            requestAnimationFrame(() => drawAvatarToCanvas(canvas, gender));
+            return wrapper;
+        }
 
         function switchPage(targetPage) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -852,11 +941,7 @@
             }
         }
 
-        function getAvatarHtml(gender) {
-            const src = AVATAR_URLS[gender] || AVATAR_URLS['女'];
-            return `<div class="avatar-q-container"><img src="${src}" alt="avatar"></div>`;
-        }
-
+        // 🌟 修正：重寫下拉選單，完全使用 DOM 節點塞入 Canvas
         function showCustomDropdown() {
             const inputVal = document.getElementById('add-customer').value.trim().toLowerCase();
             const dropdown = document.getElementById('custom-dropdown');
@@ -877,25 +962,34 @@
             clientMap.forEach((info, key) => {
                 if (inputVal === '' || info.name.toLowerCase().includes(inputVal) || info.handle.toLowerCase().includes(inputVal)) {
                     matchCount++;
+                    
                     const item = document.createElement('div');
                     item.className = 'custom-dropdown-item';
                     
-                    const handleLabel = info.handle ? `<span class="dropdown-item-handle">(${info.handle})</span>` : '<span class="dropdown-item-handle">(無帳號)</span>';
-                    const avHtml = getAvatarHtml(info.gender);
+                    const leftInfoBox = document.createElement('div');
+                    leftInfoBox.className = 'dropdown-item-info';
                     
-                    item.innerHTML = `
-                        <div class="dropdown-item-info">
-                            ${avHtml}
-                            <span><b>${cleanHtml(info.name)}</b></span>
-                        </div> 
-                        ${handleLabel}
-                    `;
+                    // 用 Canvas 畫出頭像並塞入
+                    const avEl = createAvatarCanvasElement(info.gender);
+                    leftInfoBox.appendChild(avEl);
+                    
+                    const nameSpan = document.createElement('span');
+                    nameSpan.innerHTML = `<b>${cleanHtml(info.name)}</b>`;
+                    leftInfoBox.appendChild(nameSpan);
+                    
+                    item.appendChild(leftInfoBox);
+                    
+                    const rightHandleBox = document.createElement('span');
+                    rightHandleBox.className = 'dropdown-item-handle';
+                    rightHandleBox.innerText = info.handle ? `(${info.handle})` : '(無帳號)';
+                    item.appendChild(rightHandleBox);
                     
                     item.onclick = function() {
                         document.getElementById('add-customer').value = info.name;
                         dropdown.style.display = 'none';
                         autoLoadCustomerPreference(info.name, info.handle);
                     };
+                    
                     dropdown.appendChild(item);
                 }
             });
@@ -1023,59 +1117,131 @@
             renderCalendarView();
         }
 
-        function generateRecordHtml(r) {
+        // 🌟 修正：流水帳明細列表完全重構為 DOM Node 形式，確保 Canvas 完美嵌入
+        function createRecordRowNode(r) {
+            const item = document.createElement('div');
+            item.className = `record-item ${r.type}`;
+
             const sign = r.type === 'income' ? '+$' : '-$';
+
             if (r.type === 'income') {
-                const custName = cleanHtml(r.customer) || '未註名客戶';
-                const statusClass = r.customerStatus === '新客' ? 'new-cust' : 'old-cust';
-                
-                let srcIcon = '📸 ';
-                if(r.customerSource === 'FB') srcIcon = '👥 ';
-                if(r.customerSource === 'THREADS') srcIcon = '🧵 ';
-                if(r.customerSource === 'LINE') srcIcon = '💬 ';
-                const srcTag = r.customerSource ? `<span class="tag source-tag">${srcIcon}${r.customerSource}</span>` : '';
-                const handleText = r.customerHandle ? `<span style="font-size:0.8rem; color:var(--warm-mocha); font-style:italic;">(${cleanHtml(r.customerHandle)})</span>` : '';
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'record-info';
 
-                let itemsHtml = (r.items && r.items.length > 0) ? r.items.map(i => `<span class="tag-item">${cleanHtml(i)}</span>`).join('') : '';
-                const avHtml = getAvatarHtml(r.customerGender || '女');
+                const mainDiv = document.createElement('div');
+                mainDiv.className = 'record-main';
 
-                return `
-                    <div class="record-info">
-                        <div class="record-main">
-                            ${avHtml}
-                            <span class="record-title">${custName}</span>
-                            ${handleText}
-                            <span class="tag ${statusClass}">${r.customerStatus || '新客'}</span>
-                            ${srcTag}
-                            ${itemsHtml}
-                        </div>
-                        ${r.customerPref ? `<div class="record-details" style="color: #A38F81;">❤️ <b>喜好：</b>${cleanHtml(r.customerPref)}</div>` : ''}
-                        ${r.note ? `<div class="record-details">📝 <b>備註：</b>${cleanHtml(r.note)}</div>` : ''}
-                    </div>
-                    <div class="record-amount-zone">
-                        <span class="record-amount">${sign}${r.amount}</span>
-                        <div class="action-btns">
-                            <button class="btn-action" onclick="startEditRecord('${r.id}')" title="編輯修改">✏️</button>
-                            <button class="btn-action" onclick="removeRecord('${r.id}', 'day')" title="刪除紀錄">🗑️</button>
-                        </div>
-                    </div>
-                `;
+                // 塞入精緻不跑位畫布頭像
+                const avEl = createAvatarCanvasElement(r.customerGender || '女');
+                mainDiv.appendChild(avEl);
+
+                // 塞入名字
+                const titleSpan = document.createElement('span');
+                titleSpan.className = 'record-title';
+                titleSpan.innerText = r.customer || '未註名客戶';
+                mainDiv.appendChild(titleSpan);
+
+                // 社群帳號
+                if (r.customerHandle) {
+                    const handleSpan = document.createElement('span');
+                    handleSpan.style = 'font-size:0.8rem; color:var(--warm-mocha); font-style:italic;';
+                    handleSpan.innerText = `(${r.customerHandle})`;
+                    mainDiv.appendChild(handleSpan);
+                }
+
+                // 新客/舊客標籤
+                const statusSpan = document.createElement('span');
+                statusSpan.className = `tag ${r.customerStatus === '新客' ? 'new-cust' : 'old-cust'}`;
+                statusSpan.innerText = r.customerStatus || '新客';
+                mainDiv.appendChild(statusSpan);
+
+                // 來源標籤
+                if (r.customerSource) {
+                    let srcIcon = '📸 ';
+                    if(r.customerSource === 'FB') srcIcon = '👥 ';
+                    if(r.customerSource === 'THREADS') srcIcon = '🧵 ';
+                    if(r.customerSource === 'LINE') srcIcon = '💬 ';
+                    const srcSpan = document.createElement('span');
+                    srcSpan.className = 'tag source-tag';
+                    srcSpan.innerText = `${srcIcon}${r.customerSource}`;
+                    mainDiv.appendChild(srcSpan);
+                }
+
+                // 施作項目子標籤
+                if (r.items && r.items.length > 0) {
+                    r.items.forEach(it => {
+                        const itSpan = document.createElement('span');
+                        itSpan.className = 'tag-item';
+                        itSpan.innerText = it;
+                        mainDiv.appendChild(itSpan);
+                    });
+                }
+
+                infoDiv.appendChild(mainDiv);
+
+                // 喜好說明
+                if (r.customerPref) {
+                    const prefDiv = document.createElement('div');
+                    prefDiv.className = 'record-details';
+                    prefDiv.style.color = '#A38F81';
+                    prefDiv.innerHTML = `❤️ <b>喜好：</b>${cleanHtml(r.customerPref)}`;
+                    infoDiv.appendChild(prefDiv);
+                }
+
+                // 其他備註
+                if (r.note) {
+                    const noteDiv = document.createElement('div');
+                    noteDiv.className = 'record-details';
+                    noteDiv.innerHTML = `📝 <b>備註：</b>${cleanHtml(r.note)}`;
+                    infoDiv.appendChild(noteDiv);
+                }
+
+                item.appendChild(infoDiv);
+
             } else {
-                return `
-                    <div class="record-info">
-                        <div class="record-main">
-                            <span class="record-title">${cleanHtml(r.note) || '日常項目支出'}</span>
-                        </div>
-                    </div>
-                    <div class="record-amount-zone">
-                        <span class="record-amount">${sign}${r.amount}</span>
-                        <div class="action-btns">
-                            <button class="btn-action" onclick="startEditRecord('${r.id}')" title="編輯修改">✏️</button>
-                            <button class="btn-action" onclick="removeRecord('${r.id}', 'day')" title="刪除紀錄">🗑️</button>
-                        </div>
-                    </div>
-                `;
+                // 支出類型
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'record-info';
+                const mainDiv = document.createElement('div');
+                mainDiv.className = 'record-main';
+                const titleSpan = document.createElement('span');
+                titleSpan.className = 'record-title';
+                titleSpan.innerText = r.note || '日常項目支出';
+                mainDiv.appendChild(titleSpan);
+                infoDiv.appendChild(mainDiv);
+                item.appendChild(infoDiv);
             }
+
+            // 金額與雙操作按鈕區
+            const amtZone = document.createElement('div');
+            amtZone.className = 'record-amount-zone';
+            
+            const amtSpan = document.createElement('span');
+            amtSpan.className = 'record-amount';
+            amtSpan.innerText = `${sign}${r.amount}`;
+            amtZone.appendChild(amtSpan);
+
+            const btnGroup = document.createElement('div');
+            btnGroup.className = 'action-btns';
+
+            const editBtn = document.createElement('button');
+            editBtn.className = 'btn-action';
+            editBtn.innerText = '✏️';
+            editBtn.title = '編輯修改';
+            editBtn.onclick = () => startEditRecord(r.id);
+            btnGroup.appendChild(editBtn);
+
+            const delBtn = document.createElement('button');
+            delBtn.className = 'btn-action';
+            delBtn.innerText = '🗑️';
+            delBtn.title = '刪除紀錄';
+            delBtn.onclick = () => removeRecord(r.id, 'day');
+            btnGroup.appendChild(delBtn);
+
+            amtZone.appendChild(btnGroup);
+            item.appendChild(amtZone);
+
+            return item;
         }
 
         function renderDayRecordsView() {
@@ -1093,10 +1259,8 @@
             }
 
             matches.forEach(r => {
-                const item = document.createElement('div');
-                item.className = `record-item ${r.type}`;
-                item.innerHTML = generateRecordHtml(r);
-                list.appendChild(item);
+                const rowNode = createRecordRowNode(r);
+                list.appendChild(rowNode);
             });
         }
 
@@ -1275,14 +1439,13 @@
                     list.appendChild(subContainer);
                 }
 
-                const item = document.createElement('div');
-                item.className = `record-item ${r.type}`;
-                item.innerHTML = generateRecordHtml(r);
+                const rowNode = createRecordRowNode(r);
                 
-                const delBtn = item.querySelector('.btn-delete');
-                if(delBtn) delBtn.setAttribute('onclick', `removeRecord('${r.id}', 'all')`);
+                // 修正跨頁面的刪除重定向
+                const delBtn = rowNode.querySelector('.record-amount-zone .action-btns button:last-child');
+                if(delBtn) delBtn.onclick = () => removeRecord(r.id, 'all');
                 
-                subContainer.appendChild(item);
+                subContainer.appendChild(rowNode);
             });
         }
 
@@ -1394,10 +1557,18 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
+        // 初始化：預先在輸入面板的性別選項旁邊繪製靜態預覽頭像
         window.onload = function() {
             toggleFormFields();
             renderCalendarView();
             renderDayRecordsView();
+            
+            // 塞入性別單選框旁邊的貼紙
+            const femBox = document.getElementById('preview-gender-female');
+            if(femBox) femBox.appendChild(createAvatarCanvasElement('女'));
+            
+            const maleBox = document.getElementById('preview-gender-male');
+            if(maleBox) maleBox.appendChild(createAvatarCanvasElement('男'));
         }
     </script>
 </body>
