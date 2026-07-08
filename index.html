@@ -254,7 +254,7 @@
             color: var(--warm-mocha);
         }
 
-        input[type="text"], input[type="number"], select {
+        input[type="text"], input[type="number"], input[type="date"], select {
             background-color: var(--bg-cream);
             border: 1px solid var(--soft-oat);
             padding: 10px 12px;
@@ -441,6 +441,7 @@
         .tag.old-cust { background-color: var(--tag-old); color: #3A5440; }
         .tag.source-tag { background-color: #E6E1DA; color: var(--deep-mocha); }
         .tag.expense-tag { background-color: #F0E6E6; color: #A66363; }
+        .tag.astro-tag { background-color: #EAE6FF; color: #5247A1; } /* 星座專用色 */
         
         .tag-item {
             font-size: 0.75rem;
@@ -697,6 +698,24 @@
                         </div>
                     </div>
 
+                    <!-- 🌟 新增：生日輸入欄位 (不含年分更貼心) -->
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <span class="form-label">客戶生日 (月/日)</span>
+                        <div class="form-row">
+                            <select id="add-birthday-month" style="flex: 1;" onchange="updateZodiacHint()">
+                                <option value="">-- 選擇月份 --</option>
+                                <option value="1">1 月</option><option value="2">2 月</option><option value="3">3 月</option><option value="4">4 月</option>
+                                <option value="5">5 月</option><option value="6">6 月</option><option value="7">7 月</option><option value="8">8 月</option>
+                                <option value="9">9 月</option><option value="10">10 月</option><option value="11">11 月</option><option value="12">12 月</option>
+                            </select>
+                            <select id="add-birthday-day" style="flex: 1;" onchange="updateZodiacHint()">
+                                <option value="">-- 選擇日期 --</option>
+                                <!-- 由 JS 動態生成 1-31 日 -->
+                            </select>
+                            <div id="zodiac-live-hint" style="font-size: 0.85rem; color: var(--warm-mocha); font-weight: 600; white-space: nowrap; padding-left: 5px;"></div>
+                        </div>
+                    </div>
+
                     <!-- 貼心回客提示 -->
                     <div id="pref-hint-box" class="history-pref-hint"></div>
 
@@ -723,7 +742,6 @@
                             <label class="check-label"><input type="checkbox" name="nail-item" value="他店卸甲"> 他店卸甲</label>
                             <label class="check-label"><input type="checkbox" name="nail-item" value="手"> 手</label>
                             <label class="check-label"><input type="checkbox" name="nail-item" value="足"> 足</label>
-                            <!-- 🌟 新增：延甲 項目按鈕 -->
                             <label class="check-label"><input type="checkbox" name="nail-item" value="延甲"> 延甲</label>
                         </div>
                     </div>
@@ -962,9 +980,51 @@
         const maleBox = document.getElementById('preview-gender-male');
         if(maleBox) maleBox.appendChild(createAvatarCanvasElement('男'));
         toggleFormFields();
+        setupBirthdayDaysDropdown();
     </script>
 
     <script>
+        // 🌟 核心增強：依照月日自動計算星座邏輯
+        function getZodiacSign(month, day) {
+            if (!month || !day) return "";
+            month = parseInt(month); day = parseInt(day);
+            if ((month == 3 && day >= 21) || (month == 4 && day <= 19)) return "♈ 牡羊座";
+            if ((month == 4 && day >= 20) || (month == 5 && day <= 20)) return "♉ 金牛座";
+            if ((month == 5 && day >= 21) || (month == 6 && day <= 21)) return "♊ 雙子座";
+            if ((month == 6 && day >= 22) || (month == 7 && day <= 22)) return "♋ 巨蟹座";
+            if ((month == 7 && day >= 23) || (month == 8 && day <= 22)) return "♌ 獅子座";
+            if ((month == 8 && day >= 23) || (month == 9 && day <= 22)) return "♍ 處女座";
+            if ((month == 9 && day >= 23) || (month == 10 && day <= 23)) return "♎ 天秤座";
+            if ((month == 10 && day >= 24) || (month == 11 && day <= 22)) return "♏ 天蠍座";
+            if ((month == 11 && day >= 23) || (month == 12 && day <= 21)) return "♐ 射手座";
+            if ((month == 12 && day >= 22) || (month == 1 && day <= 19)) return "♑ 魔羯座";
+            if ((month == 1 && day >= 20) || (month == 2 && day <= 18)) return "♒ 水瓶座";
+            if ((month == 2 && day >= 19) || (month == 3 && day <= 20)) return "♓ 雙魚座";
+            return "";
+        }
+
+        function setupBirthdayDaysDropdown() {
+            const daySelect = document.getElementById('add-birthday-day');
+            if(!daySelect) return;
+            daySelect.innerHTML = '<option value="">-- 日 --</option>';
+            for(let d=1; d<=31; d++) {
+                const opt = document.createElement('option');
+                opt.value = d; opt.innerText = `${d} 日`;
+                daySelect.appendChild(opt);
+            }
+        }
+
+        function updateZodiacHint() {
+            const m = document.getElementById('add-birthday-month').value;
+            const d = document.getElementById('add-birthday-day').value;
+            const hintBox = document.getElementById('zodiac-live-hint');
+            if(m && d) {
+                hintBox.innerText = getZodiacSign(m, d);
+            } else {
+                hintBox.innerText = '';
+            }
+        }
+
         function switchPage(targetPage) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
@@ -1014,8 +1074,10 @@
                     const nameKey = r.customer.trim();
                     const handleVal = r.customerHandle ? r.customerHandle.trim() : '';
                     const genderVal = r.customerGender || '女';
+                    const bMonth = r.customerBirthMonth || '';
+                    const bDay = r.customerBirthDay || '';
                     const uniqueKey = `${nameKey}_____${handleVal}`;
-                    clientMap.set(uniqueKey, { name: nameKey, handle: handleVal, gender: genderVal });
+                    clientMap.set(uniqueKey, { name: nameKey, handle: handleVal, gender: genderVal, month: bMonth, day: bDay });
                 }
             });
 
@@ -1108,6 +1170,8 @@
             const prefInput = document.getElementById('add-customer-pref');
             const handleInput = document.getElementById('add-customer-handle');
             const radioOld = document.getElementById('status-old');
+            const birthMonthSelect = document.getElementById('add-birthday-month');
+            const birthDaySelect = document.getElementById('add-birthday-day');
 
             const history = window.appData.filter(r => 
                 r.type === 'income' && 
@@ -1120,6 +1184,10 @@
                 const latestPref = history.find(r => r.customerPref && r.customerPref.trim() !== '');
                 const latestSource = history.find(r => r.customerSource);
                 const latestGender = history.find(r => r.customerGender);
+                
+                // 🌟 自動載入生日與星座
+                const latestBirthMonth = history.find(r => r.customerBirthMonth);
+                const latestBirthDay = history.find(r => r.customerBirthDay);
 
                 if (handleInput) handleInput.value = targetHandle || '';
                 if (latestSource) {
@@ -1131,9 +1199,20 @@
                     if (genRadio) genRadio.checked = true;
                 }
 
+                if (latestBirthMonth && latestBirthDay) {
+                    birthMonthSelect.value = latestBirthMonth.customerBirthMonth;
+                    birthDaySelect.value = latestBirthDay.customerBirthDay;
+                    updateZodiacHint();
+                }
+
                 let hintText = `✨ <b>回頭客歷史資料：</b><br>`;
                 hintText += `🏷️ 來源：${latestSource ? latestSource.customerSource : '未設定'} (${targetHandle || '無'})｜性別：${latestGender ? latestGender.customerGender : '女'}<br>`;
                 
+                if (latestBirthMonth && latestBirthDay) {
+                    const astro = getZodiacSign(latestBirthMonth.customerBirthMonth, latestBirthDay.customerBirthDay);
+                    hintText += `🎂 生日：${latestBirthMonth.customerBirthMonth}月${latestBirthDay.customerBirthDay}日 (${astro})<br>`;
+                }
+
                 if (latestPref && latestPref.customerPref) {
                     hintText += `❤️ 喜好：${latestPref.customerPref}`;
                     if (prefInput) prefInput.value = latestPref.customerPref;
@@ -1272,6 +1351,15 @@
                 statusSpan.innerText = r.customerStatus || '新客';
                 mainDiv.appendChild(statusSpan);
 
+                // 🌟 核心增強：在清單中渲染出生日與星座標籤
+                if (r.customerBirthMonth && r.customerBirthDay) {
+                    const astroSign = getZodiacSign(r.customerBirthMonth, r.customerBirthDay);
+                    const astroSpan = document.createElement('span');
+                    astroSpan.className = 'tag astro-tag';
+                    astroSpan.innerText = `🎂 ${r.customerBirthMonth}/${r.customerBirthDay} ${astroSign.substring(2)}`;
+                    mainDiv.appendChild(astroSpan);
+                }
+
                 if (r.customerSource) {
                     let srcIcon = '📸 ';
                     if(r.customerSource === 'FB') srcIcon = '👥 ';
@@ -1407,6 +1495,10 @@
                 document.getElementById('add-customer-pref').value = target.customerPref || '';
                 document.getElementById('add-customer-handle').value = target.customerHandle || '';
                 
+                document.getElementById('add-birthday-month').value = target.customerBirthMonth || '';
+                document.getElementById('add-birthday-day').value = target.customerBirthDay || '';
+                updateZodiacHint();
+
                 const statusRadio = document.querySelector(`input[name="cust-status"][value="${target.customerStatus || '新客'}"]`);
                 if(statusRadio) statusRadio.checked = true;
 
@@ -1461,6 +1553,10 @@
                 dataPayload.customerGender = document.querySelector('input[name="cust-gender"]:checked').value;
                 dataPayload.items = checkedItems;
                 dataPayload.customerPref = document.getElementById('add-customer-pref').value.trim();
+                
+                // 🌟 寫入雲端：生日資料
+                dataPayload.customerBirthMonth = document.getElementById('add-birthday-month').value;
+                dataPayload.customerBirthDay = document.getElementById('add-birthday-day').value;
             } else {
                 dataPayload.expenseMerchant = document.getElementById('add-expense-merchant').value.trim() || '未分類店家';
             }
@@ -1468,11 +1564,16 @@
             window.saveDataToCloud(docId, dataPayload);
             window.editingRecordId = null;
 
+            // 表單完整重設
             amtIn.value = ''; noteIn.value = '';
             document.getElementById('add-customer').value = '';
             document.getElementById('add-customer-pref').value = '';
             document.getElementById('add-customer-handle').value = '';
             document.getElementById('add-expense-merchant').value = '';
+            document.getElementById('add-birthday-month').value = '';
+            document.getElementById('add-birthday-day').value = '';
+            document.getElementById('zodiac-live-hint').innerText = '';
+
             document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => cb.checked = false);
             document.querySelector('input[name="cust-status"][value="新客"]').checked = true;
             document.querySelector('input[name="cust-source"][value="IG"]').checked = true;
