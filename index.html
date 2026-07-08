@@ -254,7 +254,7 @@
             color: var(--warm-mocha);
         }
 
-        input[type="text"], input[type="number"], input[type="date"], input[type="tel"], input[type="time"], select {
+        input[type="text"], input[type="number"], input[type="date"], input[type="tel"], select {
             background-color: var(--bg-cream);
             border: 1px solid var(--soft-oat);
             padding: 10px 12px;
@@ -442,7 +442,7 @@
         .tag.source-tag { background-color: #E6E1DA; color: var(--deep-mocha); }
         .tag.expense-tag { background-color: #F0E6E6; color: #A66363; }
         .tag.astro-tag { background-color: #EAE6FF; color: #5247A1; }
-        .tag.time-tag { background-color: #F0EDE6; color: var(--deep-mocha); font-weight: 700; letter-spacing: 0.5px; } /* 24小時制專用加粗標籤 */
+        .tag.time-tag { background-color: #F0EDE6; color: var(--deep-mocha); font-weight: 700; letter-spacing: 0.5px; }
         
         .tag-item {
             font-size: 0.75rem;
@@ -669,10 +669,19 @@
 
                 <!-- 收入專用欄位 -->
                 <div id="income-fields-group">
-                    <!-- 預約時間欄位 (HTML 原生框，部分裝置自帶滾輪) -->
+                    <!-- 🌟 升級：徹底擺脫手機系統干擾的 24 小時時分下拉選單 -->
                     <div class="form-group" style="margin-bottom: 10px;">
-                        <span class="form-label">預約時間 (24小時制格式)</span>
-                        <input type="time" id="add-customer-time">
+                        <span class="form-label">預約時間 (純 24 小時制選擇)</span>
+                        <div class="form-row">
+                            <select id="add-time-hour" style="flex: 1;">
+                                <option value="">-- 時 (24H) --</option>
+                                <!-- JS 自動填入 00 到 23 -->
+                            </select>
+                            <select id="add-time-minute" style="flex: 1;">
+                                <option value="">-- 分 --</option>
+                                <!-- JS 自動填入 00 到 55 (每五分鐘一格) -->
+                            </select>
+                        </div>
                     </div>
 
                     <div class="form-row" style="margin-bottom: 10px; position: relative;">
@@ -991,8 +1000,10 @@
         if(femBox) femBox.appendChild(createAvatarCanvasElement('女'));
         const maleBox = document.getElementById('preview-gender-male');
         if(maleBox) maleBox.appendChild(createAvatarCanvasElement('男'));
+        
         toggleFormFields();
         setupBirthdayDaysDropdown();
+        setup24HourTimeDropdowns(); // 啟動時間下拉生成
     </script>
 
     <script>
@@ -1014,12 +1025,33 @@
             return "";
         }
 
-        // 🌟 核心增強：確保時間字串符合俐落乾淨的 24 小時制（HH:mm）
+        // 🌟 核心增強：生成不被系統干擾的 24 小時與 5 分鐘級距下拉格
+        function setup24HourTimeDropdowns() {
+            const hrSelect = document.getElementById('add-time-hour');
+            const minSelect = document.getElementById('add-time-minute');
+            if (!hrSelect || !minSelect) return;
+
+            hrSelect.innerHTML = '<option value="">-- 時 (24H) --</option>';
+            for (let h = 0; h < 24; h++) {
+                const opt = document.createElement('option');
+                const hStr = String(h).padStart(2, '0');
+                opt.value = hStr; opt.innerText = `${hStr} 點`;
+                hrSelect.appendChild(opt);
+            }
+
+            minSelect.innerHTML = '<option value="">-- 分 --</option>';
+            for (let m = 0; m < 60; m += 5) {
+                const opt = document.createElement('option');
+                const mStr = String(m).padStart(2, '0');
+                opt.value = mStr; opt.innerText = `${mStr} 分`;
+                minSelect.appendChild(opt);
+            }
+        }
+
         function formatTo24Hour(timeStr) {
             if (!timeStr) return "";
             const parts = timeStr.split(':');
             if (parts.length < 2) return timeStr;
-            // 補齊前導零以呈現完美的 24 小時制畫面
             const hrs = String(parts[0]).padStart(2, '0');
             const mins = String(parts[1]).padStart(2, '0');
             return `${hrs}:${mins}`;
@@ -1364,7 +1396,6 @@
 
                 mainDiv.appendChild(window.createAvatarCanvasElement(r.customerGender || '女'));
 
-                // 🌟 優化：將呈現出的時間強制轉換為乾淨的 24 小時制標籤
                 if (r.customerTime) {
                     const timeSpan = document.createElement('span');
                     timeSpan.className = 'tag time-tag';
@@ -1492,14 +1523,12 @@
             return item;
         }
 
-        // 🌟 優化：依照 24 小時制時間字串（HH:mm）嚴格排序
         function sortRecordsByTime(records) {
             return records.sort((a, b) => {
                 if (a.type !== 'income' && b.type !== 'income') return 0;
                 if (a.type !== 'income') return 1;
                 if (b.type !== 'income') return -1;
                 
-                // 強制將未填寫時間的舊資料排在最後 (99:99)
                 const timeA = formatTo24Hour(a.customerTime) || "99:99";
                 const timeB = formatTo24Hour(b.customerTime) || "99:99";
                 return timeA.localeCompare(timeB);
@@ -1555,7 +1584,16 @@
                 document.getElementById('add-customer-pref').value = target.customerPref || '';
                 document.getElementById('add-customer-handle').value = target.customerHandle || '';
                 document.getElementById('add-customer-phone').value = target.customerPhone || '';
-                document.getElementById('add-customer-time').value = target.customerTime || '';
+                
+                // 🌟 智慧帶入 24H 雙下拉選單值
+                if (target.customerTime && target.customerTime.includes(':')) {
+                    const tParts = target.customerTime.split(':');
+                    document.getElementById('add-time-hour').value = String(tParts[0]).padStart(2, '0');
+                    document.getElementById('add-time-minute').value = String(tParts[1]).padStart(2, '0');
+                } else {
+                    document.getElementById('add-time-hour').value = '';
+                    document.getElementById('add-time-minute').value = '';
+                }
                 
                 document.getElementById('add-birthday-month').value = target.customerBirthMonth || '';
                 document.getElementById('add-birthday-day').value = target.customerBirthDay || '';
@@ -1619,7 +1657,15 @@
                 dataPayload.customerBirthMonth = document.getElementById('add-birthday-month').value;
                 dataPayload.customerBirthDay = document.getElementById('add-birthday-day').value;
                 dataPayload.customerPhone = document.getElementById('add-customer-phone').value.trim();
-                dataPayload.customerTime = document.getElementById('add-customer-time').value;
+                
+                // 🌟 組合兩個下拉選單成為 24H 格式時間字串（如 "14:05"）
+                const hVal = document.getElementById('add-time-hour').value;
+                const mVal = document.getElementById('add-time-minute').value;
+                if (hVal && mVal) {
+                    dataPayload.customerTime = `${hVal}:${mVal}`;
+                } else {
+                    dataPayload.customerTime = "";
+                }
             } else {
                 dataPayload.expenseMerchant = document.getElementById('add-expense-merchant').value.trim() || '未分類店家';
             }
@@ -1633,7 +1679,8 @@
             document.getElementById('add-customer-pref').value = '';
             document.getElementById('add-customer-handle').value = '';
             document.getElementById('add-customer-phone').value = '';
-            document.getElementById('add-customer-time').value = '';
+            document.getElementById('add-time-hour').value = '';
+            document.getElementById('add-time-minute').value = '';
             document.getElementById('add-expense-merchant').value = '';
             document.getElementById('add-birthday-month').value = '';
             document.getElementById('add-birthday-day').value = '';
@@ -1670,7 +1717,6 @@
                 return;
             }
 
-            // 先排序日期，同日內依據 24 小時制時間嚴格排序
             const sorted = [...window.appData].sort((a, b) => {
                 if (a.date !== b.date) return b.date.localeCompare(a.date);
                 if (a.type !== 'income' && b.type !== 'income') return 0;
