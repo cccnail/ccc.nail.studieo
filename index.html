@@ -520,6 +520,88 @@
             padding: 4px;
             font-weight: bold;
         }
+
+        /* --- 報表分頁樣式 --- */
+        .report-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .summary-box {
+            background-color: var(--bg-cream);
+            padding: 15px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .summary-box p {
+            font-size: 0.8rem;
+            color: var(--warm-mocha);
+            margin-bottom: 5px;
+        }
+
+        .summary-box h3 {
+            font-size: 1.2rem;
+            color: var(--deep-mocha);
+        }
+
+        .summary-box.profit {
+            grid-column: span 2;
+            background-color: var(--card-cream);
+        }
+
+        .chart-container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-top: 10px;
+        }
+
+        .chart-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+
+        .chart-label {
+            width: 75px;
+            color: var(--warm-mocha);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chart-bar-bg {
+            flex: 1;
+            background-color: var(--bg-cream);
+            height: 16px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .chart-bar-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s ease;
+            border-radius: 8px;
+        }
+        .chart-bar-fill.income-bar { background-color: #C3D3C4; }
+        .chart-bar-fill.expense-bar { background-color: #E3C3C3; }
+        .chart-bar-fill.female-bar { background-color: #EAC7C7; }
+        .chart-bar-fill.male-bar { background-color: #C7D4EA; }
+        .chart-bar-fill.merchant-bar { background-color: #E1D5C9; }
+
+        .chart-val {
+            width: 110px;
+            color: var(--deep-mocha);
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-align: right;
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -651,10 +733,12 @@
                 </div>
 
                 <!-- 支出專用欄位組 -->
-                <div id="expense-fields-group" style="display: none; margin-bottom: 10px;">
+                <div id="expense-fields-group" style="display: none; margin-bottom: 10px; position: relative;">
                     <div class="form-group">
                         <span class="form-label">購買店家 / 來源</span>
-                        <input type="text" id="add-expense-merchant" placeholder="如：蝦皮、淘寶、XX材料行、大潤發">
+                        <!-- 🌟 升級：支出店家加入智慧下拉選單提示功能 -->
+                        <input type="text" id="add-expense-merchant" placeholder="如：蝦皮、淘寶、XX材料行、大潤發" oninput="showExpenseMerchantDropdown()" onfocus="showExpenseMerchantDropdown()" autocomplete="off">
+                        <div id="expense-merchant-dropdown" class="custom-dropdown-menu"></div>
                     </div>
                 </div>
 
@@ -703,7 +787,7 @@
                 </div>
             </div>
 
-            <!-- 圖表 1 -->
+            <!-- 圖表 1：營運收支比 -->
             <div class="card-title" style="font-size: 0.95rem; margin-top: 10px;">營運收支比</div>
             <div class="chart-container" style="margin-bottom: 25px;">
                 <div class="chart-row">
@@ -722,9 +806,9 @@
                 </div>
             </div>
 
-            <!-- 圖表 2 -->
+            <!-- 圖表 2：客群性別比例 -->
             <div class="card-title" style="font-size: 0.95rem; border-top: 1px dashed var(--soft-oat); padding-top: 15px;">客群性別比例</div>
-            <div class="chart-container">
+            <div class="chart-container" style="margin-bottom: 25px;">
                 <div class="chart-row">
                     <div class="chart-label">👩‍🦰 女生</div>
                     <div class="chart-bar-bg">
@@ -740,6 +824,12 @@
                     <div class="chart-val" id="pct-male-text">0%</div>
                 </div>
             </div>
+
+            <!-- 🌟 圖表 3：當月店家購買比例報表區 -->
+            <div class="card-title" style="font-size: 0.95rem; border-top: 1px dashed var(--soft-oat); padding-top: 15px;">當月支出店家比例</div>
+            <div class="chart-container" id="merchant-report-container">
+                <!-- JS 自動計算比率排序生成 -->
+            </div>
         </div>
     </div>
 
@@ -748,7 +838,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // ⚠️ 已自動替換成 Claire 的專屬 Firebase config 設定值
+        // 已嵌入 Claire 的專屬 Firebase 帳號金鑰
         const firebaseConfig = {
             apiKey: "AIzaSyArhVMBzEVlpZeuHdeYK5_VO0NjERlst7k",
             authDomain: "ccc-nail-system.firebaseapp.com",
@@ -758,12 +848,10 @@
             appId: "1:762564904502:web:6c638cff9994b8632c3a97"
         };
 
-        // 初始化 Firebase & Firestore
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const recordsCollection = collection(db, "nail_records");
 
-        // 全域變數
         window.appData = [];
         window.editingRecordId = null;
 
@@ -772,7 +860,7 @@
         window.viewMonth = todayObj.getMonth();
         window.chosenDate = new Date(todayObj.getFullYear(), todayObj.getMonth(), todayObj.getDate());
 
-        // 雲端即時監聽即時同步 (手機一改，電腦秒變)
+        // 雲端同步監聽
         onSnapshot(recordsCollection, (snapshot) => {
             window.appData = [];
             snapshot.forEach((doc) => {
@@ -780,7 +868,6 @@
             });
             document.getElementById('loading-banner').innerText = "🟢 雲端連線成功：資料已即時同步";
             
-            // 重新刷新目前頁面視覺
             renderCalendarView();
             renderDayRecordsView();
             renderAllRecordsView();
@@ -828,25 +915,16 @@
             return wrapper;
         }
 
-        // 異步儲存/更新到雲端資料庫
         window.saveDataToCloud = async function(id, dataPayload) {
-            try {
-                await setDoc(doc(db, "nail_records", id), dataPayload);
-            } catch (e) {
-                alert("寫入雲端失敗，請確認 Firebase 規則設定！");
-            }
+            try { await setDoc(doc(db, "nail_records", id), dataPayload); } 
+            catch (e) { alert("寫入雲端失敗！"); }
         }
 
-        // 從雲端刪除
         window.deleteDataFromCloud = async function(id) {
-            try {
-                await deleteDoc(doc(db, "nail_records", id));
-            } catch (e) {
-                alert("從雲端刪除失敗！");
-            }
+            try { await deleteDoc(doc(db, "nail_records", id)); } 
+            catch (e) { alert("從雲端刪除失敗！"); }
         }
 
-        // 綁定全域函式供 HTML onClick 呼叫
         window.switchPage = switchPage;
         window.changeMonth = changeMonth;
         window.onCalendarSelectorChange = onCalendarSelectorChange;
@@ -856,7 +934,6 @@
         window.startEditRecord = startEditRecord;
         window.showCustomDropdown = showCustomDropdown;
 
-        // 初始化畫布貼紙預覽
         const femBox = document.getElementById('preview-gender-female');
         if(femBox) femBox.appendChild(createAvatarCanvasElement('女'));
         const maleBox = document.getElementById('preview-gender-male');
@@ -865,7 +942,6 @@
     </script>
 
     <script>
-        // 以下為共用核心UI流程與對齊邏輯
         function switchPage(targetPage) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
@@ -903,6 +979,7 @@
             }
         }
 
+        // 客戶搜尋下拉選單
         function showCustomDropdown() {
             const inputVal = document.getElementById('add-customer').value.trim().toLowerCase();
             const dropdown = document.getElementById('custom-dropdown');
@@ -953,11 +1030,54 @@
             else dropdown.style.display = 'none';
         }
 
+        // 🌟 核心升級功能一：支出歷史店家自動生成下拉清單
+        function showExpenseMerchantDropdown() {
+            const inputVal = document.getElementById('add-expense-merchant').value.trim().toLowerCase();
+            const dropdown = document.getElementById('expense-merchant-dropdown');
+            dropdown.innerHTML = '';
+
+            // 從雲端資料包中撈出所有帶有「支出店家」的不重複名字
+            const merchantSet = new Set();
+            window.appData.forEach(r => {
+                if (r.type === 'expense' && r.expenseMerchant) {
+                    merchantSet.add(r.expenseMerchant.trim());
+                }
+            });
+
+            let matchCount = 0;
+            merchantSet.forEach(merchantName => {
+                // 當輸入格為空，或是店家名稱包含輸入的關鍵字時顯示
+                if (inputVal === '' || merchantName.toLowerCase().includes(inputVal)) {
+                    matchCount++;
+                    const item = document.createElement('div');
+                    item.className = 'custom-dropdown-item';
+                    item.style.padding = '12px 14px';
+                    item.innerHTML = `<div class="dropdown-item-info"><span>🛒 <b>${cleanHtml(merchantName)}</b></span></div>`;
+                    
+                    item.onclick = function() {
+                        document.getElementById('add-expense-merchant').value = merchantName;
+                        dropdown.style.display = 'none';
+                    };
+                    dropdown.appendChild(item);
+                }
+            });
+
+            if (matchCount > 0) dropdown.style.display = 'block';
+            else dropdown.style.display = 'none';
+        }
+
+        // 點擊空白處關閉選單
         document.addEventListener('click', function(e) {
-            const dropdown = document.getElementById('custom-dropdown');
-            const input = document.getElementById('add-customer');
-            if (e.target !== dropdown && e.target !== input) {
-                dropdown.style.display = 'none';
+            const custDropdown = document.getElementById('custom-dropdown');
+            const custInput = document.getElementById('add-customer');
+            if (e.target !== custDropdown && e.target !== custInput) {
+                custDropdown.style.display = 'none';
+            }
+
+            const expDropdown = document.getElementById('expense-merchant-dropdown');
+            const expInput = document.getElementById('add-expense-merchant');
+            if (e.target !== expDropdown && e.target !== expInput) {
+                expDropdown.style.display = 'none';
             }
         });
 
@@ -1322,14 +1442,13 @@
                 dataPayload.items = checkedItems;
                 dataPayload.customerPref = document.getElementById('add-customer-pref').value.trim();
             } else {
-                dataPayload.expenseMerchant = document.getElementById('add-expense-merchant').value.trim();
+                // 儲存時若沒有填寫店家，預設記為「未分類店家」
+                dataPayload.expenseMerchant = document.getElementById('add-expense-merchant').value.trim() || '未分類店家';
             }
 
-            // 傳送雲端
             window.saveDataToCloud(docId, dataPayload);
             window.editingRecordId = null;
 
-            // 表單清空
             amtIn.value = ''; noteIn.value = '';
             document.getElementById('add-customer').value = '';
             document.getElementById('add-customer-pref').value = '';
@@ -1427,6 +1546,9 @@
             let inc = 0, exp = 0;
             let femaleCount = 0, maleCount = 0;
 
+            // 🌟 核心升級功能二：統計當月店家的總支出金額與比率
+            const merchantCostMap = new Map();
+
             targets.forEach(r => {
                 if (r.type === 'income') {
                     inc += r.amount;
@@ -1436,6 +1558,11 @@
                 }
                 if (r.type === 'expense') {
                     exp += r.amount;
+                    
+                    // 店家加總邏輯
+                    const merchant = r.expenseMerchant || '未分類店家';
+                    const currentCost = merchantCostMap.get(merchant) || 0;
+                    merchantCostMap.set(merchant, currentCost + r.amount);
                 }
             });
 
@@ -1445,6 +1572,7 @@
             document.getElementById('rep-profit-text').innerText = `${net >= 0 ? '' : '-'}$${Math.abs(net).toLocaleString()}`;
             document.getElementById('rep-profit-text').style.color = net >= 0 ? 'var(--deep-mocha)' : '#A66363';
 
+            // 收支條形圖
             const financialSum = inc + exp;
             let incPct = 0, expPct = 0;
             if (financialSum > 0) {
@@ -1456,6 +1584,7 @@
             document.getElementById('pct-income-text').innerText = `${incPct}%`;
             document.getElementById('pct-expense-text').innerText = `${expPct}%`;
 
+            // 性別比例
             const totalCustomers = femaleCount + maleCount;
             let femalePct = 0, malePct = 0;
             if (totalCustomers > 0) {
@@ -1466,6 +1595,34 @@
             document.getElementById('bar-male-fill').style.width = `${malePct}%`;
             document.getElementById('pct-female-text').innerText = `${femalePct}% (共${femaleCount}人)`;
             document.getElementById('pct-male-text').innerText = `${malePct}% (共${maleCount}人)`;
+
+            // 🌟 動態渲染店家購買比例圖表
+            const merchantContainer = document.getElementById('merchant-report-container');
+            merchantContainer.innerHTML = '';
+
+            if (merchantCostMap.size === 0 || exp === 0) {
+                merchantContainer.innerHTML = '<div style="text-align:center; color:var(--warm-mocha); font-size:0.85rem; padding: 15px 0; font-style:italic;">這個月沒有支出，太棒了！💅</div>';
+                return;
+            }
+
+            // 轉成陣列並按照花費「由多到少」排序
+            const sortedMerchants = Array.from(merchantCostMap.entries()).sort((a, b) => b[1] - a[1]);
+
+            sortedMerchants.forEach(([merchantName, merchantAmount]) => {
+                const percentage = Math.round((merchantAmount / exp) * 100);
+                
+                const row = document.createElement('div');
+                row.className = 'chart-row';
+                
+                row.innerHTML = `
+                    <div class="chart-label" title="${cleanHtml(merchantName)}">🛒 ${cleanHtml(merchantName)}</div>
+                    <div class="chart-bar-bg">
+                        <div class="chart-bar-fill merchant-bar" style="width: ${percentage}%;"></div>
+                    </div>
+                    <div class="chart-val">${percentage}% ($${merchantAmount.toLocaleString()})</div>
+                `;
+                merchantContainer.appendChild(row);
+            });
         }
 
         function cleanHtml(str) {
