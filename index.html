@@ -254,7 +254,7 @@
             color: var(--warm-mocha);
         }
 
-        input[type="text"], input[type="number"], input[type="date"], input[type="tel"], select {
+        input[type="text"], input[type="number"], input[type="date"], input[type="tel"], input[type="time"], select {
             background-color: var(--bg-cream);
             border: 1px solid var(--soft-oat);
             padding: 10px 12px;
@@ -442,6 +442,7 @@
         .tag.source-tag { background-color: #E6E1DA; color: var(--deep-mocha); }
         .tag.expense-tag { background-color: #F0E6E6; color: #A66363; }
         .tag.astro-tag { background-color: #EAE6FF; color: #5247A1; }
+        .tag.time-tag { background-color: #F0EDE6; color: var(--deep-mocha); } /* 時間專用標籤 */
         
         .tag-item {
             font-size: 0.75rem;
@@ -668,6 +669,12 @@
 
                 <!-- 收入專用欄位 -->
                 <div id="income-fields-group">
+                    <!-- 🌟 新增：預約時間欄位 -->
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <span class="form-label">預約時間</span>
+                        <input type="time" id="add-customer-time">
+                    </div>
+
                     <div class="form-row" style="margin-bottom: 10px; position: relative;">
                         <div class="form-group" style="flex: 1.2;">
                             <span class="form-label">客戶名稱</span>
@@ -683,7 +690,7 @@
                         </div>
                     </div>
 
-                    <!-- 🌟 新增：電話欄位 (貼心將 inputmode 設為 tel) -->
+                    <!-- 電話欄位 -->
                     <div class="form-group" style="margin-bottom: 10px;">
                         <span class="form-label">客戶電話</span>
                         <input type="tel" id="add-customer-phone" placeholder="如：0912345678" inputmode="tel">
@@ -943,7 +950,7 @@
                 ctx.fillStyle = "#F6EDE4"; ctx.beginPath(); ctx.arc(50, 50, 50, 0, Math.PI * 2); ctx.fill();
                 ctx.fillStyle = "#8F725E"; ctx.beginPath(); ctx.arc(50, 44, 27, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(23, 44, 54, 30);
                 ctx.fillStyle = "#F5D7C4"; ctx.beginPath(); ctx.arc(50, 52, 19, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = "#6B5344"; ctx.beginPath(); ctx.moveTo(27, 46); quadraticCurveTo(50, 28, 73, 46); ctx.quadraticCurveTo(50, 42, 27, 46); ctx.fill();
+                ctx.fillStyle = "#6B5344"; ctx.beginPath(); ctx.moveTo(27, 46); ctx.quadraticCurveTo(50, 28, 73, 46); ctx.quadraticCurveTo(50, 42, 27, 46); ctx.fill();
                 ctx.fillStyle = "#4A3D35"; ctx.beginPath(); ctx.arc(43, 51, 2.5, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(57, 51, 2.5, 0, Math.PI * 2); ctx.fill();
                 ctx.fillStyle = "rgba(240, 170, 170, 0.7)"; ctx.beginPath(); ctx.ellipse(38, 55, 4, 2, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(62, 55, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
                 ctx.strokeStyle = "#4A3D35"; ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.beginPath(); ctx.arc(50, 56, 3, 0, Math.PI); ctx.stroke();
@@ -1189,7 +1196,6 @@
                 const latestGender = history.find(r => r.customerGender);
                 const latestBirthMonth = history.find(r => r.customerBirthMonth);
                 const latestBirthDay = history.find(r => r.customerBirthDay);
-                // 🌟 智慧帶入：撈出最完整的新電話
                 const latestPhone = history.find(r => r.customerPhone && r.customerPhone.trim() !== '');
 
                 if (handleInput) handleInput.value = targetHandle || '';
@@ -1347,6 +1353,14 @@
 
                 mainDiv.appendChild(window.createAvatarCanvasElement(r.customerGender || '女'));
 
+                // 🌟 新增：有時間資料時顯示時間小標籤
+                if (r.customerTime) {
+                    const timeSpan = document.createElement('span');
+                    timeSpan.className = 'tag time-tag';
+                    timeSpan.innerText = `⏰ ${r.customerTime}`;
+                    mainDiv.appendChild(timeSpan);
+                }
+
                 const titleSpan = document.createElement('span');
                 titleSpan.className = 'record-title';
                 titleSpan.innerText = r.customer || '未註名客戶';
@@ -1393,7 +1407,6 @@
                 }
                 infoDiv.appendChild(mainDiv);
 
-                // 🌟 核心渲染：如果資料包含電話，在細節區呈現
                 if (r.customerPhone) {
                     const phoneDiv = document.createElement('div');
                     phoneDiv.className = 'record-details';
@@ -1468,6 +1481,22 @@
             return item;
         }
 
+        // 🌟 核心排序邏輯：讓今天的行程自動按照預約時間排序
+        function sortRecordsByTime(records) {
+            return records.sort((a, b) => {
+                // 如果兩筆都不是收入，維持不變
+                if (a.type !== 'income' && b.type !== 'income') return 0;
+                // 如果 a 是支出、b 是收入，支出往下排
+                if (a.type !== 'income') return 1;
+                if (b.type !== 'income') return -1;
+                
+                // 兩者都是收入，對比時間
+                const timeA = a.customerTime || "99:99"; // 沒填時間的排後面
+                const timeB = b.customerTime || "99:99";
+                return timeA.localeCompare(timeB);
+            });
+        }
+
         function renderDayRecordsView() {
             const sStr = toDateStr(window.chosenDate);
             const dayBoxDate = document.getElementById('day-box-date');
@@ -1486,7 +1515,9 @@
                 return;
             }
 
-            matches.forEach(r => {
+            // 🌟 排序後再渲染
+            const sortedMatches = sortRecordsByTime(matches);
+            sortedMatches.forEach(r => {
                 list.appendChild(createRecordRowNode(r));
             });
         }
@@ -1516,6 +1547,7 @@
                 document.getElementById('add-customer-pref').value = target.customerPref || '';
                 document.getElementById('add-customer-handle').value = target.customerHandle || '';
                 document.getElementById('add-customer-phone').value = target.customerPhone || '';
+                document.getElementById('add-customer-time').value = target.customerTime || '';
                 
                 document.getElementById('add-birthday-month').value = target.customerBirthMonth || '';
                 document.getElementById('add-birthday-day').value = target.customerBirthDay || '';
@@ -1578,8 +1610,9 @@
                 
                 dataPayload.customerBirthMonth = document.getElementById('add-birthday-month').value;
                 dataPayload.customerBirthDay = document.getElementById('add-birthday-day').value;
-                // 🌟 寫入雲端：電話號碼
                 dataPayload.customerPhone = document.getElementById('add-customer-phone').value.trim();
+                // 🌟 寫入雲端：預約時間資料
+                dataPayload.customerTime = document.getElementById('add-customer-time').value;
             } else {
                 dataPayload.expenseMerchant = document.getElementById('add-expense-merchant').value.trim() || '未分類店家';
             }
@@ -1593,6 +1626,7 @@
             document.getElementById('add-customer-pref').value = '';
             document.getElementById('add-customer-handle').value = '';
             document.getElementById('add-customer-phone').value = '';
+            document.getElementById('add-customer-time').value = '';
             document.getElementById('add-expense-merchant').value = '';
             document.getElementById('add-birthday-month').value = '';
             document.getElementById('add-birthday-day').value = '';
@@ -1629,7 +1663,15 @@
                 return;
             }
 
-            const sorted = [...window.appData].sort((a, b) => b.date.localeCompare(a.date));
+            // 先排序日期，再排序同日之內的時間
+            const sorted = [...window.appData].sort((a, b) => {
+                if (a.date !== b.date) return b.date.localeCompare(a.date);
+                if (a.type !== 'income' && b.type !== 'income') return 0;
+                if (a.type !== 'income') return 1;
+                if (b.type !== 'income') return -1;
+                return (a.customerTime || "99:99").localeCompare(b.customerTime || "99:99");
+            });
+
             let lastDate = '';
             let subContainer = null;
 
