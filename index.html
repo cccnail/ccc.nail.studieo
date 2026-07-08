@@ -442,7 +442,7 @@
         .tag.source-tag { background-color: #E6E1DA; color: var(--deep-mocha); }
         .tag.expense-tag { background-color: #F0E6E6; color: #A66363; }
         .tag.astro-tag { background-color: #EAE6FF; color: #5247A1; }
-        .tag.time-tag { background-color: #F0EDE6; color: var(--deep-mocha); } /* 時間專用標籤 */
+        .tag.time-tag { background-color: #F0EDE6; color: var(--deep-mocha); font-weight: 700; letter-spacing: 0.5px; } /* 24小時制專用加粗標籤 */
         
         .tag-item {
             font-size: 0.75rem;
@@ -669,9 +669,9 @@
 
                 <!-- 收入專用欄位 -->
                 <div id="income-fields-group">
-                    <!-- 🌟 新增：預約時間欄位 -->
+                    <!-- 預約時間欄位 (HTML 原生框，部分裝置自帶滾輪) -->
                     <div class="form-group" style="margin-bottom: 10px;">
-                        <span class="form-label">預約時間</span>
+                        <span class="form-label">預約時間 (24小時制格式)</span>
                         <input type="time" id="add-customer-time">
                     </div>
 
@@ -1014,6 +1014,17 @@
             return "";
         }
 
+        // 🌟 核心增強：確保時間字串符合俐落乾淨的 24 小時制（HH:mm）
+        function formatTo24Hour(timeStr) {
+            if (!timeStr) return "";
+            const parts = timeStr.split(':');
+            if (parts.length < 2) return timeStr;
+            // 補齊前導零以呈現完美的 24 小時制畫面
+            const hrs = String(parts[0]).padStart(2, '0');
+            const mins = String(parts[1]).padStart(2, '0');
+            return `${hrs}:${mins}`;
+        }
+
         function setupBirthdayDaysDropdown() {
             const daySelect = document.getElementById('add-birthday-day');
             if(!daySelect) return;
@@ -1353,11 +1364,11 @@
 
                 mainDiv.appendChild(window.createAvatarCanvasElement(r.customerGender || '女'));
 
-                // 🌟 新增：有時間資料時顯示時間小標籤
+                // 🌟 優化：將呈現出的時間強制轉換為乾淨的 24 小時制標籤
                 if (r.customerTime) {
                     const timeSpan = document.createElement('span');
                     timeSpan.className = 'tag time-tag';
-                    timeSpan.innerText = `⏰ ${r.customerTime}`;
+                    timeSpan.innerText = `⏰ ${formatTo24Hour(r.customerTime)}`;
                     mainDiv.appendChild(timeSpan);
                 }
 
@@ -1481,18 +1492,16 @@
             return item;
         }
 
-        // 🌟 核心排序邏輯：讓今天的行程自動按照預約時間排序
+        // 🌟 優化：依照 24 小時制時間字串（HH:mm）嚴格排序
         function sortRecordsByTime(records) {
             return records.sort((a, b) => {
-                // 如果兩筆都不是收入，維持不變
                 if (a.type !== 'income' && b.type !== 'income') return 0;
-                // 如果 a 是支出、b 是收入，支出往下排
                 if (a.type !== 'income') return 1;
                 if (b.type !== 'income') return -1;
                 
-                // 兩者都是收入，對比時間
-                const timeA = a.customerTime || "99:99"; // 沒填時間的排後面
-                const timeB = b.customerTime || "99:99";
+                // 強制將未填寫時間的舊資料排在最後 (99:99)
+                const timeA = formatTo24Hour(a.customerTime) || "99:99";
+                const timeB = formatTo24Hour(b.customerTime) || "99:99";
                 return timeA.localeCompare(timeB);
             });
         }
@@ -1515,7 +1524,6 @@
                 return;
             }
 
-            // 🌟 排序後再渲染
             const sortedMatches = sortRecordsByTime(matches);
             sortedMatches.forEach(r => {
                 list.appendChild(createRecordRowNode(r));
@@ -1611,7 +1619,6 @@
                 dataPayload.customerBirthMonth = document.getElementById('add-birthday-month').value;
                 dataPayload.customerBirthDay = document.getElementById('add-birthday-day').value;
                 dataPayload.customerPhone = document.getElementById('add-customer-phone').value.trim();
-                // 🌟 寫入雲端：預約時間資料
                 dataPayload.customerTime = document.getElementById('add-customer-time').value;
             } else {
                 dataPayload.expenseMerchant = document.getElementById('add-expense-merchant').value.trim() || '未分類店家';
@@ -1663,13 +1670,13 @@
                 return;
             }
 
-            // 先排序日期，再排序同日之內的時間
+            // 先排序日期，同日內依據 24 小時制時間嚴格排序
             const sorted = [...window.appData].sort((a, b) => {
                 if (a.date !== b.date) return b.date.localeCompare(a.date);
                 if (a.type !== 'income' && b.type !== 'income') return 0;
                 if (a.type !== 'income') return 1;
                 if (b.type !== 'income') return -1;
-                return (a.customerTime || "99:99").localeCompare(b.customerTime || "99:99");
+                return (formatTo24Hour(a.customerTime) || "99:99").localeCompare(formatTo24Hour(b.customerTime) || "99:99");
             });
 
             let lastDate = '';
