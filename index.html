@@ -723,6 +723,8 @@
                             <label class="check-label"><input type="checkbox" name="nail-item" value="他店卸甲"> 他店卸甲</label>
                             <label class="check-label"><input type="checkbox" name="nail-item" value="手"> 手</label>
                             <label class="check-label"><input type="checkbox" name="nail-item" value="足"> 足</label>
+                            <!-- 🌟 新增：延甲 項目按鈕 -->
+                            <label class="check-label"><input type="checkbox" name="nail-item" value="延甲"> 延甲</label>
                         </div>
                     </div>
 
@@ -763,7 +765,7 @@
 
     <!-- 頁面 3: 報表頁面 -->
     <div id="page-report" class="page">
-        <!-- 🌟 新增：全期歷史總收支（累計看板） -->
+        <!-- 全期歷史總收支（累計看板） -->
         <div class="content-card" style="background-color: #FAF4EE; border: 1.5px solid var(--accent-rose);">
             <div class="card-title" style="color: var(--deep-mocha); font-size: 1.05rem;">
                 <span>✨ 全期歷史總收支 (累計)</span>
@@ -1554,7 +1556,6 @@
         }
 
         function calculateReport() {
-            // 🌟 核心升級一：計算「不分月份」的全期歷史總收支
             let allTimeInc = 0, allTimeExp = 0;
             window.appData.forEach(r => {
                 if (r.type === 'income') allTimeInc += r.amount;
@@ -1567,8 +1568,6 @@
             document.getElementById('all-time-profit-text').innerText = `${allTimeNet >= 0 ? '' : '-'}$${Math.abs(allTimeNet).toLocaleString()}`;
             document.getElementById('all-time-profit-text').style.color = allTimeNet >= 0 ? 'var(--deep-mocha)' : '#A66363';
 
-            // ----------------------------------------
-            // 以下為原有單月報表計算邏輯
             const dropdown = document.getElementById('report-month-select');
             if(!dropdown) return;
             const mo = dropdown.value;
