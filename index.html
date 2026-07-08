@@ -254,7 +254,7 @@
             color: var(--warm-mocha);
         }
 
-        input[type="text"], input[type="number"], input[type="date"], select {
+        input[type="text"], input[type="number"], input[type="date"], input[type="tel"], select {
             background-color: var(--bg-cream);
             border: 1px solid var(--soft-oat);
             padding: 10px 12px;
@@ -441,7 +441,7 @@
         .tag.old-cust { background-color: var(--tag-old); color: #3A5440; }
         .tag.source-tag { background-color: #E6E1DA; color: var(--deep-mocha); }
         .tag.expense-tag { background-color: #F0E6E6; color: #A66363; }
-        .tag.astro-tag { background-color: #EAE6FF; color: #5247A1; } /* 星座專用色 */
+        .tag.astro-tag { background-color: #EAE6FF; color: #5247A1; }
         
         .tag-item {
             font-size: 0.75rem;
@@ -683,6 +683,12 @@
                         </div>
                     </div>
 
+                    <!-- 🌟 新增：電話欄位 (貼心將 inputmode 設為 tel) -->
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <span class="form-label">客戶電話</span>
+                        <input type="tel" id="add-customer-phone" placeholder="如：0912345678" inputmode="tel">
+                    </div>
+
                     <!-- 客戶性別欄位 -->
                     <div class="form-group" style="margin-bottom: 10px;">
                         <span class="form-label">客戶性別</span>
@@ -698,7 +704,7 @@
                         </div>
                     </div>
 
-                    <!-- 🌟 新增：生日輸入欄位 (不含年分更貼心) -->
+                    <!-- 生日輸入欄位 -->
                     <div class="form-group" style="margin-bottom: 10px;">
                         <span class="form-label">客戶生日 (月/日)</span>
                         <div class="form-row">
@@ -710,7 +716,6 @@
                             </select>
                             <select id="add-birthday-day" style="flex: 1;" onchange="updateZodiacHint()">
                                 <option value="">-- 選擇日期 --</option>
-                                <!-- 由 JS 動態生成 1-31 日 -->
                             </select>
                             <div id="zodiac-live-hint" style="font-size: 0.85rem; color: var(--warm-mocha); font-weight: 600; white-space: nowrap; padding-left: 5px;"></div>
                         </div>
@@ -731,7 +736,7 @@
                         </div>
                         <div class="form-group" style="flex: 1;">
                             <span class="form-label">社群帳號/備用</span>
-                            <input type="text" id="add-customer-handle" placeholder="@帳號/電話">
+                            <input type="text" id="add-customer-handle" placeholder="@帳號/LINE官方">
                         </div>
                     </div>
 
@@ -938,7 +943,7 @@
                 ctx.fillStyle = "#F6EDE4"; ctx.beginPath(); ctx.arc(50, 50, 50, 0, Math.PI * 2); ctx.fill();
                 ctx.fillStyle = "#8F725E"; ctx.beginPath(); ctx.arc(50, 44, 27, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(23, 44, 54, 30);
                 ctx.fillStyle = "#F5D7C4"; ctx.beginPath(); ctx.arc(50, 52, 19, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = "#6B5344"; ctx.beginPath(); ctx.moveTo(27, 46); ctx.quadraticCurveTo(50, 28, 73, 46); ctx.quadraticCurveTo(50, 42, 27, 46); ctx.fill();
+                ctx.fillStyle = "#6B5344"; ctx.beginPath(); ctx.moveTo(27, 46); quadraticCurveTo(50, 28, 73, 46); ctx.quadraticCurveTo(50, 42, 27, 46); ctx.fill();
                 ctx.fillStyle = "#4A3D35"; ctx.beginPath(); ctx.arc(43, 51, 2.5, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(57, 51, 2.5, 0, Math.PI * 2); ctx.fill();
                 ctx.fillStyle = "rgba(240, 170, 170, 0.7)"; ctx.beginPath(); ctx.ellipse(38, 55, 4, 2, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(62, 55, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
                 ctx.strokeStyle = "#4A3D35"; ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.beginPath(); ctx.arc(50, 56, 3, 0, Math.PI); ctx.stroke();
@@ -984,7 +989,6 @@
     </script>
 
     <script>
-        // 🌟 核心增強：依照月日自動計算星座邏輯
         function getZodiacSign(month, day) {
             if (!month || !day) return "";
             month = parseInt(month); day = parseInt(day);
@@ -1074,10 +1078,8 @@
                     const nameKey = r.customer.trim();
                     const handleVal = r.customerHandle ? r.customerHandle.trim() : '';
                     const genderVal = r.customerGender || '女';
-                    const bMonth = r.customerBirthMonth || '';
-                    const bDay = r.customerBirthDay || '';
                     const uniqueKey = `${nameKey}_____${handleVal}`;
-                    clientMap.set(uniqueKey, { name: nameKey, handle: handleVal, gender: genderVal, month: bMonth, day: bDay });
+                    clientMap.set(uniqueKey, { name: nameKey, handle: handleVal, gender: genderVal });
                 }
             });
 
@@ -1172,6 +1174,7 @@
             const radioOld = document.getElementById('status-old');
             const birthMonthSelect = document.getElementById('add-birthday-month');
             const birthDaySelect = document.getElementById('add-birthday-day');
+            const phoneInput = document.getElementById('add-customer-phone');
 
             const history = window.appData.filter(r => 
                 r.type === 'income' && 
@@ -1184,10 +1187,10 @@
                 const latestPref = history.find(r => r.customerPref && r.customerPref.trim() !== '');
                 const latestSource = history.find(r => r.customerSource);
                 const latestGender = history.find(r => r.customerGender);
-                
-                // 🌟 自動載入生日與星座
                 const latestBirthMonth = history.find(r => r.customerBirthMonth);
                 const latestBirthDay = history.find(r => r.customerBirthDay);
+                // 🌟 智慧帶入：撈出最完整的新電話
+                const latestPhone = history.find(r => r.customerPhone && r.customerPhone.trim() !== '');
 
                 if (handleInput) handleInput.value = targetHandle || '';
                 if (latestSource) {
@@ -1205,9 +1208,19 @@
                     updateZodiacHint();
                 }
 
+                if (latestPhone && phoneInput) {
+                    phoneInput.value = latestPhone.customerPhone;
+                } else if (phoneInput) {
+                    phoneInput.value = '';
+                }
+
                 let hintText = `✨ <b>回頭客歷史資料：</b><br>`;
                 hintText += `🏷️ 來源：${latestSource ? latestSource.customerSource : '未設定'} (${targetHandle || '無'})｜性別：${latestGender ? latestGender.customerGender : '女'}<br>`;
                 
+                if (latestPhone && latestPhone.customerPhone) {
+                    hintText += `📞 電話：${latestPhone.customerPhone}<br>`;
+                }
+
                 if (latestBirthMonth && latestBirthDay) {
                     const astro = getZodiacSign(latestBirthMonth.customerBirthMonth, latestBirthDay.customerBirthDay);
                     hintText += `🎂 生日：${latestBirthMonth.customerBirthMonth}月${latestBirthDay.customerBirthDay}日 (${astro})<br>`;
@@ -1351,7 +1364,6 @@
                 statusSpan.innerText = r.customerStatus || '新客';
                 mainDiv.appendChild(statusSpan);
 
-                // 🌟 核心增強：在清單中渲染出生日與星座標籤
                 if (r.customerBirthMonth && r.customerBirthDay) {
                     const astroSign = getZodiacSign(r.customerBirthMonth, r.customerBirthDay);
                     const astroSpan = document.createElement('span');
@@ -1380,6 +1392,15 @@
                     });
                 }
                 infoDiv.appendChild(mainDiv);
+
+                // 🌟 核心渲染：如果資料包含電話，在細節區呈現
+                if (r.customerPhone) {
+                    const phoneDiv = document.createElement('div');
+                    phoneDiv.className = 'record-details';
+                    phoneDiv.style.color = 'var(--warm-mocha)';
+                    phoneDiv.innerHTML = `📞 <b>電話：</b>${cleanHtml(r.customerPhone)}`;
+                    infoDiv.appendChild(phoneDiv);
+                }
 
                 if (r.customerPref) {
                     const prefDiv = document.createElement('div');
@@ -1494,6 +1515,7 @@
                 document.getElementById('add-customer').value = target.customer || '';
                 document.getElementById('add-customer-pref').value = target.customerPref || '';
                 document.getElementById('add-customer-handle').value = target.customerHandle || '';
+                document.getElementById('add-customer-phone').value = target.customerPhone || '';
                 
                 document.getElementById('add-birthday-month').value = target.customerBirthMonth || '';
                 document.getElementById('add-birthday-day').value = target.customerBirthDay || '';
@@ -1554,9 +1576,10 @@
                 dataPayload.items = checkedItems;
                 dataPayload.customerPref = document.getElementById('add-customer-pref').value.trim();
                 
-                // 🌟 寫入雲端：生日資料
                 dataPayload.customerBirthMonth = document.getElementById('add-birthday-month').value;
                 dataPayload.customerBirthDay = document.getElementById('add-birthday-day').value;
+                // 🌟 寫入雲端：電話號碼
+                dataPayload.customerPhone = document.getElementById('add-customer-phone').value.trim();
             } else {
                 dataPayload.expenseMerchant = document.getElementById('add-expense-merchant').value.trim() || '未分類店家';
             }
@@ -1564,11 +1587,12 @@
             window.saveDataToCloud(docId, dataPayload);
             window.editingRecordId = null;
 
-            // 表單完整重設
+            // 表單清空
             amtIn.value = ''; noteIn.value = '';
             document.getElementById('add-customer').value = '';
             document.getElementById('add-customer-pref').value = '';
             document.getElementById('add-customer-handle').value = '';
+            document.getElementById('add-customer-phone').value = '';
             document.getElementById('add-expense-merchant').value = '';
             document.getElementById('add-birthday-month').value = '';
             document.getElementById('add-birthday-day').value = '';
@@ -1728,7 +1752,7 @@
             merchantContainer.innerHTML = '';
 
             if (merchantCostMap.size === 0 || exp === 0) {
-                merchantContainer.innerHTML = '<div style="text-align:center; color:var(--warm-mocha); font-size:0.85rem; padding: 15px 0; font-style:italic;">這個月沒有支出，太棒了！💅</div>';
+                merchantContainer.innerHTML = '<div style="text-align:center; color:var(--warm-mocha); font-size:0.85rem; padding: 15px 0; font-style:italic;">這個月沒有支出，太棒了！</div>';
                 return;
             }
 
