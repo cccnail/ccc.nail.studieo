@@ -247,6 +247,44 @@
             border-color: var(--warm-mocha);
         }
 
+        /* 🌟 精緻韓系客製化浮動下拉選單 */
+        .custom-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 64px;
+            left: 0;
+            width: 100%;
+            background-color: var(--white);
+            border: 1px solid var(--soft-oat);
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(140, 122, 107, 0.15);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 999;
+        }
+
+        .custom-dropdown-item {
+            padding: 12px 14px;
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            cursor: pointer;
+            border-bottom: 1px solid rgba(232, 220, 211, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .custom-dropdown-item:last-child {
+            border-bottom: none;
+        }
+        .custom-dropdown-item:active {
+            background-color: var(--card-cream);
+        }
+        .dropdown-item-handle {
+            font-size: 0.75rem;
+            color: var(--warm-mocha);
+            font-style: italic;
+        }
+
         .checkbox-group, .radio-group {
             display: flex;
             flex-wrap: wrap;
@@ -556,11 +594,14 @@
 
                 <!-- 收入專用欄位 -->
                 <div id="income-fields-group">
-                    <div class="form-row" style="margin-bottom: 10px;">
+                    <div class="form-row" style="margin-bottom: 10px; position: relative;">
                         <div class="form-group" style="flex: 1.2;">
                             <span class="form-label">客戶名稱</span>
-                            <input type="text" id="add-customer" placeholder="輸入姓名" list="customer-datalist" oninput="autoLoadCustomerPreference()">
-                            <datalist id="customer-datalist"></datalist>
+                            <!-- 移除原本不聽話的 list，改用完全手寫客製浮動清單 -->
+                            <input type="text" id="add-customer" placeholder="輸入姓名" oninput="showCustomDropdown()" onfocus="showCustomDropdown()" autocomplete="off">
+                            
+                            <!-- 🌟 全新客製化浮動下拉選單 -->
+                            <div id="custom-dropdown" class="custom-dropdown-menu"></div>
                         </div>
                         <div class="form-group" style="flex: 1;">
                             <span class="form-label">客戶狀態</span>
@@ -686,7 +727,7 @@
     </div>
 
     <script>
-        const STORAGE_KEY = 'ccc_nail_master_v6_data';
+        const STORAGE_KEY = 'ccc_nail_master_v7_data';
         let appData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
         const todayObj = new Date();
@@ -706,7 +747,6 @@
             if (targetPage === 'calendar') {
                 renderCalendarView();
                 renderDayRecordsView();
-                updateCustomerDatalist();
             } else if (targetPage === 'all-records') {
                 renderAllRecordsView();
             } else if (targetPage === 'report') {
@@ -723,7 +763,6 @@
             if (type === 'income') {
                 incGroup.style.display = 'block';
                 noteLabel.innerText = '其他備註';
-                autoLoadCustomerPreference();
             } else {
                 incGroup.style.display = 'none';
                 noteLabel.innerText = '支出項目說明';
@@ -731,66 +770,102 @@
             }
         }
 
-        function updateCustomerDatalist() {
-            const datalist = document.getElementById('customer-datalist');
-            datalist.innerHTML = '';
-            const nameSet = new Set();
+        // 🌟 核心功能修正：手寫高相容浮動下拉選單
+        function showCustomDropdown() {
+            const inputVal = document.getElementById('add-customer').value.trim().toLowerCase();
+            const dropdown = document.getElementById('custom-dropdown');
+            dropdown.innerHTML = '';
+
+            // 1. 搜集所有不重複的客戶組合（名字 + 帳號）
+            const clientMap = new Map();
             appData.forEach(r => {
-                if (r.type === 'income' && r.customer) nameSet.add(r.customer.trim());
+                if (r.type === 'income' && r.customer) {
+                    const nameKey = r.customer.trim();
+                    const handleVal = r.customerHandle ? r.customerHandle.trim() : '';
+                    // 用 名字+帳號 當作唯一值組合
+                    const uniqueKey = `${nameKey}_____${handleVal}`;
+                    clientMap.set(uniqueKey, { name: nameKey, handle: handleVal });
+                }
             });
-            nameSet.forEach(name => {
-                const opt = document.createElement('option');
-                opt.value = name;
-                datalist.appendChild(opt);
+
+            // 2. 根據當前輸入的文字篩選出符合的客戶
+            let matchCount = 0;
+            clientMap.forEach((info, key) => {
+                // 如果輸入框是空的，顯示所有歷史客人；如果有打字，進行名字或帳號的模糊比對
+                if (inputVal === '' || info.name.toLowerCase().includes(inputVal) || info.handle.toLowerCase().includes(inputVal)) {
+                    matchCount++;
+                    const item = document.createElement('div');
+                    item.className = 'custom-dropdown-item';
+                    
+                    const handleLabel = info.handle ? `<span class="dropdown-item-handle">(${info.handle})</span>` : '<span class="dropdown-item-handle">(無帳號)</span>';
+                    item.innerHTML = `<span>👤 <b>${cleanHtml(info.name)}</b></span> ${handleLabel}`;
+                    
+                    // 當點選下拉選單其中一個人時
+                    item.onclick = function() {
+                        document.getElementById('add-customer').value = info.name;
+                        dropdown.style.display = 'none'; // 隱藏選單
+                        autoLoadCustomerPreference(info.name, info.handle); // 自動帶入所有歷史資料
+                    };
+                    dropdown.appendChild(item);
+                }
             });
+
+            // 如果有符合的客人群，就把浮動選單秀出來
+            if (matchCount > 0) {
+                dropdown.style.display = 'block';
+            } else {
+                dropdown.style.display = 'none';
+            }
         }
 
-        function autoLoadCustomerPreference() {
-            const currentName = document.getElementById('add-customer').value.trim();
+        // 點擊網頁其他地方時，自動把浮動下拉選單收起來
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('custom-dropdown');
+            const input = document.getElementById('add-customer');
+            if (e.target !== dropdown && e.target !== input) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        // 當選定某位特定的回頭客後，精準帶入喜好、帳號與來源
+        function autoLoadCustomerPreference(targetName, targetHandle) {
             const hintBox = document.getElementById('pref-hint-box');
             const prefInput = document.getElementById('add-customer-pref');
             const handleInput = document.getElementById('add-customer-handle');
             const radioOld = document.getElementById('status-old');
 
-            if (!currentName) {
-                hintBox.style.display = 'none';
-                return;
-            }
+            // 撈出完全符合該名字與帳號的歷史紀錄（由新到舊排）
+            const history = appData.filter(r => 
+                r.type === 'income' && 
+                r.customer && r.customer.trim() === targetName && 
+                ((!targetHandle && !r.customerHandle) || (r.customerHandle && r.customerHandle.trim() === targetHandle))
+            ).sort((a, b) => b.date.localeCompare(a.date));
 
-            const customerHistory = appData
-                .filter(r => r.type === 'income' && r.customer && r.customer.trim() === currentName)
-                .sort((a, b) => b.date.localeCompare(a.date));
+            if (history.length > 0) {
+                if(radioOld) radioOld.checked = true; // 自動勾選舊客
 
-            if (customerHistory.length > 0) {
-                if(radioOld) radioOld.checked = true;
+                const latestPref = history.find(r => r.customerPref && r.customerPref.trim() !== '');
+                const latestSource = history.find(r => r.customerSource);
 
-                const latestPrefRecord = customerHistory.find(r => r.customerPref && r.customerPref.trim() !== '');
-                const latestSourceRecord = customerHistory.find(r => r.customerSource);
-                const latestHandleRecord = customerHistory.find(r => r.customerHandle && r.customerHandle.trim() !== '');
-                
-                let hintText = `✨ <b>回頭客歷史資料：</b><br>`;
-                
-                if (latestSourceRecord || latestHandleRecord) {
-                    const src = latestSourceRecord ? latestSourceRecord.customerSource : '未設定';
-                    const handle = latestHandleRecord ? latestHandleRecord.customerHandle : '無';
-                    hintText += `🏷️ 來源：${src} (${handle})<br>`;
-                    
-                    if (handleInput && handleInput.value.trim() === '' && latestHandleRecord) {
-                        handleInput.value = latestHandleRecord.customerHandle;
-                    }
-                    if (latestSourceRecord) {
-                        const srcRadio = document.querySelector(`input[name="cust-source"][value="${latestSourceRecord.customerSource}"]`);
-                        if (srcRadio) srcRadio.checked = true;
-                    }
+                // 填入社群帳號
+                if (handleInput) handleInput.value = targetHandle || '';
+
+                // 填入/切換來源按鈕
+                if (latestSource) {
+                    const srcRadio = document.querySelector(`input[name="cust-source"][value="${latestSource.customerSource}"]`);
+                    if (srcRadio) srcRadio.checked = true;
                 }
+
+                // 顯示愛心喜好提示小框
+                let hintText = `✨ <b>回頭客歷史資料：</b><br>`;
+                hintText += `🏷️ 來源：${latestSource ? latestSource.customerSource : '未設定'} (${targetHandle || '無'})<br>`;
                 
-                if (latestPrefRecord && latestPrefRecord.customerPref) {
-                    hintText += `❤️ 喜好：${latestPrefRecord.customerPref}`;
-                    if (prefInput && prefInput.value.trim() === '') {
-                        prefInput.value = latestPrefRecord.customerPref;
-                    }
+                if (latestPref && latestPref.customerPref) {
+                    hintText += `❤️ 喜好：${latestPref.customerPref}`;
+                    if (prefInput) prefInput.value = latestPref.customerPref;
                 } else {
                     hintText += `❤️ 喜好：無特別備註`;
+                    if (prefInput) prefInput.value = '';
                 }
 
                 hintBox.innerHTML = hintText;
@@ -868,7 +943,6 @@
                 const custName = cleanHtml(r.customer) || '未註名客戶';
                 const statusClass = r.customerStatus === '新客' ? 'new-cust' : 'old-cust';
                 
-                // 來源標籤圖示
                 let srcIcon = '📸 ';
                 if(r.customerSource === 'FB') srcIcon = '👥 ';
                 if(r.customerSource === 'THREADS') srcIcon = '🧵 ';
@@ -984,7 +1058,6 @@
             
             renderCalendarView();
             renderDayRecordsView();
-            updateCustomerDatalist();
         }
 
         function removeRecord(id, refPage) {
@@ -994,7 +1067,6 @@
                 if (refPage === 'day') {
                     renderCalendarView();
                     renderDayRecordsView();
-                    updateCustomerDatalist();
                 } else {
                     renderAllRecordsView();
                 }
@@ -1062,7 +1134,6 @@
                             appData = parsed;
                             saveData();
                             renderAllRecordsView();
-                            updateCustomerDatalist();
                             alert('歷史紀錄成功匯入！');
                         }
                     } else {
@@ -1132,7 +1203,6 @@
             toggleFormFields();
             renderCalendarView();
             renderDayRecordsView();
-            updateCustomerDatalist();
         }
     </script>
 </body>
