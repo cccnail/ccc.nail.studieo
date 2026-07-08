@@ -669,17 +669,15 @@
 
                 <!-- 收入專用欄位 -->
                 <div id="income-fields-group">
-                    <!-- 🌟 升級：徹底擺脫手機系統干擾的 24 小時時分下拉選單 -->
+                    <!-- 🌟 完美解鎖：純 24 小時制精準時分下拉（分解鎖為 00-59 每一分均能選） -->
                     <div class="form-group" style="margin-bottom: 10px;">
-                        <span class="form-label">預約時間 (純 24 小時制選擇)</span>
+                        <span class="form-label">預約時間 (24H制精準點)</span>
                         <div class="form-row">
                             <select id="add-time-hour" style="flex: 1;">
                                 <option value="">-- 時 (24H) --</option>
-                                <!-- JS 自動填入 00 到 23 -->
                             </select>
                             <select id="add-time-minute" style="flex: 1;">
-                                <option value="">-- 分 --</option>
-                                <!-- JS 自動填入 00 到 55 (每五分鐘一格) -->
+                                <option value="">-- 分 (精準) --</option>
                             </select>
                         </div>
                     </div>
@@ -1003,7 +1001,7 @@
         
         toggleFormFields();
         setupBirthdayDaysDropdown();
-        setup24HourTimeDropdowns(); // 啟動時間下拉生成
+        setup24HourTimeDropdowns(); // 啟動精準至 1 分鐘的下拉選單
     </script>
 
     <script>
@@ -1025,7 +1023,7 @@
             return "";
         }
 
-        // 🌟 核心增強：生成不被系統干擾的 24 小時與 5 分鐘級距下拉格
+        // 🌟 解鎖精準度：生成 00-23 時 與 00-59 分 (不再跳 5 分鐘)
         function setup24HourTimeDropdowns() {
             const hrSelect = document.getElementById('add-time-hour');
             const minSelect = document.getElementById('add-time-minute');
@@ -1039,8 +1037,8 @@
                 hrSelect.appendChild(opt);
             }
 
-            minSelect.innerHTML = '<option value="">-- 分 --</option>';
-            for (let m = 0; m < 60; m += 5) {
+            minSelect.innerHTML = '<option value="">-- 分 (精準) --</option>';
+            for (let m = 0; m < 60; m++) { // 解鎖：一格就是 1 分鐘
                 const opt = document.createElement('option');
                 const mStr = String(m).padStart(2, '0');
                 opt.value = mStr; opt.innerText = `${mStr} 分`;
@@ -1434,8 +1432,9 @@
                     if(r.customerSource === 'THREADS') srcIcon = '🧵 ';
                     if(r.customerSource === 'LINE') srcIcon = '💬 ';
                     const srcSpan = document.createElement('span');
+                    const srcSpanText = `${srcIcon}${r.customerSource}`;
                     srcSpan.className = 'tag source-tag';
-                    srcSpan.innerText = `${srcIcon}${r.customerSource}`;
+                    srcSpan.innerText = srcSpanText;
                     mainDiv.appendChild(srcSpan);
                 }
 
@@ -1585,7 +1584,6 @@
                 document.getElementById('add-customer-handle').value = target.customerHandle || '';
                 document.getElementById('add-customer-phone').value = target.customerPhone || '';
                 
-                // 🌟 智慧帶入 24H 雙下拉選單值
                 if (target.customerTime && target.customerTime.includes(':')) {
                     const tParts = target.customerTime.split(':');
                     document.getElementById('add-time-hour').value = String(tParts[0]).padStart(2, '0');
@@ -1658,7 +1656,6 @@
                 dataPayload.customerBirthDay = document.getElementById('add-birthday-day').value;
                 dataPayload.customerPhone = document.getElementById('add-customer-phone').value.trim();
                 
-                // 🌟 組合兩個下拉選單成為 24H 格式時間字串（如 "14:05"）
                 const hVal = document.getElementById('add-time-hour').value;
                 const mVal = document.getElementById('add-time-minute').value;
                 if (hVal && mVal) {
