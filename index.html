@@ -443,6 +443,7 @@
         .tag.expense-tag { background-color: #F0E6E6; color: #A66363; }
         .tag.astro-tag { background-color: #EAE6FF; color: #5247A1; }
         .tag.time-tag { background-color: #F0EDE6; color: var(--deep-mocha); font-weight: 700; letter-spacing: 0.5px; }
+        .tag.atmos-tag { background-color: #FDF1E6; color: #B37D4E; font-weight: 600; }
         
         .tag-item {
             font-size: 0.75rem;
@@ -753,7 +754,6 @@
                         </div>
                     </div>
 
-                    <!-- 🌟 升級：後台施作項目全面改成「本店卸甲/他店卸甲/手/足/延甲/貓眼/單色」 -->
                     <div class="form-group" style="margin-bottom: 10px;">
                         <span class="form-label">施作項目 (可複選)</span>
                         <div class="checkbox-group">
@@ -770,6 +770,16 @@
                     <div class="form-group" style="margin-bottom: 10px;">
                         <span class="form-label">客戶備註 (喜好/膚況/特徵)</span>
                         <input type="text" id="add-customer-pref" placeholder="如：指緣易流血、喜歡厚建構">
+                    </div>
+
+                    <!-- 🌟 後台更新：新增「施作氛圍」下拉選單項目 -->
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <span class="form-label">施作現場氛圍偏好</span>
+                        <select id="add-customer-atmosphere">
+                            <option value="想聊天">想聊天 💬 (自在開朗聊天)</option>
+                            <option value="想安靜">想安靜 🎧 (安靜休息免打擾)</option>
+                            <option value="都可以" selected>都可以 ✨ (由美甲師隨緣決定)</option>
+                        </select>
                     </div>
                 </div>
 
@@ -1219,6 +1229,7 @@
             const birthMonthSelect = document.getElementById('add-birthday-month');
             const birthDaySelect = document.getElementById('add-birthday-day');
             const phoneInput = document.getElementById('add-customer-phone');
+            const atmosSelect = document.getElementById('add-customer-atmosphere');
 
             const history = window.appData.filter(r => 
                 r.type === 'income' && 
@@ -1234,6 +1245,7 @@
                 const latestBirthMonth = history.find(r => r.customerBirthMonth);
                 const latestBirthDay = history.find(r => r.customerBirthDay);
                 const latestPhone = history.find(r => r.customerPhone && r.customerPhone.trim() !== '');
+                const latestAtmos = history.find(r => r.customerAtmosphere);
 
                 if (handleInput) handleInput.value = targetHandle || '';
                 if (latestSource) {
@@ -1257,6 +1269,12 @@
                     phoneInput.value = '';
                 }
 
+                if (latestAtmos && atmosSelect) {
+                    atmosSelect.value = latestAtmos.customerAtmosphere;
+                } else if (atmosSelect) {
+                    atmosSelect.value = "都可以";
+                }
+
                 let hintText = `✨ <b>回頭客歷史資料：</b><br>`;
                 hintText += `🏷️ 來源：${latestSource ? latestSource.customerSource : '未設定'} (${targetHandle || '無'})｜性別：${latestGender ? latestGender.customerGender : '女'}<br>`;
                 
@@ -1267,6 +1285,13 @@
                 if (latestBirthMonth && latestBirthDay) {
                     const astro = getZodiacSign(latestBirthMonth.customerBirthMonth, latestBirthDay.customerBirthDay);
                     hintText += `🎂 生日：${latestBirthMonth.customerBirthMonth}月${latestBirthDay.customerBirthDay}日 (${astro})<br>`;
+                }
+
+                if (latestAtmos && latestAtmos.customerAtmosphere) {
+                    let icon = '✨';
+                    if (latestAtmos.customerAtmosphere === '想聊天') icon = '💬 想聊天';
+                    if (latestAtmos.customerAtmosphere === '想安靜') icon = '🎧 想安靜';
+                    hintText += `🎵 現場氛圍：${icon}<br>`;
                 }
 
                 if (latestPref && latestPref.customerPref) {
@@ -1433,6 +1458,17 @@
                     mainDiv.appendChild(srcSpan);
                 }
 
+                // 🌟 後台呈現：如果資料庫有現場氛圍偏好，漂亮地亮出彩色小標籤
+                if (r.customerAtmosphere) {
+                    let atmosIcon = '✨ ';
+                    if (r.customerAtmosphere === '想聊天') atmosIcon = '💬 ';
+                    if (r.customerAtmosphere === '想安靜') atmosIcon = '🎧 ';
+                    const atmosSpan = document.createElement('span');
+                    atmosSpan.className = 'tag atmos-tag';
+                    atmosSpan.innerText = `${atmosIcon}${r.customerAtmosphere}`;
+                    mainDiv.appendChild(atmosSpan);
+                }
+
                 if (r.items && r.items.length > 0) {
                     r.items.forEach(it => {
                         const itSpan = document.createElement('span');
@@ -1578,6 +1614,7 @@
                 document.getElementById('add-customer-pref').value = target.customerPref || '';
                 document.getElementById('add-customer-handle').value = target.customerHandle || '';
                 document.getElementById('add-customer-phone').value = target.customerPhone || '';
+                document.getElementById('add-customer-atmosphere').value = target.customerAtmosphere || '都可以';
                 
                 if (target.customerTime && target.customerTime.includes(':')) {
                     const tParts = target.customerTime.split(':');
@@ -1641,6 +1678,7 @@
                 dataPayload.customerGender = document.querySelector('input[name="cust-gender"]:checked').value;
                 dataPayload.items = checkedItems;
                 dataPayload.customerPref = document.getElementById('add-customer-pref').value.trim();
+                dataPayload.customerAtmosphere = document.getElementById('add-customer-atmosphere').value;
                 
                 dataPayload.customerBirthMonth = document.getElementById('add-birthday-month').value;
                 dataPayload.customerBirthDay = document.getElementById('add-birthday-day').value;
@@ -1670,6 +1708,7 @@
             document.getElementById('add-expense-merchant').value = '';
             document.getElementById('add-birthday-month').value = '';
             document.getElementById('add-birthday-day').value = '';
+            document.getElementById('add-customer-atmosphere').value = '都可以';
             document.getElementById('zodiac-live-hint').innerText = '';
 
             document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => cb.checked = false);
