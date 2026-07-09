@@ -669,7 +669,6 @@
 
                 <!-- 收入專用欄位 -->
                 <div id="income-fields-group">
-                    <!-- 🌟 完美解鎖：純 24 小時制精準時分下拉（分解鎖為 00-59 每一分均能選） -->
                     <div class="form-group" style="margin-bottom: 10px;">
                         <span class="form-label">預約時間 (24H制精準點)</span>
                         <div class="form-row">
@@ -750,10 +749,11 @@
                         </div>
                         <div class="form-group" style="flex: 1;">
                             <span class="form-label">社群帳號/備用</span>
-                            <input type="text" id="add-customer-handle" placeholder="@帳號/LINE官方">
+                            <input type="text" id="add-customer-handle" placeholder="@帳號/LINE帳號">
                         </div>
                     </div>
 
+                    <!-- 🌟 升級：後台施作項目全面改成「本店卸甲/他店卸甲/手/足/延甲/貓眼/單色」 -->
                     <div class="form-group" style="margin-bottom: 10px;">
                         <span class="form-label">施作項目 (可複選)</span>
                         <div class="checkbox-group">
@@ -762,6 +762,8 @@
                             <label class="check-label"><input type="checkbox" name="nail-item" value="手"> 手</label>
                             <label class="check-label"><input type="checkbox" name="nail-item" value="足"> 足</label>
                             <label class="check-label"><input type="checkbox" name="nail-item" value="延甲"> 延甲</label>
+                            <label class="check-label"><input type="checkbox" name="nail-item" value="貓眼"> 貓眼</label>
+                            <label class="check-label"><input type="checkbox" name="nail-item" value="單色"> 單色</label>
                         </div>
                     </div>
 
@@ -898,7 +900,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // 已嵌入 Claire 的專屬 Firebase 帳號金鑰
         const firebaseConfig = {
             apiKey: "AIzaSyArhVMBzEVlpZeuHdeYK5_VO0NjERlst7k",
             authDomain: "ccc-nail-system.firebaseapp.com",
@@ -920,7 +921,6 @@
         window.viewMonth = todayObj.getMonth();
         window.chosenDate = new Date(todayObj.getFullYear(), todayObj.getMonth(), todayObj.getDate());
 
-        // 雲端同步監聽
         onSnapshot(recordsCollection, (snapshot) => {
             window.appData = [];
             snapshot.forEach((doc) => {
@@ -938,7 +938,6 @@
             document.getElementById('loading-banner').innerText = "🔴 雲端同步失敗，請檢查金鑰設定";
         });
 
-        // 記憶體 Canvas 動態繪圖
         window.drawAvatarToCanvas = function(canvas, gender) {
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
@@ -1001,7 +1000,7 @@
         
         toggleFormFields();
         setupBirthdayDaysDropdown();
-        setup24HourTimeDropdowns(); // 啟動精準至 1 分鐘的下拉選單
+        setup24HourTimeDropdowns();
     </script>
 
     <script>
@@ -1023,7 +1022,6 @@
             return "";
         }
 
-        // 🌟 解鎖精準度：生成 00-23 時 與 00-59 分 (不再跳 5 分鐘)
         function setup24HourTimeDropdowns() {
             const hrSelect = document.getElementById('add-time-hour');
             const minSelect = document.getElementById('add-time-minute');
@@ -1038,7 +1036,7 @@
             }
 
             minSelect.innerHTML = '<option value="">-- 分 (精準) --</option>';
-            for (let m = 0; m < 60; m++) { // 解鎖：一格就是 1 分鐘
+            for (let m = 0; m < 60; m++) {
                 const opt = document.createElement('option');
                 const mStr = String(m).padStart(2, '0');
                 opt.value = mStr; opt.innerText = `${mStr} 分`;
@@ -1114,7 +1112,6 @@
             }
         }
 
-        // 客戶搜尋下拉選單
         function showCustomDropdown() {
             const inputVal = document.getElementById('add-customer').value.trim().toLowerCase();
             const dropdown = document.getElementById('custom-dropdown');
@@ -1165,7 +1162,6 @@
             else dropdown.style.display = 'none';
         }
 
-        // 支出歷史店家下拉選單
         function showExpenseMerchantDropdown() {
             const inputVal = document.getElementById('add-expense-merchant').value.trim().toLowerCase();
             const dropdown = document.getElementById('expense-merchant-dropdown');
@@ -1274,7 +1270,7 @@
                 }
 
                 if (latestPref && latestPref.customerPref) {
-                    hintText += `❤️ 喜好：${latestPref.customerPref}`;
+                    hintText += `❤️ 喜好/表單回報：<br>${cleanHtml(latestPref.customerPref).replace(/\n/g, '<br>')}`;
                     if (prefInput) prefInput.value = latestPref.customerPref;
                 } else {
                     hintText += `❤️ 喜好：無特別備註`;
@@ -1432,9 +1428,8 @@
                     if(r.customerSource === 'THREADS') srcIcon = '🧵 ';
                     if(r.customerSource === 'LINE') srcIcon = '💬 ';
                     const srcSpan = document.createElement('span');
-                    const srcSpanText = `${srcIcon}${r.customerSource}`;
                     srcSpan.className = 'tag source-tag';
-                    srcSpan.innerText = srcSpanText;
+                    srcSpan.innerText = `${srcIcon}${r.customerSource}`;
                     mainDiv.appendChild(srcSpan);
                 }
 
@@ -1460,7 +1455,7 @@
                     const prefDiv = document.createElement('div');
                     prefDiv.className = 'record-details';
                     prefDiv.style.color = '#A38F81';
-                    prefDiv.innerHTML = `❤️ <b>喜好：</b>${cleanHtml(r.customerPref)}`;
+                    prefDiv.innerHTML = `❤️ <b>喜好/表單回報：</b><br>${cleanHtml(r.customerPref).replace(/\n/g, '<br>')}`;
                     infoDiv.appendChild(prefDiv);
                 }
 
@@ -1572,8 +1567,8 @@
             renderCalendarView();
             renderDayRecordsView();
 
-            document.getElementById('add-type').value = target.type;
             document.getElementById('add-amount').value = target.amount;
+            document.getElementById('add-type').value = target.type;
             document.getElementById('add-note').value = target.note || '';
 
             toggleFormFields();
@@ -1622,14 +1617,9 @@
 
         function addNewRecord() {
             const amtIn = document.getElementById('add-amount');
-            const amt = parseInt(amtIn.value);
+            const amt = parseInt(amtIn.value) || 0;
             const type = document.getElementById('add-type').value;
             const noteIn = document.getElementById('add-note');
-            
-            if (!amt || amt <= 0) {
-                alert('請填入有效的消費金額唷！');
-                return;
-            }
 
             let docId = window.editingRecordId || 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
             
@@ -1670,7 +1660,6 @@
             window.saveDataToCloud(docId, dataPayload);
             window.editingRecordId = null;
 
-            // 表單清空
             amtIn.value = ''; noteIn.value = '';
             document.getElementById('add-customer').value = '';
             document.getElementById('add-customer-pref').value = '';
@@ -1839,7 +1828,6 @@
             document.getElementById('pct-female-text').innerText = `${femalePct}% (共${femaleCount}人)`;
             document.getElementById('pct-male-text').innerText = `${malePct}% (共${maleCount}人)`;
 
-            // 商家比例圖
             const merchantContainer = document.getElementById('merchant-report-container');
             merchantContainer.innerHTML = '';
 
