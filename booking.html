@@ -221,7 +221,7 @@
             background-color: var(--deep-mocha);
         }
 
-        /* 覆蓋通用彈窗樣式 */
+        /* 通用彈窗樣式 */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -351,7 +351,6 @@
                     <input type="tel" id="cust-phone" required placeholder="請輸入聯絡電話" inputmode="tel">
                 </div>
 
-                <!-- 🌟 新增：生日填寫區塊 -->
                 <div class="form-group">
                     <label class="form-label">您的生日（月/日）*</label>
                     <div class="form-row">
@@ -367,7 +366,6 @@
                     </div>
                 </div>
 
-                <!-- 🌟 升級：聯絡方式二選一（拿掉官方二字） -->
                 <div class="form-group">
                     <label class="form-label">聯絡管道與帳號 *</label>
                     <div class="radio-tile-group" style="margin-bottom: 8px;">
@@ -388,11 +386,13 @@
                     </div>
                 </div>
 
+                <!-- 🌟 升級：施作項目多加「純卸甲」選項 -->
                 <div class="form-group">
                     <label class="form-label">施作項目（可多選）*</label>
                     <div class="checkbox-tile-group">
                         <label class="tile-label"><input type="checkbox" name="nail-item" value="手"> <span class="tile-button">手部凝膠</span></label>
                         <label class="tile-label"><input type="checkbox" name="nail-item" value="足"> <span class="tile-button">足部凝膠</span></label>
+                        <label class="tile-label"><input type="checkbox" name="nail-item" value="純卸甲"> <span class="tile-button">純卸甲 🫧</span></label>
                     </div>
                 </div>
 
@@ -492,7 +492,6 @@
                 minSelect.appendChild(new Option(`${mStr} 分`, mStr));
             }
 
-            // 生日「日」下拉格選單生成 (1-31)
             const daySelect = document.getElementById('cust-birth-day');
             for(let d = 1; d <= 31; d++) {
                 daySelect.appendChild(new Option(`${d} 日`, d));
@@ -514,7 +513,7 @@
             
             const checkedItems = document.querySelectorAll('input[name="nail-item"]:checked');
             if(checkedItems.length === 0) {
-                alert("請至少選擇一項施作項目（手或足）唷！");
+                alert("請至少選擇一項施作項目（手部、足部或純卸甲）唷！");
                 return;
             }
             
@@ -555,8 +554,8 @@
                 customerTime: timePayload,
                 customerStatus: "新客",
                 customerGender: "女", 
-                customerSource: source, // 客人選的 IG 或 LINE 完美對接
-                customerBirthMonth: document.getElementById('cust-birth-month').value, // 完美對接後台生日欄位
+                customerSource: source,
+                customerBirthMonth: document.getElementById('cust-birth-month').value,
                 customerBirthDay: document.getElementById('cust-birth-day').value,
                 items: items,
                 customerPref: `✨【顧客線上預約】\n款式類型：${hasDesign}\n期望氛圍：${chatPref}`,
