@@ -772,7 +772,6 @@
                         <input type="text" id="add-customer-pref" placeholder="如：指緣易流血、喜歡厚建構">
                     </div>
 
-                    <!-- 🌟 後台更新：新增「施作氛圍」下拉選單項目 -->
                     <div class="form-group" style="margin-bottom: 10px;">
                         <span class="form-label">施作現場氛圍偏好</span>
                         <select id="add-customer-atmosphere">
@@ -1219,6 +1218,7 @@
             }
         });
 
+        // 🌟 調整：回頭客提示中，將現場氛圍獨立一列，絕不帶到「客戶備註（喜好）」輸入框
         function autoLoadCustomerPreference(targetName, targetHandle) {
             if (window.editingRecordId !== null) return;
 
@@ -1295,7 +1295,7 @@
                 }
 
                 if (latestPref && latestPref.customerPref) {
-                    hintText += `❤️ 喜好/表單回報：<br>${cleanHtml(latestPref.customerPref).replace(/\n/g, '<br>')}`;
+                    hintText += `❤️ 喜好/特殊備註：<br>${cleanHtml(latestPref.customerPref).replace(/\n/g, '<br>')}`;
                     if (prefInput) prefInput.value = latestPref.customerPref;
                 } else {
                     hintText += `❤️ 喜好：無特別備註`;
@@ -1458,7 +1458,6 @@
                     mainDiv.appendChild(srcSpan);
                 }
 
-                // 🌟 後台呈現：如果資料庫有現場氛圍偏好，漂亮地亮出彩色小標籤
                 if (r.customerAtmosphere) {
                     let atmosIcon = '✨ ';
                     if (r.customerAtmosphere === '想聊天') atmosIcon = '💬 ';
