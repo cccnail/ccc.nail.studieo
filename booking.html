@@ -221,7 +221,7 @@
             background-color: var(--deep-mocha);
         }
 
-        /* 覆蓋通用彈窗樣式 (含防呆二次確認、成功提交) */
+        /* 覆蓋通用彈窗樣式 */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -297,7 +297,7 @@
             <p>Online Booking System</p>
         </header>
 
-        <!-- 🌟 順序 1：七月份優惠專案看板 -->
+        <!-- 順序 1：七月份優惠專案看板 -->
         <div class="promo-card">
             <div class="notice-title" style="color: #4A3A2C;">✨七月份優惠專案✨</div>
             <ul class="notice-list">
@@ -311,7 +311,7 @@
             </ul>
         </div>
 
-        <!-- 🌟 順序 2：預約須知看板 -->
+        <!-- 順序 2：預約須知看板 -->
         <div class="notice-card">
             <div class="notice-title">✨CCC.Nail.Studieo 預約須知✨</div>
             <ul class="notice-list">
@@ -326,7 +326,7 @@
             </ul>
         </div>
 
-        <!-- 🌟 順序 3：店家地址與捷運交通資訊 -->
+        <!-- 順序 3：店家地址與捷運交通資訊 -->
         <div class="location-card">
             <div class="notice-title" style="color: var(--deep-mocha);">✨店家地址✨</div>
             <div style="font-size: 0.85rem; line-height: 1.6; text-align: center; color: var(--text-dark); margin-bottom: 10px;">
@@ -351,9 +351,30 @@
                     <input type="tel" id="cust-phone" required placeholder="請輸入聯絡電話" inputmode="tel">
                 </div>
 
+                <!-- 🌟 新增：生日填寫區塊 -->
                 <div class="form-group">
-                    <label class="form-label">聯絡方式（Line 官方 / IG 帳號）*</label>
-                    <input type="text" id="cust-handle" required placeholder="如：@lineid 或 ig_account">
+                    <label class="form-label">您的生日（月/日）*</label>
+                    <div class="form-row">
+                        <select id="cust-birth-month" required style="flex: 1;">
+                            <option value="">-- 月 --</option>
+                            <option value="1">1 月</option><option value="2">2 月</option><option value="3">3 月</option><option value="4">4 月</option>
+                            <option value="5">5 月</option><option value="6">6 月</option><option value="7">7 月</option><option value="8">8 月</option>
+                            <option value="9">9 月</option><option value="10">10 月</option><option value="11">11 月</option><option value="12">12 月</option>
+                        </select>
+                        <select id="cust-birth-day" required style="flex: 1;">
+                            <option value="">-- 日 --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 🌟 升級：聯絡方式二選一（拿掉官方二字） -->
+                <div class="form-group">
+                    <label class="form-label">聯絡管道與帳號 *</label>
+                    <div class="radio-tile-group" style="margin-bottom: 8px;">
+                        <label class="tile-label"><input type="radio" name="cust-source" value="IG" checked onchange="updateHandlePlaceholder()"><span class="tile-button">IG 帳號</span></label>
+                        <label class="tile-label"><input type="radio" name="cust-source" value="LINE" onchange="updateHandlePlaceholder()"><span class="tile-button">LINE 帳號</span></label>
+                    </div>
+                    <input type="text" id="cust-handle" required placeholder="請輸入您的 IG 帳號">
                 </div>
 
                 <div class="form-group">
@@ -417,7 +438,7 @@
         </div>
     </div>
 
-    <!-- 🌟 新增：防呆二次確認彈窗 -->
+    <!-- 防呆二次確認彈窗 -->
     <div id="confirm-modal" class="modal-overlay">
         <div class="modal-card">
             <h2>🤍 確認預約資訊</h2>
@@ -470,9 +491,24 @@
                 const mStr = String(m).padStart(2, '0');
                 minSelect.appendChild(new Option(`${mStr} 分`, mStr));
             }
+
+            // 生日「日」下拉格選單生成 (1-31)
+            const daySelect = document.getElementById('cust-birth-day');
+            for(let d = 1; d <= 31; d++) {
+                daySelect.appendChild(new Option(`${d} 日`, d));
+            }
         }
 
-        // 點擊最下方按鈕時：觸發二次確認彈窗
+        window.updateHandlePlaceholder = function() {
+            const source = document.querySelector('input[name="cust-source"]:checked').value;
+            const handleInput = document.getElementById('cust-handle');
+            if (source === 'IG') {
+                handleInput.placeholder = "請輸入您的 IG 帳號";
+            } else {
+                handleInput.placeholder = "請輸入您的 LINE 帳號/ID";
+            }
+        };
+
         window.handleFormSubmit = function(event) {
             event.preventDefault();
             
@@ -482,7 +518,6 @@
                 return;
             }
             
-            // 彈出確認視窗
             document.getElementById('confirm-modal').style.display = 'flex';
         };
 
@@ -490,9 +525,7 @@
             document.getElementById('confirm-modal').style.display = 'none';
         };
 
-        // 真正執行寫入 Firebase 的函數
         window.executeBookingSubmit = async function() {
-            // 隱藏確認彈窗
             document.getElementById('confirm-modal').style.display = 'none';
 
             const items = [];
@@ -505,6 +538,7 @@
 
             const hasDesign = document.querySelector('input[name="has-design"]:checked').value;
             const chatPref = document.querySelector('input[name="chat-pref"]:checked').value;
+            const source = document.querySelector('input[name="cust-source"]:checked').value;
             
             const hr = document.getElementById('book-hour').value;
             const min = document.getElementById('book-minute').value;
@@ -521,7 +555,9 @@
                 customerTime: timePayload,
                 customerStatus: "新客",
                 customerGender: "女", 
-                customerSource: "IG",
+                customerSource: source, // 客人選的 IG 或 LINE 完美對接
+                customerBirthMonth: document.getElementById('cust-birth-month').value, // 完美對接後台生日欄位
+                customerBirthDay: document.getElementById('cust-birth-day').value,
                 items: items,
                 customerPref: `✨【顧客線上預約】\n款式類型：${hasDesign}\n期望氛圍：${chatPref}`,
                 note: "⚠️ 顧客自助預約成功，待施作完補填金額"
@@ -531,6 +567,7 @@
                 await setDoc(doc(db, "nail_records", docId), dataPayload);
                 document.getElementById('success-popup').style.display = 'flex';
                 document.getElementById('customer-booking-form').reset();
+                updateHandlePlaceholder();
             } catch(e) {
                 alert("預約提交失敗，請檢查網路或與美甲師聯絡！");
             }
