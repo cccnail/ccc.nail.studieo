@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCC.Nail.Studieo 線上預約預約系統</title>
+    <style>
+        /* 韓系奶油風色調 */
+        :root {
+            --bg-cream: #FDFBF7;
+            --card-cream: #F5EFEB;
+            --soft-oat: #E8DCD3;
+            --warm-mocha: #8C7A6B;
+            --deep-mocha: #5A4E44;
+            --accent-rose: #D9C3B0;
+            --text-dark: #4A3E3D;
+            --white: #FFFFFF;
+            --shadow: 0 12px 30px rgba(140, 122, 107, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-cream);
+            color: var(--text-dark);
+            padding: 20px 16px 40px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        header h1 {
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            color: var(--deep-mocha);
+            font-weight: 600;
+        }
+
+        header p {
+            font-size: 0.85rem;
+            color: var(--warm-mocha);
+            margin-top: 5px;
+            letter-spacing: 1px;
+        }
+
+        /* 預約須知區塊 */
+        .notice-card {
+            background-color: #FAF6F2;
+            border-left: 4px solid var(--accent-rose);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(140, 122, 107, 0.04);
+        }
+
+        .notice-title {
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: var(--deep-mocha);
+            text-align: center;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        .notice-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .notice-list li {
+            font-size: 0.82rem;
+            line-height: 1.5;
+            color: #615246;
+        }
+
+        /* 表單區塊 */
+        .form-card {
+            background-color: var(--white);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(232, 220, 211, 0.4);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        .form-group:last-of-type {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--deep-mocha);
+        }
+
+        input[type="text"], input[type="tel"], input[type="date"], select {
+            background-color: var(--bg-cream);
+            border: 1px solid var(--soft-oat);
+            padding: 12px 14px;
+            border-radius: 12px;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+            outline: none;
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--warm-mocha);
+            background-color: var(--white);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* 漂亮精緻的單選/複選鈕 */
+        .radio-tile-group, .checkbox-tile-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tile-label {
+            flex: 1;
+            min-width: 80px;
+            position: relative;
+        }
+
+        .tile-label input {
+            position: absolute;
+            opacity: 0;
+            width: 0; height: 0;
+        }
+
+        .tile-button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            background-color: var(--bg-cream);
+            border: 1px solid var(--soft-oat);
+            border-radius: 12px;
+            font-size: 0.85rem;
+            color: var(--text-dark);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .tile-label input:checked + .tile-button {
+            background-color: var(--card-cream);
+            border-color: var(--warm-mocha);
+            color: var(--deep-mocha);
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(140, 122, 107, 0.05);
+        }
+
+        .btn-submit {
+            background-color: var(--warm-mocha);
+            color: var(--white);
+            border: none;
+            padding: 14px;
+            border-radius: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 12px rgba(140, 122, 107, 0.2);
+            transition: background-color 0.2s;
+        }
+
+        .btn-submit:active {
+            background-color: var(--deep-mocha);
+        }
+
+        /* 成功彈出視窗 */
+        .success-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(90, 78, 68, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .success-card {
+            background-color: var(--white);
+            border-radius: 24px;
+            padding: 30px 24px;
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: var(--shadow);
+        }
+
+        .success-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .success-card h2 {
+            font-size: 1.25rem;
+            color: var(--deep-mocha);
+            margin-bottom: 8px;
+        }
+
+        .success-card p {
+            font-size: 0.88rem;
+            color: var(--warm-mocha);
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>CCC.Nail.Studieo</h1>
+            <p>Online Booking System</p>
+        </header>
+
+        <!-- 預約須知看板 -->
+        <div class="notice-card">
+            <div class="notice-title">✨CCC.Nail.Studieo 預約須知✨</div>
+            <ul class="notice-list">
+                <li>🤍 實習美甲師（高標請勿預約）</li>
+                <li>🤍 預約時間只保留15分鐘，若需要改期請最晚於前一天告知</li>
+                <li>🤍 目前不收問題甲</li>
+                <li>🤍 凝膠有七天保固期，超過需收補甲費</li>
+                <li>🤍 設計款/帶圖款不會跟原圖一模一樣</li>
+                <li>🤍 施作期間，有問題請於照燈前提出</li>
+                <li>🤍 一人工作室，回覆較慢請見諒</li>
+                <li>🤍 <b>預約完成視同同意以上事項</b></li>
+            </ul>
+        </div>
+
+        <!-- 線上預約表單 -->
+        <div class="form-card">
+            <form id="customer-booking-form" onsubmit="submitBooking(event)">
+                
+                <div class="form-group">
+                    <label class="form-label">姓名（綽號）*</label>
+                    <input type="text" id="cust-name" required placeholder="請輸入您的姓名或稱呼">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">手機號碼 *</label>
+                    <input type="tel" id="cust-phone" required placeholder="請輸入聯絡電話" inputmode="tel">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">聯絡方式（Line 官方 / IG 帳號）*</label>
+                    <input type="text" id="cust-handle" required placeholder="如：@lineid 或 ig_account">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">預約日期與時間 *</label>
+                    <div class="form-row" style="margin-bottom: 8px;">
+                        <input type="date" id="book-date" required>
+                    </div>
+                    <div class="form-row">
+                        <select id="book-hour" required style="flex: 1;"></select>
+                        <select id="book-minute" required style="flex: 1;"></select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">施作項目（可多選）*</label>
+                    <div class="checkbox-tile-group">
+                        <label class="tile-label"><input type="checkbox" name="nail-item" value="手"> <span class="tile-button">手部凝膠</span></label>
+                        <label class="tile-label"><input type="checkbox" name="nail-item" value="足"> <span class="tile-button">足部凝膠</span></label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1;">
+                        <label class="form-label">需要延甲嗎？</label>
+                        <div class="radio-tile-group">
+                            <label class="tile-label"><input type="radio" name="need-extension" value="延甲"><span class="tile-button">是</span></label>
+                            <label class="tile-label"><input type="radio" name="need-extension" value="無" checked><span class="tile-button">否</span></label>
+                        </div>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label class="form-label">需要卸甲嗎？</label>
+                        <div class="radio-tile-group">
+                            <label class="tile-label"><input type="radio" name="need-removal" value="他店卸甲"><span class="tile-button">他店</span></label>
+                            <label class="tile-label"><input type="radio" name="need-removal" value="本店卸甲"><span class="tile-button">本店</span></label>
+                            <label class="tile-label"><input type="radio" name="need-removal" value="無" checked><span class="tile-button">不需要</span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">是否自帶美甲設計圖？</label>
+                    <div class="radio-tile-group">
+                        <label class="tile-label"><input type="radio" name="has-design" value="自帶圖"><span class="tile-button">有自帶圖</span></label>
+                        <label class="tile-label"><input type="radio" name="has-design" value="不帶圖" checked><span class="tile-button">單色/現場不帶圖</span></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">施作期間的現場氛圍偏好？</label>
+                    <div class="radio-tile-group">
+                        <label class="tile-label"><input type="radio" name="chat-pref" value="想聊天" checked><span class="tile-button">自在聊天 💬</span></label>
+                        <label class="tile-label"><input type="radio" name="chat-pref" value="想安靜"><span class="tile-button">安靜休息 🎧</span></label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">同意須知並送出預約 ✨</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 成功提示彈窗 -->
+    <div id="success-popup" class="success-overlay">
+        <div class="success-card">
+            <div class="success-icon">🤍</div>
+            <h2>預約已成功送出</h2>
+            <p>系統已將您的預約排程同步至雲端中！<br>回覆可能較慢，敬請耐心等候美甲師通知確認唷。</p>
+        </div>
+    </div>
+
+    <!-- 引入 Firebase 雲端連動 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // 完美連動 Claire 的專屬 Firebase 資料庫
+        const firebaseConfig = {
+            apiKey: "AIzaSyArhVMBzEVlpZeuHdeYK5_VO0NjERlst7k",
+            authDomain: "ccc-nail-system.firebaseapp.com",
+            projectId: "ccc-nail-system",
+            storageBucket: "ccc-nail-system.firebasestorage.app",
+            messagingSenderId: "762564904502",
+            appId: "1:762564904502:web:6c638cff9994b8632c3a97"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // 生成預約時、分下拉選單項目
+        function setupTimeSelectors() {
+            const hrSelect = document.getElementById('book-hour');
+            const minSelect = document.getElementById('book-minute');
+            
+            hrSelect.innerHTML = '<option value="">-- 時 (24H) --</option>';
+            for(let h = 0; h < 24; h++) {
+                const hStr = String(h).padStart(2, '0');
+                hrSelect.appendChild(new Option(`${hStr} 點`, hStr));
+            }
+
+            minSelect.innerHTML = '<option value="">-- 分 --</option>';
+            for(let m = 0; m < 60; m++) {
+                const mStr = String(m).padStart(2, '0');
+                minSelect.appendChild(new Option(`${mStr} 分`, mStr));
+            }
+        }
+
+        // 核心邏輯：顧客送出，自動封裝成後台認得的欄位格式
+        window.submitBooking = async function(event) {
+            event.preventDefault();
+
+            const items = [];
+            document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => items.push(cb.value));
+            if(items.length === 0) {
+                alert("請至少選擇一項施作項目（手或足）唷！");
+                return;
+            }
+
+            const removal = document.querySelector('input[name="need-removal"]:checked').value;
+            if(removal !== "無") items.push(removal);
+            const extension = document.querySelector('input[name="need-extension"]:checked').value;
+            if(extension !== "無") items.push(extension);
+
+            const hasDesign = document.querySelector('input[name="has-design"]:checked').value;
+            const chatPref = document.querySelector('input[name="chat-pref"]:checked').value;
+            
+            const hr = document.getElementById('book-hour').value;
+            const min = document.getElementById('book-minute').value;
+            const timePayload = `${hr}:${min}`;
+
+            // 生成專屬唯一 ID，並裝載後台所需的智慧資料
+            const docId = 'book_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+            const dataPayload = {
+                date: document.getElementById('book-date').value,
+                type: "income",
+                amount: 0, // 初始預約記帳後台顯示 $0，施作完妳再補填
+                customer: document.getElementById('cust-name').value.trim(),
+                customerPhone: document.getElementById('cust-phone').value.trim(),
+                customerHandle: document.getElementById('cust-handle').value.trim(),
+                customerTime: timePayload,
+                customerStatus: "新客", // 預設新客，後台會依名字自動調出回頭客提示
+                customerGender: "女", 
+                customerSource: "IG", // 預設來源
+                items: items,
+                customerPref: `✨【顧客線上預約】\n自帶圖：${hasDesign}\n期望氛圍：${chatPref}`,
+                note: "⚠️ 顧客自助預約成功，待施作完補填金額"
+            };
+
+            try {
+                await setDoc(doc(db, "nail_records", docId), dataPayload);
+                document.getElementById('success-popup').style.display = 'flex';
+                document.getElementById('customer-booking-form').reset();
+            } catch(e) {
+                alert("預約提交失敗，請檢查網路或與美甲師聯絡！");
+            }
+        };
+
+        setupTimeSelectors();
+    </script>
+</body>
+</html>
