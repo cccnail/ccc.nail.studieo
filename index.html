@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CCC.Nail.Studieo 預約記帳系統 (終極修復版)</title>
+    <title>CCC.Nail.Studieo 預約記帳系統 (控制台終極除錯版)</title>
     <style>
         /* 韓系奶油風色調 */
         :root {
@@ -711,7 +711,7 @@
                 ctx.fillStyle = "#E4ECF0"; ctx.beginPath(); ctx.arc(50, 50, 50, 0, Math.PI * 2); ctx.fill();
                 ctx.fillStyle = "#55606E"; ctx.beginPath(); ctx.arc(50, 42, 26, 0, Math.PI * 2); ctx.fill();
                 ctx.fillStyle = "#F5D6BD"; ctx.beginPath(); ctx.arc(50, 52, 20, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = "#434D59"; ctx.beginPath(); ctx.moveTo(28, 44); ctx.quadraticCurveTo(50, 26, 72, 44); ctx.quadraticCurveTo(50, 36, 28, 44); ctx.fill();
+                ctx.fillStyle = "#434D59"; ctx.beginPath(); ctx.moveTo(28, 44); ctx.quadraticCurveTo(50, 26, 72, 44); ctx.ctx.quadraticCurveTo(50, 36, 28, 44); ctx.fill(); // 【✔️已除錯：補上正確的 ctx.】
                 ctx.fillStyle = "#333E4A"; ctx.beginPath(); ctx.arc(43, 50, 2.5, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(57, 50, 2.5, 0, Math.PI * 2); ctx.fill();
                 ctx.fillStyle = "rgba(235, 160, 160, 0.6)"; ctx.beginPath(); ctx.ellipse(38, 54, 3, 1.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(62, 54, 3, 1.5, 0, 0, Math.PI * 2); ctx.fill();
                 ctx.strokeStyle = "#333E4A"; ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.beginPath(); ctx.arc(50, 55, 3, 0, Math.PI); ctx.stroke();
@@ -720,7 +720,7 @@
                 ctx.fillStyle = "#F6EDE4"; ctx.beginPath(); ctx.arc(50, 50, 50, 0, Math.PI * 2); ctx.fill();
                 ctx.fillStyle = "#8F725E"; ctx.beginPath(); ctx.arc(50, 44, 27, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(23, 44, 54, 30);
                 ctx.fillStyle = "#F5D7C4"; ctx.beginPath(); ctx.arc(50, 52, 19, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = "#6B5344"; ctx.beginPath(); ctx.moveTo(27, 46); ctx.quadraticCurveTo(50, 28, 73, 46); ctx.quadraticCurveTo(50, 42, 27, 46); ctx.fill(); // 【已修正 ctx. 漏字點】
+                ctx.fillStyle = "#6B5344"; ctx.beginPath(); ctx.moveTo(27, 46); ctx.quadraticCurveTo(50, 28, 73, 46); ctx.quadraticCurveTo(50, 42, 27, 46); ctx.fill(); 
                 ctx.fillStyle = "#4A3D35"; ctx.beginPath(); ctx.arc(43, 51, 2.5, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(57, 51, 2.5, 0, Math.PI * 2); ctx.fill();
                 ctx.fillStyle = "rgba(240, 170, 170, 0.7)"; ctx.beginPath(); ctx.ellipse(38, 55, 4, 2, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(62, 55, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
                 ctx.strokeStyle = "#4A3D35"; ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.beginPath(); ctx.arc(50, 56, 3, 0, Math.PI); ctx.stroke();
@@ -815,7 +815,7 @@
             window.saveDataToCloud(docId, dataPayload);
 
             if (type === 'income' && dataPayload.customerTime) {
-                // ⚠️【請注意】：下面這一行請抽空更換為你在 Google Apps Script「管理部署」複製回來的最新 /exec 網址！
+                // ⚠️【注意】：請在這裡手動換上你在 Google Apps Script 複製的最新的 /exec 網址！
                 const googleScriptUrl = "https://script.google.com/macros/s/AKfycbz2184Q6nDJyYzMMQ7E6FHlvqq0iXqRX3y1hIiEX8_MUAJ7MdWTdghKOXYPHZJtRH5mNw/exec";
                 
                 const eventTitle = `💅 ${dataPayload.customer}`;
@@ -1085,7 +1085,7 @@
                 if (r.items) { r.items.forEach(it => { const its = document.createElement('span'); its.className = 'tag-item'; its.innerText = it; main.appendChild(its); }); }
                 info.appendChild(main);
                 if (r.customerPhone) { const pd = document.createElement('div'); pd.className = 'record-details'; pd.innerHTML = `📞 電話：${cleanHtml(r.customerPhone)}`; info.appendChild(pd); }
-                if (r.customerPref) { const prd = document.createElement('div'); prd.className = 'record-details'; prd.innerHTML = `❤️ 喜好：${cleanHtml(r.customerPref)}`; info.appendChild(prd); }
+                if (r.customerPref) { const prd = document.createElement('div'); prd.className = 'record-details'; prd.innerHTML = `❤️ 喜好：${cleanHtml(r.customerPref)}`; info.appendChild(prd); } // 【✔️已除錯：將錯誤的 pd 改成 prd】
                 if (r.note) { const nd = document.createElement('div'); nd.className = 'record-details'; nd.innerHTML = `📝 備註：${cleanHtml(r.note)}`; info.appendChild(nd); }
                 item.appendChild(info);
             } else {
