@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CCC.Nail.Studieo 預約記帳系統 (精準覆蓋版)</title>
+    <title>CCC.Nail.Studieo 預約記帳系統 (日曆平移除錯版)</title>
     <style>
         /* 韓系奶油風色調 */
         :root {
@@ -720,7 +720,7 @@
                 ctx.fillStyle = "#F6EDE4"; ctx.beginPath(); ctx.arc(50, 50, 50, 0, Math.PI * 2); ctx.fill();
                 ctx.fillStyle = "#8F725E"; ctx.beginPath(); ctx.arc(50, 44, 27, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(23, 44, 54, 30);
                 ctx.fillStyle = "#F5D7C4"; ctx.beginPath(); ctx.arc(50, 52, 19, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = "#6B5344"; ctx.beginPath(); ctx.moveTo(27, 46); ctx.quadraticCurveTo(50, 28, 73, 46); ctx.quadraticCurveTo(50, 42, 27, 46); ctx.fill();
+                ctx.fillStyle = "#6B5344"; ctx.beginPath(); ctx.moveTo(27, 46); ctx.quadraticCurveTo(50, 28, 73, 46); quadraticCurveTo(50, 42, 27, 46); ctx.fill();
                 ctx.fillStyle = "#4A3D35"; ctx.beginPath(); ctx.arc(43, 51, 2.5, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(57, 51, 2.5, 0, Math.PI * 2); ctx.fill();
                 ctx.fillStyle = "rgba(240, 170, 170, 0.7)"; ctx.beginPath(); ctx.ellipse(38, 55, 4, 2, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(62, 55, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
                 ctx.strokeStyle = "#4A3D35"; ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.beginPath(); ctx.arc(50, 56, 3, 0, Math.PI); ctx.stroke();
@@ -779,7 +779,6 @@
                     if (matched) {
                         window.existingCalendarEventId = matched.calendarEventId;
                         docId = matched.id;
-                        console.log("🎯 雷達攔截綁定成功，ID: " + matched.calendarEventId);
                     }
                 }
             }
@@ -816,7 +815,9 @@
             window.saveDataToCloud(docId, dataPayload);
 
             if (type === 'income' && dataPayload.customerTime) {
+                // 【⚠️ 核心對接點】：請在此更換為你在第二步中複製的最新 Google GAS 網址！
                 const googleScriptUrl = "https://script.google.com/macros/s/AKfycbz2184Q6nDJyYzMMQ7E6FHlvqq0iXqRX3y1hIiEX8_MUAJ7MdWTdghKOXYPHZJtRH5mNw/exec";
+                
                 const eventTitle = `💅 ${dataPayload.customer}`;
                 const eventNote = `客戶：${dataPayload.customer}\n電話：${dataPayload.customerPhone}\n來源：${dataPayload.customerSource}\n項目：${dataPayload.items.join(', ')}\n備註：${dataPayload.customerPref || '無'}`;
 
@@ -828,6 +829,8 @@
                     calendarEventId: dataPayload.calendarEventId || "" 
                 };
 
+                console.log("🚀 正向 Google GAS 發送聯動訊號...", postData);
+
                 fetch(googleScriptUrl, {
                     method: "POST",
                     mode: "cors",
@@ -836,13 +839,18 @@
                 })
                 .then(res => res.text())
                 .then(serverEventId => {
+                    console.log("📥 GAS 伺服器回應結果:", serverEventId);
                     if (serverEventId && !serverEventId.startsWith("Error")) {
                         dataPayload.calendarEventId = serverEventId.trim();
                         window.saveDataToCloud(docId, dataPayload);
-                        console.log("🟢 [日曆覆蓋平移鎖定]");
+                        console.log("🟢 [日曆同步成功：ID 鎖定完畢]");
+                    } else {
+                        console.error("🔴 GAS 回傳錯誤:", serverEventId);
                     }
                 })
-                .catch(err => console.error("日曆通訊異常:", err));
+                .catch(err => {
+                    console.error("❌ 無法與 Google GAS 通訊，請檢查網址或權限是否封鎖:", err);
+                });
             }
 
             window.editingRecordId = null;
@@ -1081,7 +1089,7 @@
                 if (r.items) { r.items.forEach(it => { const its = document.createElement('span'); its.className = 'tag-item'; its.innerText = it; main.appendChild(its); }); }
                 info.appendChild(main);
                 if (r.customerPhone) { const pd = document.createElement('div'); pd.className = 'record-details'; pd.innerHTML = `📞 電話：${cleanHtml(r.customerPhone)}`; info.appendChild(pd); }
-                if (r.customerPref) { const prd = document.createElement('div'); prd.className = 'record-details'; prd.innerHTML = `❤️ 喜好：${cleanHtml(r.customerPref)}`; info.appendChild(prd); }
+                if (r.customerPref) { const prd = document.createElement('div'); prd.className = 'record-details'; prd.innerHTML = `❤️ 喜好：${cleanHtml(r.customerPref)}`; info.appendChild(pd); }
                 if (r.note) { const nd = document.createElement('div'); nd.className = 'record-details'; nd.innerHTML = `📝 備註：${cleanHtml(r.note)}`; info.appendChild(nd); }
                 item.appendChild(info);
             } else {
