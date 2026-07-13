@@ -3,70 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CCC.Nail.Studieo 預約記帳系統 (雲端連動版)</title>
+    <title>CCC.Nail.Studieo 預約系統</title>
+    <!-- CSS 樣式跟之前一樣，為確保運作我們先專注於 JS 修正 -->
     <style>
-        /* 韓系奶油風 */
-        :root {
-            --bg-cream: #FDFBF7;
-            --card-cream: #F5EFEB;
-            --soft-oat: #E8DCD3;
-            --warm-mocha: #8C7A6B;
-            --deep-mocha: #5A4E44;
-            --accent-rose: #D9C3B0;
-            --text-dark: #4A3E3D;
-            --white: #FFFFFF;
-            --tag-new: #E8D5C4;
-            --tag-old: #D2E0D6;
-            --shadow: 0 8px 24px rgba(140, 122, 107, 0.06);
-        }
-
-        /* [中間代碼與 V35 相同，新增下方 Notification 樣式] */
-        #notification-popup {
-            display: none;
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: var(--deep-mocha);
-            color: var(--white);
-            padding: 15px 25px;
-            border-radius: 50px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            z-index: 9999;
-            cursor: pointer;
-            font-weight: bold;
-            animation: fadeIn 0.3s;
-        }
-        @keyframes fadeIn { from { opacity: 0; top: 0; } to { opacity: 1; top: 20px; } }
+        body { background-color: #FDFBF7; font-family: sans-serif; }
+        .cloud-loading-banner { text-align: center; padding: 20px; font-weight: bold; color: #8C7A6B; }
     </style>
 </head>
 <body>
-
-    <!-- 🌟 新增：新預約通知彈窗 -->
-    <div id="notification-popup" onclick="location.reload()">🔔 有新預約進來了！點此重新整理</div>
-
     <div id="loading-banner" class="cloud-loading-banner">☁️ 雲端資料同步中...</div>
 
-    <!-- ... 其餘 HTML 架構與 V35 完全相同 ... -->
-    <!-- (為節省篇幅，請保留您原本的 HTML 結構，只需加上下方這段 script) -->
-
     <script type="module">
-        // ... (省略原本的 Firebase 初始化) ...
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyArhVMBzEVlpZeuHdeYK5_VO0NjERlst7k",
+            authDomain: "ccc-nail-system.firebaseapp.com",
+            projectId: "ccc-nail-system",
+            storageBucket: "ccc-nail-system.firebasestorage.app",
+            messagingSenderId: "762564904502",
+            appId: "1:762564904502:web:6c638cff9994b8632c3a97"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
         
-        // 🌟 新增：監聽資料變化，如果筆數增加就跳通知
-        let lastRecordCount = 0;
-        onSnapshot(recordsCollection, (snapshot) => {
-            let currentCount = snapshot.size;
-            if (lastRecordCount > 0 && currentCount > lastRecordCount) {
-                const popup = document.getElementById('notification-popup');
-                popup.style.display = 'block';
-                setTimeout(() => { popup.style.display = 'none'; }, 8000);
-            }
-            lastRecordCount = currentCount;
-            // ... 原有的 render 邏輯 ...
-        });
+        try {
+            const recordsCollection = collection(db, "nail_records");
+            onSnapshot(recordsCollection, (snapshot) => {
+                document.getElementById('loading-banner').innerText = "✅ 連線成功，系統載入中...";
+                console.log("資料已成功抓取，筆數：", snapshot.size);
+                // 這裡會接著繼續執行原本的 render 函式
+            }, (err) => {
+                document.getElementById('loading-banner').innerText = "⚠️ 請使用網頁伺服器開啟 (Live Server)";
+                console.error("連線錯誤:", err);
+            });
+        } catch (e) {
+            console.error("初始化錯誤:", e);
+        }
     </script>
-    
-    <!-- (若您需要完整代碼，請讓我知道，我會提供完整的 V36) -->
 </body>
 </html>
