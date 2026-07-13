@@ -743,7 +743,6 @@
             try { await deleteDoc(doc(db, "nail_records", id)); } catch (e) { alert("從雲端刪除失敗！"); }
         }
 
-        // 【語法修正修復點】：正則表達式修正，移除語法噪點
         function cleanTextForMatch(str) {
             if (!str) return "";
             return str.toString().trim().replace(/[\s\-\(\)\+]/g, "").toLowerCase();
