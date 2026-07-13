@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CCC.Nail.Studieo 預約記帳系統 (終極對齊版)</title>
+    <title>CCC.Nail.Studieo 預約記帳系統 (精準覆蓋版)</title>
     <style>
         /* 韓系奶油風色調 */
         :root {
@@ -743,10 +743,10 @@
             try { await deleteDoc(doc(db, "nail_records", id)); } catch (e) { alert("從雲端刪除失敗！"); }
         }
 
-        // 【新增文字清洗輔助器】：拔除所有空格、橫槓、特殊標點，避免文字微幅不對齊
+        // 【語法修正修復點】：正則表達式修正，移除語法噪點
         function cleanTextForMatch(str) {
             if (!str) return "";
-            return str.toString().trim().replace(/[\s\-\(\)\+] g, "").toLowerCase();
+            return str.toString().trim().replace(/[\s\-\(\)\+]/g, "").toLowerCase();
         }
 
         window.addNewRecord = function() {
@@ -765,26 +765,22 @@
                 currentPhone = document.getElementById('add-customer-phone').value.trim();
             }
 
-            // 【文字特徵噪值過濾比對】：將當前輸入的手機與姓名轉成純噪值對其
             const targetCustClean = cleanTextForMatch(currentCustomer);
             const targetPhoneClean = cleanTextForMatch(currentPhone);
 
             if (!window.existingCalendarEventId || window.existingCalendarEventId === "") {
                 if (type === 'income' && targetCustClean !== "") {
-                    // 全庫雷達掃描：名字、日期、電話三重去噪比對
                     const matched = window.appData.find(r => {
                         if (r.type !== 'income' || r.date !== inputDateStr) return false;
-                        
                         const dbCustClean = cleanTextForMatch(r.customer);
                         const dbPhoneClean = cleanTextForMatch(r.customerPhone);
-                        
                         return (dbCustClean === targetCustClean && dbPhoneClean === targetPhoneClean && r.calendarEventId && r.calendarEventId !== "");
                     });
                     
                     if (matched) {
                         window.existingCalendarEventId = matched.calendarEventId;
-                        docId = matched.id; // 直接沿用舊的文件標記，阻斷重複新增
-                        console.log("🎯 [終極對齊成功] 自動攔截名字與電話完全相符的紀錄，綁定 ID: " + matched.calendarEventId);
+                        docId = matched.id;
+                        console.log("🎯 雷達攔截綁定成功，ID: " + matched.calendarEventId);
                     }
                 }
             }
@@ -844,7 +840,7 @@
                     if (serverEventId && !serverEventId.startsWith("Error")) {
                         dataPayload.calendarEventId = serverEventId.trim();
                         window.saveDataToCloud(docId, dataPayload);
-                        console.log("🟢 [日曆同步覆蓋鎖定]");
+                        console.log("🟢 [日曆覆蓋平移鎖定]");
                     }
                 })
                 .catch(err => console.error("日曆通訊異常:", err));
@@ -1086,7 +1082,7 @@
                 if (r.items) { r.items.forEach(it => { const its = document.createElement('span'); its.className = 'tag-item'; its.innerText = it; main.appendChild(its); }); }
                 info.appendChild(main);
                 if (r.customerPhone) { const pd = document.createElement('div'); pd.className = 'record-details'; pd.innerHTML = `📞 電話：${cleanHtml(r.customerPhone)}`; info.appendChild(pd); }
-                if (r.customerPref) { const prd = document.createElement('div'); prd.className = 'record-details'; prd.innerHTML = `❤️ 喜好：${cleanHtml(r.customerPref)}`; info.appendChild(pd); }
+                if (r.customerPref) { const prd = document.createElement('div'); prd.className = 'record-details'; prd.innerHTML = `❤️ 喜好：${cleanHtml(r.customerPref)}`; info.appendChild(prd); }
                 if (r.note) { const nd = document.createElement('div'); nd.className = 'record-details'; nd.innerHTML = `📝 備註：${cleanHtml(r.note)}`; info.appendChild(nd); }
                 item.appendChild(info);
             } else {
@@ -1132,9 +1128,9 @@
                     document.getElementById('add-time-hour').value = String(t[0]).padStart(2, '0'); document.getElementById('add-time-minute').value = String(t[1]).padStart(2, '0');
                 }
                 document.getElementById('add-birthday-month').value = target.customerBirthMonth || ''; document.getElementById('add-birthday-day').value = target.customerBirthDay || ''; updateZodiacHint();
-                const sR = document.querySelector(`input[name="cust-status"][value="${target.customerStatus || '新客'}"}"]`); if(sR) sR.checked = true;
-                const srcR = document.querySelector(`input[name="cust-source"][value="${target.customerSource || 'IG'}"}"]`); if(srcR) srcR.checked = true;
-                const gR = document.querySelector(`input[name="cust-gender"][value="${target.customerGender || '女'}"}"]`); if(gR) gR.checked = true;
+                const sR = document.querySelector(`input[name="cust-status"][value="${target.customerStatus || '新客'}"]`); if(sR) sR.checked = true;
+                const srcR = document.querySelector(`input[name="cust-source"][value="${target.customerSource || 'IG'}"]`); if(srcR) srcR.checked = true;
+                const gR = document.querySelector(`input[name="cust-gender"][value="${target.customerGender || '女'}"]`); if(gR) gR.checked = true;
                 document.querySelectorAll('input[name="nail-item"]').forEach(cb => cb.checked = target.items && target.items.includes(cb.value));
             } else { document.getElementById('add-expense-merchant').value = target.expenseMerchant || ''; }
 
