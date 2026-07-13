@@ -904,6 +904,10 @@
         </div>
     </div>
 
+    <!-- 隱形表單傳輸容器，專門用來解決瀏覽器跨網域 CORS 的安全阻擋限制 -->
+    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+    <form id="hidden_google_form" method="POST" target="hidden_iframe" style="display:none;"></form>
+
     <!-- 引入 Firebase 核心 SDK 與 Firestore 功能 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -1039,7 +1043,7 @@
             // 1. 儲存至雲端 Firebase
             window.saveDataToCloud(docId, dataPayload);
 
-            // 2. 聯動 Google 行事曆 (僅限營業預約收入)
+            // 2. 聯動 Google 行事曆 (採用 100% 繞過 CORS 的隱形表單傳輸技術)
             if (type === 'income') {
                 const googleScriptUrl = "https://script.google.com/macros/s/AKfycbz2184Q6nDJyYzMMQ7E6FHlvqq0iXqRX3y1hIiEX8_MUAJ7MdWTdghKOXYPHZJtRH5mNw/exec";
                 
@@ -1047,19 +1051,36 @@
                 const mVal = document.getElementById('add-time-minute').value;
                 
                 if (hVal && mVal) {
-                    // 升級改用可靠的背景表單格式傳輸，避免跨網域被瀏覽器封鎖
-                    const payload = {
-                        date: toDateStr(window.chosenDate),
-                        time: `${hVal}:${mVal}`,
-                        title: `💅 預約: ${dataPayload.customer}`,
-                        note: `客戶：${dataPayload.customer}\n電話：${dataPayload.customerPhone}\n來源：${dataPayload.customerSource}\n項目：${dataPayload.items.join(', ')}\n備註：${dataPayload.customerPref || '無'}`
-                    };
+                    const eventTitle = `💅 預約: ${dataPayload.customer}`;
+                    const eventNote = `客戶：${dataPayload.customer}\n電話：${dataPayload.customerPhone}\n來源：${dataPayload.customerSource}\n項目：${dataPayload.items.join(', ')}\n備註：${dataPayload.customerPref || '無'}`;
+                    const eventDate = toDateStr(window.chosenDate);
+                    const eventTime = `${hVal}:${mVal}`;
 
                     try {
-                        const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-                        navigator.sendBeacon(googleScriptUrl, blob);
+                        const form = document.getElementById('hidden_google_form');
+                        form.action = googleScriptUrl;
+                        form.innerHTML = ''; // 清空舊欄位
+
+                        // 用傳統表單的 key-value 方式傳遞，讓 Apps Script 的 e.parameter 能直接讀取
+                        const inputs = {
+                            date: eventDate,
+                            time: eventTime,
+                            title: eventTitle,
+                            note: eventNote
+                        };
+
+                        for (const [key, val] of Object.entries(inputs)) {
+                            const hiddenInput = document.createElement('input');
+                            hiddenInput.type = 'hidden';
+                            hiddenInput.name = key;
+                            hiddenInput.value = val;
+                            form.appendChild(hiddenInput);
+                        }
+
+                        // 模擬表單提交，利用 iframe 承接回應，徹底繞過控制台的 CORS 政策限制
+                        form.submit();
                     } catch (err) {
-                        console.error("日曆同步失敗:", err);
+                        console.error("行事曆表單傳送失敗:", err);
                     }
                 }
             }
