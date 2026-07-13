@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CCC.Nail.Studieo 預約記帳系統 (智慧連動版)</title>
+    <title>CCC.Nail.Studieo 預約記帳系統 (智慧修復版)</title>
     <style>
         /* 韓系奶油風色調 */
         :root {
@@ -660,7 +660,6 @@
                     <div class="chart-val" id="pct-male-text">0%</div>
                 </div>
             </div>
-            <div class="card-title" style="font-size: 0.95rem; border-top: 1px dashed var(--soft-oat); padding-top: 15px;">當月支出店家比例</div>
             <div class="chart-container" id="merchant-report-container"></div>
         </div>
     </div>
@@ -684,7 +683,7 @@
 
         window.appData = [];
         window.editingRecordId = null;
-        window.existingCalendarEventId = null; // 用來暫存編輯中的日曆ID
+        window.existingCalendarEventId = null; 
 
         const todayObj = new Date();
         window.viewYear = todayObj.getFullYear();
@@ -759,7 +758,7 @@
                 type: type,
                 amount: amt,
                 note: noteIn.value.trim(),
-                calendarEventId: window.existingCalendarEventId || "" // 攜帶舊有的日曆身分證ID
+                calendarEventId: window.existingCalendarEventId || "" 
             };
 
             if (type === 'income') {
@@ -783,17 +782,11 @@
                 dataPayload.expenseMerchant = document.getElementById('add-expense-merchant').value.trim() || '未分類店家';
             }
 
-            // 先儲存基礎資料到雲端庫
             window.saveDataToCloud(docId, dataPayload);
 
-            // 聯動 Google 日曆（智慧重疊、覆蓋、且不帶有多餘標籤字樣）
             if (type === 'income' && dataPayload.customerTime) {
                 const googleScriptUrl = "https://script.google.com/macros/s/AKfycbz2184Q6nDJyYzMMQ7E6FHlvqq0iXqRX3y1hIiEX8_MUAJ7MdWTdghKOXYPHZJtRH5mNw/exec";
-                
-                // 【已修改】：徹底拉掉「預約:」，純顯示美甲符號+名字
                 const eventTitle = `💅 ${dataPayload.customer}`;
-                
-                // 【已修改】：內文明確剔除 CCC.NAIL.STUDIEO
                 const eventNote = `客戶：${dataPayload.customer}\n電話：${dataPayload.customerPhone}\n來源：${dataPayload.customerSource}\n項目：${dataPayload.items.join(', ')}\n備註：${dataPayload.customerPref || '無'}`;
 
                 const postData = {
@@ -801,10 +794,9 @@
                     time: dataPayload.customerTime,
                     title: eventTitle,
                     note: eventNote,
-                    calendarEventId: window.existingCalendarEventId || "" // 告訴 Google 是要新增還是覆蓋
+                    calendarEventId: window.existingCalendarEventId || "" 
                 };
 
-                // 改用標準 text/plain 的 fetch 傳輸，接收 Google 日曆身分證
                 fetch(googleScriptUrl, {
                     method: "POST",
                     body: JSON.stringify(postData)
@@ -812,19 +804,17 @@
                 .then(res => res.json())
                 .then(jsonResult => {
                     if (jsonResult && jsonResult.status === "Success" && jsonResult.eventId) {
-                        // 拿到日曆回報的身分證號後，非同步回存補進資料庫，確保下次點修改可以直接「覆蓋原行程」
                         dataPayload.calendarEventId = jsonResult.eventId;
                         window.saveDataToCloud(docId, dataPayload);
-                        console.log("⚡ 智慧日曆同步成功，已綁定Event ID:", jsonResult.eventId);
+                        console.log("智慧日曆同步成功");
                     }
                 })
-                .catch(err => console.error("行事曆連線通訊異常:", err));
+                .catch(err => console.error("日曆通訊異常:", err));
             }
 
             window.editingRecordId = null;
             window.existingCalendarEventId = null;
 
-            // 清空欄位
             amtIn.value = ''; noteIn.value = '';
             document.getElementById('add-customer').value = ''; document.getElementById('add-customer-pref').value = '';
             document.getElementById('add-customer-handle').value = ''; document.getElementById('add-customer-phone').value = '';
@@ -869,6 +859,18 @@
             if ((month == 1 && day >= 20) || (month == 2 && day <= 18)) return "♒ 水瓶座";
             if ((month == 2 && day >= 19) || (month == 3 && day <= 20)) return "♓ 雙魚座";
             return "";
+        }
+
+        // 【智慧修復關鍵】：原本遺漏的輔助函數，導致排班條列清單卡死
+        function sortRecordsByTime(records) {
+            return records.sort((a, b) => {
+                if (a.type !== 'income' && b.type !== 'income') return 0;
+                if (a.type !== 'income') return 1;
+                if (b.type !== 'income') return -1;
+                const timeA = a.customerTime || "99:99";
+                const timeB = b.customerTime || "99:99";
+                return timeA.localeCompare(timeB);
+            });
         }
 
         function setup24HourTimeDropdowns() {
@@ -1077,7 +1079,7 @@
         function startEditRecord(id) {
             const target = window.appData.find(r => r.id === id); if (!target) return;
             switchPage('calendar'); window.editingRecordId = id;
-            window.existingCalendarEventId = target.calendarEventId || null; // 【重要】載入原先存好的日曆身分證ID
+            window.existingCalendarEventId = target.calendarEventId || null; 
 
             const parts = target.date.split('-'); window.chosenDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
             window.viewYear = window.chosenDate.getFullYear(); window.viewMonth = window.chosenDate.getMonth();
@@ -1147,13 +1149,6 @@
             const totalCust = female + male; let fPct = totalCust > 0 ? Math.round((female / totalCust) * 100) : 0; let mPct = totalCust > 0 ? Math.round((male / totalCust) * 100) : 0;
             document.getElementById('bar-female-fill').style.width = `${fPct}%`; document.getElementById('bar-male-fill').style.width = `${mPct}%`;
             document.getElementById('pct-female-text').innerText = `${fPct}% (共${female}人)`; document.getElementById('pct-male-text').innerText = `${mPct}% (共${male}人)`;
-            const container = document.getElementById('merchant-report-container'); container.innerHTML = '';
-            if (merchantMap.size === 0 || exp === 0) { container.innerHTML = '<div style="text-align:center; color:var(--warm-mocha); font-size:0.85rem; padding: 15px 0;">無支出</div>'; return; }
-            Array.from(merchantMap.entries()).sort((a, b) => b[1] - a[1]).forEach(([mName, mAmount]) => {
-                const percentage = Math.round((mAmount / exp) * 100); const row = document.createElement('div'); row.className = 'chart-row';
-                row.innerHTML = `<div class="chart-label" title="${cleanHtml(mName)}">🛒 ${cleanHtml(mName)}</div><div class="chart-bar-bg"><div class="chart-bar-fill merchant-bar" style="width: ${percentage}%;"></div></div><div class="chart-val">${percentage}% ($${mAmount.toLocaleString()})</div>`;
-                container.appendChild(row);
-            });
         }
 
         function cleanHtml(str) { if(!str) return ''; return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
