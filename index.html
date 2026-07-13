@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CCC.Nail.Studieo 預約記帳系統 (智慧修復版)</title>
+    <title>CCC.Nail.Studieo 預約記帳系統 (終極聯動版)</title>
     <style>
         /* 韓系奶油風色調 */
         :root {
@@ -422,7 +422,6 @@
         .chart-bar-fill.expense-bar { background-color: #E3C3C3; }
         .chart-bar-fill.female-bar { background-color: #EAC7C7; }
         .chart-bar-fill.male-bar { background-color: #C7D4EA; }
-        .chart-bar-fill.merchant-bar { background-color: #E1D5C9; }
         .chart-val { width: 110px; color: var(--deep-mocha); font-size: 0.8rem; font-weight: 500; text-align: right; white-space: nowrap; }
     </style>
 </head>
@@ -467,7 +466,7 @@
             
             <div class="record-list" id="day-records-list"></div>
 
-            <!-- 智慧表單 -->
+            <!-- 表單 -->
             <div id="accounting-form-anchor" class="quick-add-form">
                 <div class="form-row">
                     <div class="form-group" style="flex: 1;">
@@ -660,7 +659,6 @@
                     <div class="chart-val" id="pct-male-text">0%</div>
                 </div>
             </div>
-            <div class="chart-container" id="merchant-report-container"></div>
         </div>
     </div>
 
@@ -782,6 +780,7 @@
                 dataPayload.expenseMerchant = document.getElementById('add-expense-merchant').value.trim() || '未分類店家';
             }
 
+            // 先儲存至資料庫
             window.saveDataToCloud(docId, dataPayload);
 
             if (type === 'income' && dataPayload.customerTime) {
@@ -797,19 +796,23 @@
                     calendarEventId: window.existingCalendarEventId || "" 
                 };
 
+                // 【終極方案】：改用異步獲取純文字文本模式，徹底打通 CORS 阻擋屏障
                 fetch(googleScriptUrl, {
                     method: "POST",
+                    mode: "cors", // 使用標準跨域模式
+                    headers: { "Content-Type": "text/plain" },
                     body: JSON.stringify(postData)
                 })
-                .then(res => res.json())
-                .then(jsonResult => {
-                    if (jsonResult && jsonResult.status === "Success" && jsonResult.eventId) {
-                        dataPayload.calendarEventId = jsonResult.eventId;
+                .then(res => res.text()) // 【核心修復】：用純文字讀取 Google 吐回來的身份證 ID！
+                .then(serverEventId => {
+                    if (serverEventId && !serverEventId.startsWith("Error")) {
+                        // 網頁成功拿到日曆身分證！回寫雲端資料庫，確保下次點編輯可以直接精準覆蓋
+                        dataPayload.calendarEventId = serverEventId.trim();
                         window.saveDataToCloud(docId, dataPayload);
-                        console.log("智慧日曆同步成功");
+                        console.log("🟢 智慧日曆同步成功，已成功儲存日曆身分證號！");
                     }
                 })
-                .catch(err => console.error("日曆通訊異常:", err));
+                .catch(err => console.error("通訊連線異常:", err));
             }
 
             window.editingRecordId = null;
@@ -861,15 +864,12 @@
             return "";
         }
 
-        // 【智慧修復關鍵】：原本遺漏的輔助函數，導致排班條列清單卡死
         function sortRecordsByTime(records) {
             return records.sort((a, b) => {
                 if (a.type !== 'income' && b.type !== 'income') return 0;
                 if (a.type !== 'income') return 1;
                 if (b.type !== 'income') return -1;
-                const timeA = a.customerTime || "99:99";
-                const timeB = b.customerTime || "99:99";
-                return timeA.localeCompare(timeB);
+                return (a.customerTime || "99:99").localeCompare(b.customerTime || "99:99");
             });
         }
 
@@ -1136,10 +1136,10 @@
             document.getElementById('all-time-income-text').innerText = `$${allTimeInc.toLocaleString()}`; document.getElementById('all-time-expense-text').innerText = `$${allTimeExp.toLocaleString()}`;
             const allTimeNet = allTimeInc - allTimeExp; document.getElementById('all-time-profit-text').innerText = `${allTimeNet >= 0 ? '' : '-'}$${Math.abs(allTimeNet).toLocaleString()}`;
             const dropdown = document.getElementById('report-month-select'); if(!dropdown) return; const mo = dropdown.value; if (!mo) return;
-            const targets = window.appData.filter(r => r.date.startsWith(mo)); let inc = 0, exp = 0, female = 0, male = 0; const merchantMap = new Map();
+            const targets = window.appData.filter(r => r.date.startsWith(mo)); let inc = 0, exp = 0, female = 0, male = 0;
             targets.forEach(r => {
                 if (r.type === 'income') { inc += r.amount; if ((r.customerGender || '女') === '女') female++; else male++; }
-                if (r.type === 'expense') { exp += r.amount; const m = r.expenseMerchant || '未分類店家'; merchantMap.set(m, (merchantMap.get(m) || 0) + r.amount); }
+                if (r.type === 'expense') { exp += r.amount; }
             });
             const net = inc - exp; document.getElementById('rep-income-text').innerText = `$${inc.toLocaleString()}`; document.getElementById('rep-expense-text').innerText = `$${exp.toLocaleString()}`;
             document.getElementById('rep-profit-text').innerText = `${net >= 0 ? '' : '-'}$${Math.abs(net).toLocaleString()}`;
