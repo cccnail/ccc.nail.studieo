@@ -1047,17 +1047,20 @@
                 const mVal = document.getElementById('add-time-minute').value;
                 
                 if (hVal && mVal) {
-                    fetch(googleScriptUrl, {
-                        method: "POST",
-                        mode: "no-cors",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            date: toDateStr(window.chosenDate),
-                            time: `${hVal}:${mVal}`,
-                            title: `💅 預約: ${dataPayload.customer}`,
-                            note: `客戶：${dataPayload.customer}\n電話：${dataPayload.customerPhone}\n來源：${dataPayload.customerSource}\n項目：${dataPayload.items.join(', ')}\n備註：${dataPayload.customerPref || '無'}`
-                        })
-                    }).catch(err => console.error("行事曆同步失敗:", err));
+                    // 升級改用可靠的背景表單格式傳輸，避免跨網域被瀏覽器封鎖
+                    const payload = {
+                        date: toDateStr(window.chosenDate),
+                        time: `${hVal}:${mVal}`,
+                        title: `💅 預約: ${dataPayload.customer}`,
+                        note: `客戶：${dataPayload.customer}\n電話：${dataPayload.customerPhone}\n來源：${dataPayload.customerSource}\n項目：${dataPayload.items.join(', ')}\n備註：${dataPayload.customerPref || '無'}`
+                    };
+
+                    try {
+                        const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+                        navigator.sendBeacon(googleScriptUrl, blob);
+                    } catch (err) {
+                        console.error("日曆同步失敗:", err);
+                    }
                 }
             }
 
