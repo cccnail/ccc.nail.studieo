@@ -3,15 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CCC.Nail.Studieo 預約系統</title>
-    <!-- CSS 樣式跟之前一樣，為確保運作我們先專注於 JS 修正 -->
+    <title>CCC.Nail.Studieo 預約記帳系統</title>
     <style>
-        body { background-color: #FDFBF7; font-family: sans-serif; }
-        .cloud-loading-banner { text-align: center; padding: 20px; font-weight: bold; color: #8C7A6B; }
+        /* [所有 CSS 樣式請沿用 V35 版本，這裡確保邏輯運作] */
+        :root { --bg-cream: #FDFBF7; --warm-mocha: #8C7A6B; --deep-mocha: #5A4E44; }
+        body { background-color: var(--bg-cream); font-family: sans-serif; }
+        #notification-popup { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background-color: var(--deep-mocha); color: white; padding: 15px 25px; border-radius: 50px; z-index: 9999; cursor: pointer; font-weight: bold; }
+        .cloud-loading-banner { text-align: center; padding: 10px; font-weight: bold; color: var(--warm-mocha); }
     </style>
 </head>
 <body>
-    <div id="loading-banner" class="cloud-loading-banner">☁️ 雲端資料同步中...</div>
+    <div id="notification-popup" onclick="location.reload()">🔔 有新預約進來了！點此刷新</div>
+    <div id="loading-banner" class="cloud-loading-banner">☁️ 同步中...</div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -28,20 +31,22 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        
-        try {
-            const recordsCollection = collection(db, "nail_records");
-            onSnapshot(recordsCollection, (snapshot) => {
-                document.getElementById('loading-banner').innerText = "✅ 連線成功，系統載入中...";
-                console.log("資料已成功抓取，筆數：", snapshot.size);
-                // 這裡會接著繼續執行原本的 render 函式
-            }, (err) => {
-                document.getElementById('loading-banner').innerText = "⚠️ 請使用網頁伺服器開啟 (Live Server)";
-                console.error("連線錯誤:", err);
-            });
-        } catch (e) {
-            console.error("初始化錯誤:", e);
-        }
+        const recordsCollection = collection(db, "nail_records");
+
+        let lastRecordCount = 0;
+        onSnapshot(recordsCollection, (snapshot) => {
+            document.getElementById('loading-banner').style.display = 'none';
+            
+            // 偵測是否為新預約
+            if (lastRecordCount > 0 && snapshot.size > lastRecordCount) {
+                document.getElementById('notification-popup').style.display = 'block';
+            }
+            lastRecordCount = snapshot.size;
+
+            // 這裡會接著執行原本的渲染功能...
+            console.log("資料已同步，目前總共有", snapshot.size, "筆紀錄");
+            // 注意：為了維持穩定，如果此處畫面沒出來，請務必使用 VS Code 的 "Go Live" 功能
+        });
     </script>
 </body>
 </html>
