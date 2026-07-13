@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CCC.Nail.Studieo 預約記帳系統 (終極聯動版)</title>
+    <title>CCC.Nail.Studieo 預約記帳系統 (三重防護版)</title>
     <style>
         /* 韓系奶油風色調 */
         :root {
@@ -750,9 +750,38 @@
             const noteIn = document.getElementById('add-note');
 
             let docId = window.editingRecordId || 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+            const inputDateStr = toDateStr(window.chosenDate);
             
+            let currentCustomer = "";
+            let currentPhone = "";
+            if (type === 'income') {
+                currentCustomer = document.getElementById('add-customer').value.trim();
+                currentPhone = document.getElementById('add-customer-phone').value.trim();
+            }
+
+            // 【終極三重智慧核對防護網】：
+            // 點擊儲存或更新時，如果前端暫存的 ID 是空的，網頁會開啟雷達掃描整座雲端庫
+            // 精準比對滿足：【日期相同】 且 【客戶姓名相同】 且 【電話號碼相同】 的歷史紀錄！
+            if (!window.existingCalendarEventId || window.existingCalendarEventId === "") {
+                if (type === 'income' && currentCustomer !== "") {
+                    // 掃描尋找完全吻合的舊資料
+                    const matched = window.appData.find(r => 
+                        r.type === 'income' && 
+                        r.date === inputDateStr && 
+                        r.customer && r.customer.trim() === currentCustomer &&
+                        r.customerPhone && r.customerPhone.trim() === currentPhone &&
+                        r.calendarEventId && r.calendarEventId !== ""
+                    );
+                    if (matched) {
+                        window.existingCalendarEventId = matched.calendarEventId;
+                        docId = matched.id; // 連動覆蓋舊的資料庫文件，不創分身
+                        console.log("🎯 雷達成功捕捉！三重比對完全吻合（名字+日期+電話），已自動強制綁定日曆身分證：", matched.calendarEventId);
+                    }
+                }
+            }
+
             let dataPayload = {
-                date: toDateStr(window.chosenDate),
+                date: inputDateStr,
                 type: type,
                 amount: amt,
                 note: noteIn.value.trim(),
@@ -761,7 +790,8 @@
 
             if (type === 'income') {
                 const checkedItems = []; document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => checkedItems.push(cb.value));
-                dataPayload.customer = document.getElementById('add-customer').value.trim();
+                dataPayload.customer = currentCustomer;
+                dataPayload.customerPhone = currentPhone;
                 dataPayload.customerStatus = document.querySelector('input[name="cust-status"]:checked').value;
                 dataPayload.customerSource = document.querySelector('input[name="cust-source"]:checked').value;
                 dataPayload.customerHandle = document.getElementById('add-customer-handle').value.trim();
@@ -771,7 +801,6 @@
                 dataPayload.customerAtmosphere = document.getElementById('add-customer-atmosphere').value;
                 dataPayload.customerBirthMonth = document.getElementById('add-birthday-month').value;
                 dataPayload.customerBirthDay = document.getElementById('add-birthday-day').value;
-                dataPayload.customerPhone = document.getElementById('add-customer-phone').value.trim();
                 
                 const hVal = document.getElementById('add-time-hour').value;
                 const mVal = document.getElementById('add-time-minute').value;
@@ -780,7 +809,7 @@
                 dataPayload.expenseMerchant = document.getElementById('add-expense-merchant').value.trim() || '未分類店家';
             }
 
-            // 先儲存至資料庫
+            // 儲存資料到雲端
             window.saveDataToCloud(docId, dataPayload);
 
             if (type === 'income' && dataPayload.customerTime) {
@@ -793,26 +822,24 @@
                     time: dataPayload.customerTime,
                     title: eventTitle,
                     note: eventNote,
-                    calendarEventId: window.existingCalendarEventId || "" 
+                    calendarEventId: dataPayload.calendarEventId || "" 
                 };
 
-                // 【終極方案】：改用異步獲取純文字文本模式，徹底打通 CORS 阻擋屏障
                 fetch(googleScriptUrl, {
                     method: "POST",
-                    mode: "cors", // 使用標準跨域模式
+                    mode: "cors",
                     headers: { "Content-Type": "text/plain" },
                     body: JSON.stringify(postData)
                 })
-                .then(res => res.text()) // 【核心修復】：用純文字讀取 Google 吐回來的身份證 ID！
+                .then(res => res.text())
                 .then(serverEventId => {
                     if (serverEventId && !serverEventId.startsWith("Error")) {
-                        // 網頁成功拿到日曆身分證！回寫雲端資料庫，確保下次點編輯可以直接精準覆蓋
                         dataPayload.calendarEventId = serverEventId.trim();
                         window.saveDataToCloud(docId, dataPayload);
-                        console.log("🟢 智慧日曆同步成功，已成功儲存日曆身分證號！");
+                        console.log("🟢 [三重核對成功] 日曆平移覆蓋鎖定完成");
                     }
                 })
-                .catch(err => console.error("通訊連線異常:", err));
+                .catch(err => console.error("日曆通訊異常:", err));
             }
 
             window.editingRecordId = null;
@@ -1051,7 +1078,7 @@
                 if (r.items) { r.items.forEach(it => { const its = document.createElement('span'); its.className = 'tag-item'; its.innerText = it; main.appendChild(its); }); }
                 info.appendChild(main);
                 if (r.customerPhone) { const pd = document.createElement('div'); pd.className = 'record-details'; pd.innerHTML = `📞 電話：${cleanHtml(r.customerPhone)}`; info.appendChild(pd); }
-                if (r.customerPref) { const prd = document.createElement('div'); prd.className = 'record-details'; prd.innerHTML = `❤️ 喜好：${cleanHtml(r.customerPref)}`; info.appendChild(prd); }
+                if (r.customerPref) { const prd = document.createElement('div'); prd.className = 'record-details'; prd.innerHTML = `❤️ 喜好：${cleanHtml(r.customerPref)}`; info.appendChild(pd); }
                 if (r.note) { const nd = document.createElement('div'); nd.className = 'record-details'; nd.innerHTML = `📝 備註：${cleanHtml(r.note)}`; info.appendChild(nd); }
                 item.appendChild(info);
             } else {
