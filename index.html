@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CCC.Nail.Studieo 預約記帳系統 (雲端連動版)</title>
+    <title>CCC.Nail.Studieo 預約記帳系統 (智慧連動版)</title>
     <style>
-        /* 韓系奶油風：溫柔、低飽和度的燕麥、奶茶與摩卡色調 */
+        /* 韓系奶油風色調 */
         :root {
             --bg-cream: #FDFBF7;
             --card-cream: #F5EFEB;
@@ -114,7 +114,7 @@
             align-items: center;
         }
 
-        /* --- 月曆 --- */
+        /* 月曆 */
         .calendar-nav {
             display: flex;
             justify-content: space-between;
@@ -224,7 +224,7 @@
             background-color: var(--bg-cream);
         }
 
-        /* 表單樣式 */
+        /* 表單 */
         .quick-add-form {
             display: flex;
             flex-direction: column;
@@ -269,7 +269,6 @@
             border-color: var(--warm-mocha);
         }
 
-        /* 客製化浮動下拉選單 */
         .custom-dropdown-menu {
             display: none;
             position: absolute;
@@ -295,22 +294,10 @@
             justify-content: space-between;
             align-items: center;
         }
-        .custom-dropdown-item:last-child {
-            border-bottom: none;
-        }
-        .custom-dropdown-item:active {
-            background-color: var(--card-cream);
-        }
-        .dropdown-item-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .dropdown-item-handle {
-            font-size: 0.75rem;
-            color: var(--warm-mocha);
-            font-style: italic;
-        }
+        .custom-dropdown-item:last-child { border-bottom: none; }
+        .custom-dropdown-item:active { background-color: var(--card-cream); }
+        .dropdown-item-info { display: flex; align-items: center; gap: 12px; }
+        .dropdown-item-handle { font-size: 0.75rem; color: var(--warm-mocha); font-style: italic; }
 
         .checkbox-group, .radio-group {
             display: flex;
@@ -338,12 +325,7 @@
             height: 16px;
         }
 
-        .gender-label-with-avatar {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
+        .gender-label-with-avatar { display: inline-flex; align-items: center; gap: 8px; }
         .history-pref-hint {
             display: none;
             background-color: #F4EFEA;
@@ -373,12 +355,7 @@
         .btn-submit.editing-mode { background-color: #7E8E7F; }
 
         /* 紀錄清單 */
-        .record-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
+        .record-list { display: flex; flex-direction: column; gap: 12px; }
         .record-item {
             display: flex;
             justify-content: space-between;
@@ -388,24 +365,10 @@
             border-radius: 16px;
             border-left: 5px solid var(--soft-oat);
         }
-
         .record-item.income { border-left-color: #C3D3C4; } 
         .record-item.expense { border-left-color: #E3C3C3; } 
-
-        .record-info {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            flex: 1;
-            padding-right: 10px;
-        }
-
-        .record-main {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
+        .record-info { display: flex; flex-direction: column; gap: 4px; flex: 1; padding-right: 10px; }
+        .record-main { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 
         .avatar-canvas-box {
             width: 32px;
@@ -418,25 +381,10 @@
             box-shadow: 0 2px 6px rgba(140, 122, 107, 0.12);
             border: 1.5px solid var(--white);
         }
-        .avatar-canvas-box canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
+        .avatar-canvas-box canvas { display: block; width: 100%; height: 100%; }
+        .record-title { font-size: 0.95rem; font-weight: 600; color: var(--text-dark); margin-left: 2px; }
 
-        .record-title {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--text-dark);
-            margin-left: 2px;
-        }
-
-        .tag {
-            font-size: 0.7rem;
-            padding: 2px 6px;
-            border-radius: 6px;
-            font-weight: 600;
-        }
+        .tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 6px; font-weight: 600; }
         .tag.new-cust { background-color: var(--tag-new); color: #7A583A; }
         .tag.old-cust { background-color: var(--tag-old); color: #3A5440; }
         .tag.source-tag { background-color: #E6E1DA; color: var(--deep-mocha); }
@@ -444,167 +392,38 @@
         .tag.astro-tag { background-color: #EAE6FF; color: #5247A1; }
         .tag.time-tag { background-color: #F0EDE6; color: var(--deep-mocha); font-weight: 700; letter-spacing: 0.5px; }
         .tag.atmos-tag { background-color: #FDF1E6; color: #B37D4E; font-weight: 600; }
-        
-        .tag-item {
-            font-size: 0.75rem;
-            background-color: #EFECE8;
-            color: var(--warm-mocha);
-            padding: 1px 5px;
-            border-radius: 4px;
-        }
-
-        .record-details {
-            font-size: 0.8rem;
-            color: var(--warm-mocha);
-            margin-top: 2px;
-            line-height: 1.4;
-        }
-
-        .record-amount-zone {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 8px;
-            justify-content: center;
-        }
-
-        .record-amount {
-            font-size: 0.95rem;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-        
+        .tag-item { font-size: 0.75rem; background-color: #EFECE8; color: var(--warm-mocha); padding: 1px 5px; border-radius: 4px; }
+        .record-details { font-size: 0.8rem; color: var(--warm-mocha); margin-top: 2px; line-height: 1.4; }
+        .record-amount-zone { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; justify-content: center; }
+        .record-amount { font-size: 0.95rem; font-weight: 700; white-space: nowrap; }
         .income .record-amount { color: #5A735B; }
         .expense .record-amount { color: #A66363; }
 
-        .action-btns {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .btn-action {
-            background: none;
-            border: none;
-            font-size: 1rem;
-            cursor: pointer;
-            padding: 2px;
-            opacity: 0.4;
-            transition: opacity 0.2s;
-        }
+        .action-btns { display: flex; gap: 8px; align-items: center; }
+        .btn-action { background: none; border: none; font-size: 1rem; cursor: pointer; padding: 2px; opacity: 0.4; transition: opacity 0.2s; }
         .btn-action:active, .btn-action:hover { opacity: 1; }
+        .no-data { text-align: center; color: var(--warm-mocha); font-size: 0.9rem; padding: 25px 0; font-style: italic; }
+        .all-records-container { max-height: 55vh; overflow-y: auto; }
+        .record-group-title { font-size: 0.85rem; color: var(--warm-mocha); margin: 15px 0 6px 4px; font-weight: 600; }
+        .cloud-loading-banner { background-color: var(--card-cream); text-align: center; font-size: 0.8rem; color: var(--warm-mocha); padding: 4px; font-weight: bold; }
 
-        .no-data {
-            text-align: center;
-            color: var(--warm-mocha);
-            font-size: 0.9rem;
-            padding: 25px 0;
-            font-style: italic;
-        }
-
-        .all-records-container {
-            max-height: 55vh;
-            overflow-y: auto;
-        }
-
-        .record-group-title {
-            font-size: 0.85rem;
-            color: var(--warm-mocha);
-            margin: 15px 0 6px 4px;
-            font-weight: 600;
-        }
-
-        /* 雲端載入提示 */
-        .cloud-loading-banner {
-            background-color: var(--card-cream);
-            text-align: center;
-            font-size: 0.8rem;
-            color: var(--warm-mocha);
-            padding: 4px;
-            font-weight: bold;
-        }
-
-        /* --- 報表分頁樣式 --- */
-        .report-summary {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .summary-box {
-            background-color: var(--bg-cream);
-            padding: 15px;
-            border-radius: 16px;
-            text-align: center;
-        }
-
-        .summary-box p {
-            font-size: 0.8rem;
-            color: var(--warm-mocha);
-            margin-bottom: 5px;
-        }
-
-        .summary-box h3 {
-            font-size: 1.2rem;
-            color: var(--deep-mocha);
-        }
-
-        .summary-box.profit {
-            grid-column: span 2;
-            background-color: var(--card-cream);
-        }
-
-        .chart-container {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            margin-top: 10px;
-        }
-
-        .chart-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.85rem;
-        }
-
-        .chart-label {
-            width: 75px;
-            color: var(--warm-mocha);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .chart-bar-bg {
-            flex: 1;
-            background-color: var(--bg-cream);
-            height: 16px;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .chart-bar-fill {
-            height: 100%;
-            width: 0%;
-            transition: width 0.4s ease;
-            border-radius: 8px;
-        }
+        /* 報表 */
+        .report-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .summary-box { background-color: var(--bg-cream); padding: 15px; border-radius: 16px; text-align: center; }
+        .summary-box p { font-size: 0.8rem; color: var(--warm-mocha); margin-bottom: 5px; }
+        .summary-box h3 { font-size: 1.2rem; color: var(--deep-mocha); }
+        .summary-box.profit { grid-column: span 2; background-color: var(--card-cream); }
+        .chart-container { display: flex; flex-direction: column; gap: 14px; margin-top: 10px; }
+        .chart-row { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
+        .chart-label { width: 75px; color: var(--warm-mocha); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chart-bar-bg { flex: 1; background-color: var(--bg-cream); height: 16px; border-radius: 8px; overflow: hidden; }
+        .chart-bar-fill { height: 100%; width: 0%; transition: width 0.4s ease; border-radius: 8px; }
         .chart-bar-fill.income-bar { background-color: #C3D3C4; }
         .chart-bar-fill.expense-bar { background-color: #E3C3C3; }
         .chart-bar-fill.female-bar { background-color: #EAC7C7; }
         .chart-bar-fill.male-bar { background-color: #C7D4EA; }
         .chart-bar-fill.merchant-bar { background-color: #E1D5C9; }
-
-        .chart-val {
-            width: 110px;
-            color: var(--deep-mocha);
-            font-size: 0.8rem;
-            font-weight: 500;
-            text-align: right;
-            white-space: nowrap;
-        }
+        .chart-val { width: 110px; color: var(--deep-mocha); font-size: 0.8rem; font-weight: 500; text-align: right; white-space: nowrap; }
     </style>
 </head>
 <body>
@@ -636,9 +455,7 @@
             <div class="weekdays">
                 <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
             </div>
-            <div class="days-grid" id="calendar-days-box">
-                <!-- JS 自動生成 -->
-            </div>
+            <div class="days-grid" id="calendar-days-box"></div>
         </div>
 
         <!-- 當日明細方框 -->
@@ -648,11 +465,9 @@
                 <span style="font-size: 0.85rem; color: var(--warm-mocha);" id="day-box-date">2026-07-08</span>
             </div>
             
-            <div class="record-list" id="day-records-list">
-                <!-- JS 條列清單 -->
-            </div>
+            <div class="record-list" id="day-records-list"></div>
 
-            <!-- 智慧複合式表單 -->
+            <!-- 智慧表單 -->
             <div id="accounting-form-anchor" class="quick-add-form">
                 <div class="form-row">
                     <div class="form-group" style="flex: 1;">
@@ -673,12 +488,8 @@
                     <div class="form-group" style="margin-bottom: 10px;">
                         <span class="form-label">預約時間 (24H制精準點)</span>
                         <div class="form-row">
-                            <select id="add-time-hour" style="flex: 1;">
-                                <option value="">-- 時 (24H) --</option>
-                            </select>
-                            <select id="add-time-minute" style="flex: 1;">
-                                <option value="">-- 分 (精準) --</option>
-                            </select>
+                            <select id="add-time-hour" style="flex: 1;"></select>
+                            <select id="add-time-minute" style="flex: 1;"></select>
                         </div>
                     </div>
 
@@ -697,13 +508,11 @@
                         </div>
                     </div>
 
-                    <!-- 電話欄位 -->
                     <div class="form-group" style="margin-bottom: 10px;">
                         <span class="form-label">客戶電話</span>
                         <input type="tel" id="add-customer-phone" placeholder="如：0912345678" inputmode="tel">
                     </div>
 
-                    <!-- 客戶性別欄位 -->
                     <div class="form-group" style="margin-bottom: 10px;">
                         <span class="form-label">客戶性別</span>
                         <div class="radio-group" style="padding: 9px 12px; gap: 20px;">
@@ -718,7 +527,6 @@
                         </div>
                     </div>
 
-                    <!-- 生日輸入欄位 -->
                     <div class="form-group" style="margin-bottom: 10px;">
                         <span class="form-label">客戶生日 (月/日)</span>
                         <div class="form-row">
@@ -728,14 +536,11 @@
                                 <option value="5">5 月</option><option value="6">6 月</option><option value="7">7 月</option><option value="8">8 月</option>
                                 <option value="9">9 月</option><option value="10">10 月</option><option value="11">11 月</option><option value="12">12 月</option>
                             </select>
-                            <select id="add-birthday-day" style="flex: 1;" onchange="updateZodiacHint()">
-                                <option value="">-- 選擇日期 --</option>
-                            </select>
+                            <select id="add-birthday-day" style="flex: 1;" onchange="updateZodiacHint()"></select>
                             <div id="zodiac-live-hint" style="font-size: 0.85rem; color: var(--warm-mocha); font-weight: 600; white-space: nowrap; padding-left: 5px;"></div>
                         </div>
                     </div>
 
-                    <!-- 貼心回客提示 -->
                     <div id="pref-hint-box" class="history-pref-hint"></div>
 
                     <div class="form-row" style="margin-bottom: 10px;">
@@ -775,25 +580,25 @@
                     <div class="form-group" style="margin-bottom: 10px;">
                         <span class="form-label">施作現場氛圍偏好</span>
                         <select id="add-customer-atmosphere">
-                            <option value="想聊天">想聊天 💬 (自在開朗聊天)</option>
-                            <option value="想安靜">想安靜 🎧 (安靜休息免打擾)</option>
-                            <option value="都可以" selected>都可以 ✨ (由美甲師隨緣決定)</option>
+                            <option value="想聊天">想聊天 💬</option>
+                            <option value="想安靜">想安靜 🎧</option>
+                            <option value="都可以" selected>都可以 ✨</option>
                         </select>
                     </div>
                 </div>
 
-                <!-- 支出專用欄位組 -->
+                <!-- 支出專用 -->
                 <div id="expense-fields-group" style="display: none; margin-bottom: 10px; position: relative;">
                     <div class="form-group">
                         <span class="form-label">購買店家 / 來源</span>
-                        <input type="text" id="add-expense-merchant" placeholder="如：蝦皮、淘寶、XX材料行、大潤發" oninput="showExpenseMerchantDropdown()" onfocus="showExpenseMerchantDropdown()" autocomplete="off">
+                        <input type="text" id="add-expense-merchant" placeholder="如：蝦皮、材料行" oninput="showExpenseMerchantDropdown()" onfocus="showExpenseMerchantDropdown()" autocomplete="off">
                         <div id="expense-merchant-dropdown" class="custom-dropdown-menu"></div>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <span class="form-label" id="note-label">其他備註</span>
-                    <input type="text" id="add-note" placeholder="如：LINE Pay 轉帳、材料進貨等">
+                    <input type="text" id="add-note" placeholder="如：LINE Pay 轉帳">
                 </div>
 
                 <button id="btn-submit-main" class="btn-submit" onclick="addNewRecord()">儲存此筆紀錄</button>
@@ -801,109 +606,65 @@
         </div>
     </div>
 
-    <!-- 頁面 2: 總紀錄頁面 -->
+    <!-- 總紀錄 -->
     <div id="page-all-records" class="page">
         <div class="content-card">
             <div class="card-title">歷史明細總覽</div>
-            <div class="all-records-container" id="all-records-list">
-                <!-- 自動分類呈現 -->
-            </div>
+            <div class="all-records-container" id="all-records-list"></div>
         </div>
     </div>
 
-    <!-- 頁面 3: 報表頁面 -->
+    <!-- 報表 -->
     <div id="page-report" class="page">
-        <!-- 全期歷史總收支（累計看板） -->
         <div class="content-card" style="background-color: #FAF4EE; border: 1.5px solid var(--accent-rose);">
-            <div class="card-title" style="color: var(--deep-mocha); font-size: 1.05rem;">
-                <span>✨ 全期歷史總收支 (累計)</span>
-            </div>
-            <div class="report-summary" style="margin-bottom: 0;">
-                <div class="summary-box" style="background-color: var(--white);">
-                    <p>歷史總收入</p>
-                    <h3 id="all-time-income-text" style="color: #5A735B;">$0</h3>
-                </div>
-                <div class="summary-box" style="background-color: var(--white);">
-                    <p>歷史總支出</p>
-                    <h3 id="all-time-expense-text" style="color: #A66363;">$0</h3>
-                </div>
-                <div class="summary-box profit" style="background-color: var(--soft-oat); grid-column: span 2;">
-                    <p>歷史總淨利潤</p>
-                    <h3 id="all-time-profit-text" style="color: var(--deep-mocha); font-size: 1.3rem;">$0</h3>
-                </div>
+            <div class="card-title"><span>✨ 全期歷史總收支 (累計)</span></div>
+            <div class="report-summary">
+                <div class="summary-box"><p>歷史總收入</p><h3 id="all-time-income-text" style="color: #5A735B;">$0</h3></div>
+                <div class="summary-box"><p>歷史總支出</p><h3 id="all-time-expense-text" style="color: #A66363;">$0</h3></div>
+                <div class="summary-box profit"><p>歷史總淨利潤</p><h3 id="all-time-profit-text" style="color: var(--deep-mocha); font-size: 1.3rem;">$0</h3></div>
             </div>
         </div>
-
-        <!-- 原有月份報表 -->
         <div class="content-card">
             <div class="card-title">
                 <span>📅 單月營運數據報表</span>
-                <select id="report-month-select" onchange="calculateReport()" style="width: auto; padding: 4px 10px; border-radius: 8px;">
-                    <!-- 自動月份 -->
-                </select>
+                <select id="report-month-select" onchange="calculateReport()" style="width: auto; padding: 4px 10px; border-radius: 8px;"></select>
             </div>
-            
             <div class="report-summary">
-                <div class="summary-box">
-                    <p>當月總收入</p>
-                    <h3 id="rep-income-text" style="color: #5A735B;">$0</h3>
-                </div>
-                <div class="summary-box">
-                    <p>當月總支出</p>
-                    <h3 id="rep-expense-text" style="color: #A66363;">$0</h3>
-                </div>
-                <div class="summary-box profit">
-                    <p>當月淨利潤 (收入 - 支出)</p>
-                    <h3 id="rep-profit-text">$0</h3>
-                </div>
+                <div class="summary-box"><p>當月總收入</p><h3 id="rep-income-text" style="color: #5A735B;">$0</h3></div>
+                <div class="summary-box"><p>當月總支出</p><h3 id="rep-expense-text" style="color: #A66363;">$0</h3></div>
+                <div class="summary-box profit"><p>當月淨利潤</p><h3 id="rep-profit-text">$0</h3></div>
             </div>
-
-            <!-- 圖表 1：當月收支比 -->
-            <div class="card-title" style="font-size: 0.95rem; margin-top: 10px;">當月營運收支比</div>
+            <div class="card-title" style="font-size: 0.95rem;">當月營運收支比</div>
             <div class="chart-container" style="margin-bottom: 25px;">
                 <div class="chart-row">
                     <div class="chart-label">總收入</div>
-                    <div class="chart-bar-bg">
-                        <div id="bar-income-fill" class="chart-bar-fill income-bar"></div>
-                    </div>
+                    <div class="chart-bar-bg"><div id="bar-income-fill" class="chart-bar-fill income-bar"></div></div>
                     <div class="chart-val" id="pct-income-text">0%</div>
                 </div>
                 <div class="chart-row">
                     <div class="chart-label">總支出</div>
-                    <div class="chart-bar-bg">
-                        <div id="bar-expense-fill" class="chart-bar-fill expense-bar"></div>
-                    </div>
+                    <div class="chart-bar-bg"><div id="bar-expense-fill" class="chart-bar-fill expense-bar"></div></div>
                     <div class="chart-val" id="pct-expense-text">0%</div>
                 </div>
             </div>
-
-            <!-- 圖表 2：客群性別比例 -->
             <div class="card-title" style="font-size: 0.95rem; border-top: 1px dashed var(--soft-oat); padding-top: 15px;">當月客群性別比例</div>
             <div class="chart-container" style="margin-bottom: 25px;">
                 <div class="chart-row">
                     <div class="chart-label">👩‍🦰 女生</div>
-                    <div class="chart-bar-bg">
-                        <div id="bar-female-fill" class="chart-bar-fill female-bar"></div>
-                    </div>
+                    <div class="chart-bar-bg"><div id="bar-female-fill" class="chart-bar-fill female-bar"></div></div>
                     <div class="chart-val" id="pct-female-text">0%</div>
                 </div>
                 <div class="chart-row">
                     <div class="chart-label">👨‍🦱 男生</div>
-                    <div class="chart-bar-bg">
-                        <div id="bar-male-fill" class="chart-bar-fill male-bar"></div>
-                    </div>
+                    <div class="chart-bar-bg"><div id="bar-male-fill" class="chart-bar-fill male-bar"></div></div>
                     <div class="chart-val" id="pct-male-text">0%</div>
                 </div>
             </div>
-
-            <!-- 圖表 3：店家購買比例 -->
-            <div class="chart-container" id="merchant-report-container">
-                <!-- JS 自動生成 -->
-            </div>
+            <div class="card-title" style="font-size: 0.95rem; border-top: 1px dashed var(--soft-oat); padding-top: 15px;">當月支出店家比例</div>
+            <div class="chart-container" id="merchant-report-container"></div>
         </div>
     </div>
 
-    <!-- 引入 Firebase 核心 SDK 與 Firestore 功能 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -923,6 +684,7 @@
 
         window.appData = [];
         window.editingRecordId = null;
+        window.existingCalendarEventId = null; // 用來暫存編輯中的日曆ID
 
         const todayObj = new Date();
         window.viewYear = todayObj.getFullYear();
@@ -935,22 +697,19 @@
                 window.appData.push({ id: doc.id, ...doc.data() });
             });
             document.getElementById('loading-banner').innerText = "🟢 雲端連線成功：資料已即時同步";
-            
             renderCalendarView();
             renderDayRecordsView();
             renderAllRecordsView();
             setupReportDropdown();
             calculateReport();
         }, (error) => {
-            console.error("雲端同步失敗: ", error);
-            document.getElementById('loading-banner').innerText = "🔴 雲端同步失敗，請檢查金鑰設定";
+            console.error(error);
+            document.getElementById('loading-banner').innerText = "🔴 雲端同步失敗";
         });
 
         window.drawAvatarToCanvas = function(canvas, gender) {
             if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, 100, 100);
-
+            const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, 100, 100);
             if (gender === '男') {
                 ctx.fillStyle = "#E4ECF0"; ctx.beginPath(); ctx.arc(50, 50, 50, 0, Math.PI * 2); ctx.fill();
                 ctx.fillStyle = "#55606E"; ctx.beginPath(); ctx.arc(50, 42, 26, 0, Math.PI * 2); ctx.fill();
@@ -973,23 +732,18 @@
         }
 
         window.createAvatarCanvasElement = function(gender) {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'avatar-canvas-box';
-            const canvas = document.createElement('canvas');
-            canvas.width = 100; canvas.height = 100;
-            wrapper.appendChild(canvas);
-            requestAnimationFrame(() => drawAvatarToCanvas(canvas, gender));
+            const wrapper = document.createElement('div'); wrapper.className = 'avatar-canvas-box';
+            const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 100;
+            wrapper.appendChild(canvas); requestAnimationFrame(() => drawAvatarToCanvas(canvas, gender));
             return wrapper;
         }
 
         window.saveDataToCloud = async function(id, dataPayload) {
-            try { await setDoc(doc(db, "nail_records", id), dataPayload); } 
-            catch (e) { alert("寫入雲端失敗！"); }
+            try { await setDoc(doc(db, "nail_records", id), dataPayload); } catch (e) { alert("寫入雲端失敗！"); }
         }
 
         window.deleteDataFromCloud = async function(id) {
-            try { await deleteDoc(doc(db, "nail_records", id)); } 
-            catch (e) { alert("從雲端刪除失敗！"); }
+            try { await deleteDoc(doc(db, "nail_records", id)); } catch (e) { alert("從雲端刪除失敗！"); }
         }
 
         window.addNewRecord = function() {
@@ -1004,13 +758,12 @@
                 date: toDateStr(window.chosenDate),
                 type: type,
                 amount: amt,
-                note: noteIn.value.trim()
+                note: noteIn.value.trim(),
+                calendarEventId: window.existingCalendarEventId || "" // 攜帶舊有的日曆身分證ID
             };
 
             if (type === 'income') {
-                const checkedItems = [];
-                document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => checkedItems.push(cb.value));
-
+                const checkedItems = []; document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => checkedItems.push(cb.value));
                 dataPayload.customer = document.getElementById('add-customer').value.trim();
                 dataPayload.customerStatus = document.querySelector('input[name="cust-status"]:checked').value;
                 dataPayload.customerSource = document.querySelector('input[name="cust-source"]:checked').value;
@@ -1019,77 +772,66 @@
                 dataPayload.items = checkedItems;
                 dataPayload.customerPref = document.getElementById('add-customer-pref').value.trim();
                 dataPayload.customerAtmosphere = document.getElementById('add-customer-atmosphere').value;
-                
                 dataPayload.customerBirthMonth = document.getElementById('add-birthday-month').value;
                 dataPayload.customerBirthDay = document.getElementById('add-birthday-day').value;
                 dataPayload.customerPhone = document.getElementById('add-customer-phone').value.trim();
                 
                 const hVal = document.getElementById('add-time-hour').value;
                 const mVal = document.getElementById('add-time-minute').value;
-                if (hVal && mVal) {
-                    dataPayload.customerTime = `${hVal}:${mVal}`;
-                } else {
-                    dataPayload.customerTime = "";
-                }
+                dataPayload.customerTime = (hVal && mVal) ? `${hVal}:${mVal}` : "";
             } else {
                 dataPayload.expenseMerchant = document.getElementById('add-expense-merchant').value.trim() || '未分類店家';
             }
 
-            // 1. 儲存至雲端 Firebase
+            // 先儲存基礎資料到雲端庫
             window.saveDataToCloud(docId, dataPayload);
 
-            // 2. 聯動 Google 行事曆 (採用安全的背景 fetch 發送機制)
-            if (type === 'income') {
+            // 聯動 Google 日曆（智慧重疊、覆蓋、且不帶有多餘標籤字樣）
+            if (type === 'income' && dataPayload.customerTime) {
                 const googleScriptUrl = "https://script.google.com/macros/s/AKfycbz2184Q6nDJyYzMMQ7E6FHlvqq0iXqRX3y1hIiEX8_MUAJ7MdWTdghKOXYPHZJtRH5mNw/exec";
                 
-                const hVal = document.getElementById('add-time-hour').value;
-                const mVal = document.getElementById('add-time-minute').value;
+                // 【已修改】：徹底拉掉「預約:」，純顯示美甲符號+名字
+                const eventTitle = `💅 ${dataPayload.customer}`;
                 
-                if (hVal && mVal) {
-                    // 已修改：主旨移除「預約:」，僅留美甲圖示與名稱
-                    const eventTitle = `💅 ${dataPayload.customer}`;
-                    
-                    // 已修改：內文移除「CCC.NAIL.STUDIEO」等重複抬頭，保持精簡乾淨
-                    const eventNote = `客戶：${dataPayload.customer}\n電話：${dataPayload.customerPhone}\n來源：${dataPayload.customerSource}\n項目：${dataPayload.items.join(', ')}\n備註：${dataPayload.customerPref || '無'}`;
-                    const eventDate = toDateStr(window.chosenDate);
-                    const eventTime = `${hVal}:${mVal}`;
+                // 【已修改】：內文明確剔除 CCC.NAIL.STUDIEO
+                const eventNote = `客戶：${dataPayload.customer}\n電話：${dataPayload.customerPhone}\n來源：${dataPayload.customerSource}\n項目：${dataPayload.items.join(', ')}\n備註：${dataPayload.customerPref || '無'}`;
 
-                    const postData = {
-                        date: eventDate,
-                        time: eventTime,
-                        title: eventTitle,
-                        note: eventNote
-                    };
+                const postData = {
+                    date: dataPayload.date,
+                    time: dataPayload.customerTime,
+                    title: eventTitle,
+                    note: eventNote,
+                    calendarEventId: window.existingCalendarEventId || "" // 告訴 Google 是要新增還是覆蓋
+                };
 
-                    fetch(googleScriptUrl, {
-                        method: "POST",
-                        mode: "no-cors", 
-                        headers: {
-                            "Content-Type": "text/plain" 
-                        },
-                        body: JSON.stringify(postData)
-                    })
-                    .then(() => console.log("行事曆同步信號已成功發送"))
-                    .catch(err => console.error("行事曆連線失敗:", err));
-                }
+                // 改用標準 text/plain 的 fetch 傳輸，接收 Google 日曆身分證
+                fetch(googleScriptUrl, {
+                    method: "POST",
+                    body: JSON.stringify(postData)
+                })
+                .then(res => res.json())
+                .then(jsonResult => {
+                    if (jsonResult && jsonResult.status === "Success" && jsonResult.eventId) {
+                        // 拿到日曆回報的身分證號後，非同步回存補進資料庫，確保下次點修改可以直接「覆蓋原行程」
+                        dataPayload.calendarEventId = jsonResult.eventId;
+                        window.saveDataToCloud(docId, dataPayload);
+                        console.log("⚡ 智慧日曆同步成功，已綁定Event ID:", jsonResult.eventId);
+                    }
+                })
+                .catch(err => console.error("行事曆連線通訊異常:", err));
             }
 
             window.editingRecordId = null;
+            window.existingCalendarEventId = null;
 
             // 清空欄位
             amtIn.value = ''; noteIn.value = '';
-            document.getElementById('add-customer').value = '';
-            document.getElementById('add-customer-pref').value = '';
-            document.getElementById('add-customer-handle').value = '';
-            document.getElementById('add-customer-phone').value = '';
-            document.getElementById('add-time-hour').value = '';
-            document.getElementById('add-time-minute').value = '';
-            document.getElementById('add-expense-merchant').value = '';
-            document.getElementById('add-birthday-month').value = '';
-            document.getElementById('add-birthday-day').value = '';
-            document.getElementById('add-customer-atmosphere').value = '都可以';
+            document.getElementById('add-customer').value = ''; document.getElementById('add-customer-pref').value = '';
+            document.getElementById('add-customer-handle').value = ''; document.getElementById('add-customer-phone').value = '';
+            document.getElementById('add-time-hour').value = ''; document.getElementById('add-time-minute').value = '';
+            document.getElementById('add-expense-merchant').value = ''; document.getElementById('add-birthday-month').value = '';
+            document.getElementById('add-birthday-day').value = ''; document.getElementById('add-customer-atmosphere').value = '都可以';
             document.getElementById('zodiac-live-hint').innerText = '';
-
             document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => cb.checked = false);
             document.querySelector('input[name="cust-status"][value="新客"]').checked = true;
             document.querySelector('input[name="cust-source"][value="IG"]').checked = true;
@@ -1097,26 +839,17 @@
             document.getElementById('pref-hint-box').style.display = 'none';
 
             const submitBtn = document.getElementById('btn-submit-main');
-            submitBtn.innerText = '儲存此筆紀錄';
-            submitBtn.classList.remove('editing-mode');
+            submitBtn.innerText = '儲存此筆紀錄'; submitBtn.classList.remove('editing-mode');
         }
 
-        window.switchPage = switchPage;
-        window.changeMonth = changeMonth;
-        window.onCalendarSelectorChange = onCalendarSelectorChange;
-        window.toggleFormFields = toggleFormFields;
-        window.removeRecord = removeRecord;
-        window.startEditRecord = startEditRecord;
-        window.showCustomDropdown = showCustomDropdown;
+        window.switchPage = switchPage; window.changeMonth = changeMonth;
+        window.onCalendarSelectorChange = onCalendarSelectorChange; window.toggleFormFields = toggleFormFields;
+        window.removeRecord = removeRecord; window.startEditRecord = startEditRecord; window.showCustomDropdown = showCustomDropdown;
 
-        const femBox = document.getElementById('preview-gender-female');
-        if(femBox) femBox.appendChild(createAvatarCanvasElement('女'));
-        const maleBox = document.getElementById('preview-gender-male');
-        if(maleBox) maleBox.appendChild(createAvatarCanvasElement('男'));
+        const femBox = document.getElementById('preview-gender-female'); if(femBox) femBox.appendChild(createAvatarCanvasElement('女'));
+        const maleBox = document.getElementById('preview-gender-male'); if(maleBox) maleBox.appendChild(createAvatarCanvasElement('男'));
         
-        toggleFormFields();
-        setupBirthdayDaysDropdown();
-        setup24HourTimeDropdowns();
+        toggleFormFields(); setupBirthdayDaysDropdown(); setup24HourTimeDropdowns();
     </script>
 
     <script>
@@ -1142,795 +875,288 @@
             const hrSelect = document.getElementById('add-time-hour');
             const minSelect = document.getElementById('add-time-minute');
             if (!hrSelect || !minSelect) return;
-
             hrSelect.innerHTML = '<option value="">-- 時 (24H) --</option>';
             for (let h = 0; h < 24; h++) {
-                const opt = document.createElement('option');
-                const hStr = String(h).padStart(2, '0');
-                opt.value = hStr; opt.innerText = `${hStr} 點`;
-                hrSelect.appendChild(opt);
+                const opt = document.createElement('option'); const s = String(h).padStart(2, '0');
+                opt.value = s; opt.innerText = `${s} 點`; hrSelect.appendChild(opt);
             }
-
             minSelect.innerHTML = '<option value="">-- 分 (精準) --</option>';
             for (let m = 0; m < 60; m++) {
-                const opt = document.createElement('option');
-                const mStr = String(m).padStart(2, '0');
-                opt.value = mStr; opt.innerText = `${mStr} 分`;
-                minSelect.appendChild(opt);
+                const opt = document.createElement('option'); const s = String(m).padStart(2, '0');
+                opt.value = s; opt.innerText = `${s} 分`; minSelect.appendChild(opt);
             }
         }
 
         function formatTo24Hour(timeStr) {
-            if (!timeStr) return "";
-            const parts = timeStr.split(':');
-            if (parts.length < 2) return timeStr;
-            const hrs = String(parts[0]).padStart(2, '0');
-            const mins = String(parts[1]).padStart(2, '0');
-            return `${hrs}:${mins}`;
+            if (!timeStr) return ""; const parts = timeStr.split(':'); if (parts.length < 2) return timeStr;
+            return `${String(parts[0]).padStart(2, '0')}:${String(parts[1]).padStart(2, '0')}`;
         }
 
         function setupBirthdayDaysDropdown() {
-            const daySelect = document.getElementById('add-birthday-day');
-            if(!daySelect) return;
+            const daySelect = document.getElementById('add-birthday-day'); if(!daySelect) return;
             daySelect.innerHTML = '<option value="">-- 日 --</option>';
             for(let d=1; d<=31; d++) {
-                const opt = document.createElement('option');
-                opt.value = d; opt.innerText = `${d} 日`;
-                daySelect.appendChild(opt);
+                const opt = document.createElement('option'); opt.value = d; opt.innerText = `${d} 日`; daySelect.appendChild(opt);
             }
         }
 
         function updateZodiacHint() {
             const m = document.getElementById('add-birthday-month').value;
             const d = document.getElementById('add-birthday-day').value;
-            const hintBox = document.getElementById('zodiac-live-hint');
-            if(m && d) {
-                hintBox.innerText = getZodiacSign(m, d);
-            } else {
-                hintBox.innerText = '';
-            }
+            document.getElementById('zodiac-live-hint').innerText = (m && d) ? getZodiacSign(m, d) : '';
         }
 
         function switchPage(targetPage) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`page-${targetPage}`).classList.add('active');
-            
             const btnMap = { 'calendar': 0, 'all-records': 1, 'report': 2 };
             document.querySelectorAll('.tool-btn')[btnMap[targetPage]].classList.add('active');
-
-            if (targetPage === 'calendar') {
-                renderCalendarView();
-                renderDayRecordsView();
-            } else if (targetPage === 'all-records') {
-                renderAllRecordsView();
-            } else if (targetPage === 'report') {
-                setupReportDropdown();
-                calculateReport();
-            }
+            if (targetPage === 'calendar') { renderCalendarView(); renderDayRecordsView(); } 
+            else if (targetPage === 'all-records') { renderAllRecordsView(); } 
+            else if (targetPage === 'report') { setupReportDropdown(); calculateReport(); }
         }
 
         function toggleFormFields() {
             const type = document.getElementById('add-type').value;
-            const incGroup = document.getElementById('income-fields-group');
-            const expGroup = document.getElementById('expense-fields-group');
-            const noteLabel = document.getElementById('note-label');
-            
-            if (type === 'income') {
-                incGroup.style.display = 'block';
-                expGroup.style.display = 'none';
-                noteLabel.innerText = '其他備註';
-            } else {
-                incGroup.style.display = 'none';
-                expGroup.style.display = 'block';
-                noteLabel.innerText = '支出項目說明';
-                document.getElementById('pref-hint-box').style.display = 'none';
-            }
+            document.getElementById('income-fields-group').style.display = type === 'income' ? 'block' : 'none';
+            document.getElementById('expense-fields-group').style.display = type === 'expense' ? 'block' : 'none';
+            document.getElementById('note-label').innerText = type === 'income' ? '其他備註' : '支出項目說明';
+            if(type !== 'income') document.getElementById('pref-hint-box').style.display = 'none';
         }
 
         function showCustomDropdown() {
             const inputVal = document.getElementById('add-customer').value.trim().toLowerCase();
-            const dropdown = document.getElementById('custom-dropdown');
-            dropdown.innerHTML = '';
-
+            const dropdown = document.getElementById('custom-dropdown'); dropdown.innerHTML = '';
             const clientMap = new Map();
             window.appData.forEach(r => {
                 if (r.type === 'income' && r.customer) {
-                    const nameKey = r.customer.trim();
-                    const handleVal = r.customerHandle ? r.customerHandle.trim() : '';
-                    const genderVal = r.customerGender || '女';
-                    const uniqueKey = `${nameKey}_____${handleVal}`;
-                    clientMap.set(uniqueKey, { name: nameKey, handle: handleVal, gender: genderVal });
+                    const n = r.customer.trim(); const h = r.customerHandle ? r.customerHandle.trim() : '';
+                    clientMap.set(`${n}_____${h}`, { name: n, handle: h, gender: r.customerGender || '女' });
                 }
             });
-
-            let matchCount = 0;
-            clientMap.forEach((info, key) => {
+            let count = 0;
+            clientMap.forEach((info) => {
                 if (inputVal === '' || info.name.toLowerCase().includes(inputVal) || info.handle.toLowerCase().includes(inputVal)) {
-                    matchCount++;
-                    const item = document.createElement('div');
-                    item.className = 'custom-dropdown-item';
-                    
-                    const leftInfoBox = document.createElement('div');
-                    leftInfoBox.className = 'dropdown-item-info';
-                    leftInfoBox.appendChild(window.createAvatarCanvasElement(info.gender));
-                    
-                    const nameSpan = document.createElement('span');
-                    nameSpan.innerHTML = `<b>${cleanHtml(info.name)}</b>`;
-                    leftInfoBox.appendChild(nameSpan);
-                    item.appendChild(leftInfoBox);
-                    
-                    const rightHandleBox = document.createElement('span');
-                    rightHandleBox.className = 'dropdown-item-handle';
-                    rightHandleBox.innerText = info.handle ? `(${info.handle})` : '(無帳號)';
-                    item.appendChild(rightHandleBox);
-                    
-                    item.onclick = function() {
-                        document.getElementById('add-customer').value = info.name;
-                        dropdown.style.display = 'none';
-                        autoLoadCustomerPreference(info.name, info.handle);
-                    };
+                    count++; const item = document.createElement('div'); item.className = 'custom-dropdown-item';
+                    const left = document.createElement('div'); left.className = 'dropdown-item-info';
+                    left.appendChild(window.createAvatarCanvasElement(info.gender));
+                    const ns = document.createElement('span'); ns.innerHTML = `<b>${cleanHtml(info.name)}</b>`; left.appendChild(ns); item.appendChild(left);
+                    const rh = document.createElement('span'); rh.className = 'dropdown-item-handle'; rh.innerText = info.handle ? `(${info.handle})` : '(無帳號)'; item.appendChild(rh);
+                    item.onclick = function() { document.getElementById('add-customer').value = info.name; dropdown.style.display = 'none'; autoLoadCustomerPreference(info.name, info.handle); };
                     dropdown.appendChild(item);
                 }
             });
-
-            if (matchCount > 0) dropdown.style.display = 'block';
-            else dropdown.style.display = 'none';
+            dropdown.style.display = count > 0 ? 'block' : 'none';
         }
 
         function showExpenseMerchantDropdown() {
             const inputVal = document.getElementById('add-expense-merchant').value.trim().toLowerCase();
-            const dropdown = document.getElementById('expense-merchant-dropdown');
-            dropdown.innerHTML = '';
-
-            const merchantSet = new Set();
-            window.appData.forEach(r => {
-                if (r.type === 'expense' && r.expenseMerchant) {
-                    merchantSet.add(r.expenseMerchant.trim());
-                }
-            });
-
-            let matchCount = 0;
-            merchantSet.forEach(merchantName => {
-                if (inputVal === '' || merchantName.toLowerCase().includes(inputVal)) {
-                    matchCount++;
-                    const item = document.createElement('div');
-                    item.className = 'custom-dropdown-item';
-                    item.style.padding = '12px 14px';
-                    item.innerHTML = `<div class="dropdown-item-info"><span>🛒 <b>${cleanHtml(merchantName)}</b></span></div>`;
-                    
-                    item.onclick = function() {
-                        document.getElementById('add-expense-merchant').value = merchantName;
-                        dropdown.style.display = 'none';
-                    };
+            const dropdown = document.getElementById('expense-merchant-dropdown'); dropdown.innerHTML = '';
+            const merchantSet = new Set(); window.appData.forEach(r => { if (r.type === 'expense' && r.expenseMerchant) merchantSet.add(r.expenseMerchant.trim()); });
+            let count = 0;
+            merchantSet.forEach(m => {
+                if (inputVal === '' || m.toLowerCase().includes(inputVal)) {
+                    count++; const item = document.createElement('div'); item.className = 'custom-dropdown-item'; item.style.padding = '12px 14px';
+                    item.innerHTML = `<div class="dropdown-item-info"><span>🛒 <b>${cleanHtml(m)}</b></span></div>`;
+                    item.onclick = function() { document.getElementById('add-expense-merchant').value = m; dropdown.style.display = 'none'; };
                     dropdown.appendChild(item);
                 }
             });
-
-            if (matchCount > 0) dropdown.style.display = 'block';
-            else dropdown.style.display = 'none';
+            dropdown.style.display = count > 0 ? 'block' : 'none';
         }
 
         document.addEventListener('click', function(e) {
-            const custDropdown = document.getElementById('custom-dropdown');
-            const custInput = document.getElementById('add-customer');
-            if (e.target !== custDropdown && e.target !== custInput) {
-                custDropdown.style.display = 'none';
-            }
-
-            const expDropdown = document.getElementById('expense-merchant-dropdown');
-            const expInput = document.getElementById('add-expense-merchant');
-            if (e.target !== expDropdown && e.target !== expInput) {
-                expDropdown.style.display = 'none';
-            }
+            if (e.target !== document.getElementById('custom-dropdown') && e.target !== document.getElementById('add-customer')) document.getElementById('custom-dropdown').style.display = 'none';
+            if (e.target !== document.getElementById('expense-merchant-dropdown') && e.target !== document.getElementById('add-expense-merchant')) document.getElementById('expense-merchant-dropdown').style.display = 'none';
         });
 
         function autoLoadCustomerPreference(targetName, targetHandle) {
             if (window.editingRecordId !== null) return;
-
             const hintBox = document.getElementById('pref-hint-box');
-            const prefInput = document.getElementById('add-customer-pref');
-            const handleInput = document.getElementById('add-customer-handle');
-            const radioOld = document.getElementById('status-old');
-            const birthMonthSelect = document.getElementById('add-birthday-month');
-            const birthDaySelect = document.getElementById('add-birthday-day');
-            const phoneInput = document.getElementById('add-customer-phone');
-            const atmosSelect = document.getElementById('add-customer-atmosphere');
-
-            const history = window.appData.filter(r => 
-                r.type === 'income' && 
-                r.customer && r.customer.trim() === targetName && 
-                ((!targetHandle && !r.customerHandle) || (r.customerHandle && r.customerHandle.trim() === targetHandle))
-            ).sort((a, b) => b.date.localeCompare(a.date));
-
+            const history = window.appData.filter(r => r.type === 'income' && r.customer && r.customer.trim() === targetName && ((!targetHandle && !r.customerHandle) || (r.customerHandle && r.customerHandle.trim() === targetHandle))).sort((a, b) => b.date.localeCompare(a.date));
             if (history.length > 0) {
-                if(radioOld) radioOld.checked = true;
+                document.getElementById('status-old').checked = true;
                 const latestPref = history.find(r => r.customerPref && r.customerPref.trim() !== '');
-                const latestSource = history.find(r => r.customerSource);
-                const latestGender = history.find(r => r.customerGender);
-                const latestBirthMonth = history.find(r => r.customerBirthMonth);
-                const latestBirthDay = history.find(r => r.customerBirthDay);
-                const latestPhone = history.find(r => r.customerPhone && r.customerPhone.trim() !== '');
-                const latestAtmos = history.find(r => r.customerAtmosphere);
+                const latestSource = history.find(r => r.customerSource); const latestGender = history.find(r => r.customerGender);
+                const latestBirthMonth = history.find(r => r.customerBirthMonth); const latestBirthDay = history.find(r => r.customerBirthDay);
+                const latestPhone = history.find(r => r.customerPhone && r.customerPhone.trim() !== ''); const latestAtmos = history.find(r => r.customerAtmosphere);
 
-                if (handleInput) handleInput.value = targetHandle || '';
-                if (latestSource) {
-                    const srcRadio = document.querySelector(`input[name="cust-source"][value="${latestSource.customerSource}"]`);
-                    if (srcRadio) srcRadio.checked = true;
-                }
-                if (latestGender) {
-                    const genRadio = document.querySelector(`input[name="cust-gender"][value="${latestGender.customerGender}"]`);
-                    if (genRadio) genRadio.checked = true;
-                }
+                if (document.getElementById('add-customer-handle')) document.getElementById('add-customer-handle').value = targetHandle || '';
+                if (latestSource) { const radio = document.querySelector(`input[name="cust-source"][value="${latestSource.customerSource}"]`); if (radio) radio.checked = true; }
+                if (latestGender) { const radio = document.querySelector(`input[name="cust-gender"][value="${latestGender.customerGender}"]`); if (radio) radio.checked = true; }
+                if (latestBirthMonth && latestBirthDay) { document.getElementById('add-birthday-month').value = latestBirthMonth.customerBirthMonth; document.getElementById('add-birthday-day').value = latestBirthDay.customerBirthDay; updateZodiacHint(); }
+                if (latestPhone) document.getElementById('add-customer-phone').value = latestPhone.customerPhone;
+                if (latestAtmos) document.getElementById('add-customer-atmosphere').value = latestAtmos.customerAtmosphere;
 
-                if (latestBirthMonth && latestBirthDay) {
-                    birthMonthSelect.value = latestBirthMonth.customerBirthMonth;
-                    birthDaySelect.value = latestBirthDay.customerBirthDay;
-                    updateZodiacHint();
-                }
-
-                if (latestPhone && phoneInput) {
-                    phoneInput.value = latestPhone.customerPhone;
-                } else if (phoneInput) {
-                    phoneInput.value = '';
-                }
-
-                if (latestAtmos && atmosSelect) {
-                    atmosSelect.value = latestAtmos.customerAtmosphere;
-                } else if (atmosSelect) {
-                    atmosSelect.value = "都可以";
-                }
-
-                let hintText = `✨ <b>回頭客歷史資料：</b><br>`;
-                hintText += `🏷️ 來源：${latestSource ? latestSource.customerSource : '未設定'} (${targetHandle || '無'})｜性別：${latestGender ? latestGender.customerGender : '女'}<br>`;
-                
-                if (latestPhone && latestPhone.customerPhone) {
-                    hintText += `📞 電話：${latestPhone.customerPhone}<br>`;
-                }
-
-                if (latestBirthMonth && latestBirthDay) {
-                    const astro = getZodiacSign(latestBirthMonth.customerBirthMonth, latestBirthDay.customerBirthDay);
-                    hintText += `🎂 生日：${latestBirthMonth.customerBirthMonth}月${latestBirthDay.customerBirthDay}日 (${astro})<br>`;
-                }
-
-                if (latestAtmos && latestAtmos.customerAtmosphere) {
-                    let icon = '✨';
-                    if (latestAtmos.customerAtmosphere === '想聊天') icon = '💬 想聊天';
-                    if (latestAtmos.customerAtmosphere === '想安靜') icon = '🎧 想安靜';
-                    hintText += `🎵 現場氛圍：${icon}<br>`;
-                }
-
-                if (latestPref && latestPref.customerPref) {
-                    hintText += `❤️ 喜好/特殊備註：<br>${cleanHtml(latestPref.customerPref).replace(/\n/g, '<br>')}`;
-                    if (prefInput) prefInput.value = latestPref.customerPref;
-                } else {
-                    hintText += `❤️ 喜好：無特別備註`;
-                    if (prefInput) prefInput.value = '';
-                }
-
-                hintBox.innerHTML = hintText;
-                hintBox.style.display = 'block';
-            } else {
-                hintBox.style.display = 'none';
-            }
+                let hText = `✨ <b>回頭客歷史資料：</b><br>🏷️ 來源：${latestSource ? latestSource.customerSource : '未設定'}｜性別：${latestGender ? latestGender.customerGender : '女'}<br>`;
+                if (latestPhone && latestPhone.customerPhone) hText += `📞 電話：${latestPhone.customerPhone}<br>`;
+                if (latestBirthMonth && latestBirthDay) hText += `🎂 生日：${latestBirthMonth.customerBirthMonth}月${latestBirthDay.customerBirthDay}日 (${getZodiacSign(latestBirthMonth.customerBirthMonth, latestBirthDay.customerBirthDay)})<br>`;
+                if (latestPref && latestPref.customerPref) { hText += `❤️ 喜好/特殊備註：<br>${cleanHtml(latestPref.customerPref).replace(/\n/g, '<br>')}`; document.getElementById('add-customer-pref').value = latestPref.customerPref; }
+                hintBox.innerHTML = hText; hintBox.style.display = 'block';
+            } else { hintBox.style.display = 'none'; }
         }
 
-        function toDateStr(date) {
-            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-        }
+        function toDateStr(date) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; }
 
         function renderCalendarView() {
-            setupCalendarSelectors();
-            const box = document.getElementById('calendar-days-box');
-            if(!box) return;
-            box.innerHTML = '';
-
+            setupCalendarSelectors(); const box = document.getElementById('calendar-days-box'); if(!box) return; box.innerHTML = '';
             const firstDayWk = new Date(window.viewYear, window.viewMonth, 1).getDay();
             const daysInMo = new Date(window.viewYear, window.viewMonth + 1, 0).getDate();
             const daysInPrevMo = new Date(window.viewYear, window.viewMonth, 0).getDate();
-
-            for (let i = firstDayWk; i > 0; i--) {
-                buildCell(new Date(window.viewYear, window.viewMonth - 1, daysInPrevMo - i + 1), daysInPrevMo - i + 1, true, box);
-            }
-            for (let i = 1; i <= daysInMo; i++) {
-                buildCell(new Date(window.viewYear, window.viewMonth, i), i, false, box);
-            }
-            const currentCells = firstDayWk + daysInMo;
-            const nextBlankCells = currentCells % 7 === 0 ? 0 : 7 - (currentCells % 7);
-            for (let i = 1; i <= nextBlankCells; i++) {
-                buildCell(new Date(window.viewYear, window.viewMonth + 1, i), i, true, box);
-            }
+            for (let i = firstDayWk; i > 0; i--) buildCell(new Date(window.viewYear, window.viewMonth - 1, daysInPrevMo - i + 1), daysInPrevMo - i + 1, true, box);
+            for (let i = 1; i <= daysInMo; i++) buildCell(new Date(window.viewYear, window.viewMonth, i), i, false, box);
+            const totalC = firstDayWk + daysInMo; const nextB = totalC % 7 === 0 ? 0 : 7 - (totalC % 7);
+            for (let i = 1; i <= nextB; i++) buildCell(new Date(window.viewYear, window.viewMonth + 1, i), i, true, box);
         }
 
         function setupCalendarSelectors() {
-            const yrSelect = document.getElementById('cal-year-select');
-            const moSelect = document.getElementById('cal-month-select');
-            if(!yrSelect || !moSelect) return;
-
-            if(yrSelect.innerHTML === "") {
-                const currentYr = new Date().getFullYear();
-                for (let y = currentYr - 5; y <= currentYr + 5; y++) {
-                    const opt = document.createElement('option');
-                    opt.value = y; opt.innerText = `${y} 年`;
-                    yrSelect.appendChild(opt);
-                }
-            }
-            yrSelect.value = window.viewYear;
-
-            if(moSelect.innerHTML === "") {
-                for (let m = 0; m < 12; m++) {
-                    const opt = document.createElement('option');
-                    opt.value = m; opt.innerText = `${m + 1} 月`;
-                    moSelect.appendChild(opt);
-                }
-            }
-            moSelect.value = window.viewMonth;
+            const yr = document.getElementById('cal-year-select'); const mo = document.getElementById('cal-month-select'); if(!yr || !mo) return;
+            if(yr.innerHTML === "") { const cY = new Date().getFullYear(); for (let y = cY - 5; y <= cY + 5; y++) { const o = document.createElement('option'); o.value = y; o.innerText = `${y} 年`; yr.appendChild(o); } }
+            yr.value = window.viewYear;
+            if(mo.innerHTML === "") { for (let m = 0; m < 12; m++) { const o = document.createElement('option'); o.value = m; o.innerText = `${m + 1} 月`; mo.appendChild(o); } }
+            mo.value = window.viewMonth;
         }
 
         function onCalendarSelectorChange() {
-            window.viewYear = parseInt(document.getElementById('cal-year-select').value);
-            window.viewMonth = parseInt(document.getElementById('cal-month-select').value);
-            window.chosenDate = new Date(window.viewYear, window.viewMonth, 1);
-            renderCalendarView();
-            renderDayRecordsView();
+            window.viewYear = parseInt(document.getElementById('cal-year-select').value); window.viewMonth = parseInt(document.getElementById('cal-month-select').value);
+            window.chosenDate = new Date(window.viewYear, window.viewMonth, 1); renderCalendarView(); renderDayRecordsView();
         }
 
         function buildCell(dateObj, dNum, isOther, targetDiv) {
-            const cell = document.createElement('div');
-            cell.className = 'day-cell';
-            if (isOther) cell.classList.add('other-month');
-
-            const span = document.createElement('span');
-            span.className = 'day-number';
-            span.innerText = dNum;
-            cell.appendChild(span);
-
-            const sStr = toDateStr(dateObj);
-            const todayStr = toDateStr(new Date());
-            if (sStr === todayStr) cell.classList.add('is-today');
+            const cell = document.createElement('div'); cell.className = 'day-cell'; if (isOther) cell.classList.add('other-month');
+            const span = document.createElement('span'); span.className = 'day-number'; span.innerText = dNum; cell.appendChild(span);
+            const sStr = toDateStr(dateObj); if (sStr === toDateStr(new Date())) cell.classList.add('is-today');
             if (sStr === toDateStr(window.chosenDate)) cell.classList.add('target-active');
             if (window.appData.some(r => r.date === sStr)) cell.classList.add('has-record');
-
-            cell.onclick = () => {
-                window.chosenDate = dateObj;
-                window.viewYear = dateObj.getFullYear();
-                window.viewMonth = dateObj.getMonth();
-                renderCalendarView();
-                renderDayRecordsView();
-            };
+            cell.onclick = () => { window.chosenDate = dateObj; window.viewYear = dateObj.getFullYear(); window.viewMonth = dateObj.getMonth(); renderCalendarView(); renderDayRecordsView(); };
             targetDiv.appendChild(cell);
         }
 
-        function changeMonth(delta) {
-            window.viewMonth += delta;
-            if (window.viewMonth > 11) { window.viewMonth = 0; window.viewYear++; }
-            else if (window.viewMonth < 0) { window.viewMonth = 11; window.viewYear--; }
-            renderCalendarView();
-        }
+        function changeMonth(delta) { window.viewMonth += delta; if (window.viewMonth > 11) { window.viewMonth = 0; window.viewYear++; } else if (window.viewMonth < 0) { window.viewMonth = 11; window.viewYear--; } renderCalendarView(); }
 
         function createRecordRowNode(r) {
-            const item = document.createElement('div');
-            item.className = `record-item ${r.type}`;
-            const sign = r.type === 'income' ? '+$' : '-$';
-
+            const item = document.createElement('div'); item.className = `record-item ${r.type}`; const sign = r.type === 'income' ? '+$' : '-$';
             if (r.type === 'income') {
-                const infoDiv = document.createElement('div');
-                infoDiv.className = 'record-info';
-                const mainDiv = document.createElement('div');
-                mainDiv.className = 'record-main';
-
-                mainDiv.appendChild(window.createAvatarCanvasElement(r.customerGender || '女'));
-
-                if (r.customerTime) {
-                    const timeSpan = document.createElement('span');
-                    timeSpan.className = 'tag time-tag';
-                    timeSpan.innerText = `⏰ ${formatTo24Hour(r.customerTime)}`;
-                    mainDiv.appendChild(timeSpan);
-                }
-
-                const titleSpan = document.createElement('span');
-                titleSpan.className = 'record-title';
-                titleSpan.innerText = r.customer || '未註名客戶';
-                mainDiv.appendChild(titleSpan);
-
-                if (r.customerHandle) {
-                    const handleSpan = document.createElement('span');
-                    handleSpan.style = 'font-size:0.8rem; color:var(--warm-mocha); font-style:italic;';
-                    handleSpan.innerText = `(${r.customerHandle})`;
-                    mainDiv.appendChild(handleSpan);
-                }
-
-                const statusSpan = document.createElement('span');
-                statusSpan.className = `tag ${r.customerStatus === '新客' ? 'new-cust' : 'old-cust'}`;
-                statusSpan.innerText = r.customerStatus || '新客';
-                mainDiv.appendChild(statusSpan);
-
-                if (r.customerBirthMonth && r.customerBirthDay) {
-                    const astroSign = getZodiacSign(r.customerBirthMonth, r.customerBirthDay);
-                    const astroSpan = document.createElement('span');
-                    astroSpan.className = 'tag astro-tag';
-                    astroSpan.innerText = `🎂 ${r.customerBirthMonth}/${r.customerBirthDay} ${astroSign.substring(2)}`;
-                    mainDiv.appendChild(astroSpan);
-                }
-
-                if (r.customerSource) {
-                    let srcIcon = '📸 ';
-                    if(r.customerSource === 'FB') srcIcon = '👥 ';
-                    if(r.customerSource === 'THREADS') srcIcon = '🧵 ';
-                    if(r.customerSource === 'LINE') srcIcon = '💬 ';
-                    const srcSpan = document.createElement('span');
-                    srcSpan.className = 'tag source-tag';
-                    srcSpan.innerText = `${srcIcon}${r.customerSource}`;
-                    mainDiv.appendChild(srcSpan);
-                }
-
-                if (r.customerAtmosphere) {
-                    let atmosIcon = '✨ ';
-                    if (r.customerAtmosphere === '想聊天') atmosIcon = '💬 ';
-                    if (r.customerAtmosphere === '想安靜') atmosIcon = '🎧 ';
-                    const atmosSpan = document.createElement('span');
-                    atmosSpan.className = 'tag atmos-tag';
-                    atmosSpan.innerText = `${atmosIcon}${r.customerAtmosphere}`;
-                    mainDiv.appendChild(atmosSpan);
-                }
-
-                if (r.items && r.items.length > 0) {
-                    r.items.forEach(it => {
-                        const itSpan = document.createElement('span');
-                        itSpan.className = 'tag-item';
-                        itSpan.innerText = it;
-                        mainDiv.appendChild(itSpan);
-                    });
-                }
-                infoDiv.appendChild(mainDiv);
-
-                if (r.customerPhone) {
-                    const phoneDiv = document.createElement('div');
-                    phoneDiv.className = 'record-details';
-                    phoneDiv.style.color = 'var(--warm-mocha)';
-                    phoneDiv.innerHTML = `📞 <b>電話：</b>${cleanHtml(r.customerPhone)}`;
-                    infoDiv.appendChild(phoneDiv);
-                }
-
-                if (r.customerPref) {
-                    const prefDiv = document.createElement('div');
-                    prefDiv.className = 'record-details';
-                    prefDiv.style.color = '#A38F81';
-                    prefDiv.innerHTML = `❤️ <b>喜好/表單回報：</b><br>${cleanHtml(r.customerPref).replace(/\n/g, '<br>')}`;
-                    infoDiv.appendChild(prefDiv);
-                }
-
-                if (r.note) {
-                    const noteDiv = document.createElement('div');
-                    noteDiv.className = 'record-details';
-                    noteDiv.innerHTML = `📝 <b>備註：</b>${cleanHtml(r.note)}`;
-                    infoDiv.appendChild(noteDiv);
-                }
-                item.appendChild(infoDiv);
+                const info = document.createElement('div'); info.className = 'record-info'; const main = document.createElement('div'); main.className = 'record-main';
+                main.appendChild(window.createAvatarCanvasElement(r.customerGender || '女'));
+                if (r.customerTime) { const ts = document.createElement('span'); ts.className = 'tag time-tag'; ts.innerText = `⏰ ${formatTo24Hour(r.customerTime)}`; main.appendChild(ts); }
+                const title = document.createElement('span'); title.className = 'record-title'; title.innerText = r.customer || '未註名'; main.appendChild(title);
+                if (r.customerHandle) { const hs = document.createElement('span'); hs.style = 'font-size:0.8rem; color:var(--warm-mocha); font-style:italic;'; hs.innerText = `(${r.customerHandle})`; main.appendChild(hs); }
+                const ss = document.createElement('span'); ss.className = `tag ${r.customerStatus === '新客' ? 'new-cust' : 'old-cust'}`; ss.innerText = r.customerStatus || '新客'; main.appendChild(ss);
+                if (r.customerBirthMonth && r.customerBirthDay) { const as = document.createElement('span'); as.className = 'tag astro-tag'; as.innerText = `🎂 ${r.customerBirthMonth}/${r.customerBirthDay}`; main.appendChild(as); }
+                if (r.customerSource) { const srcs = document.createElement('span'); srcs.className = 'tag source-tag'; srcs.innerText = r.customerSource; main.appendChild(srcs); }
+                if (r.items) { r.items.forEach(it => { const its = document.createElement('span'); its.className = 'tag-item'; its.innerText = it; main.appendChild(its); }); }
+                info.appendChild(main);
+                if (r.customerPhone) { const pd = document.createElement('div'); pd.className = 'record-details'; pd.innerHTML = `📞 電話：${cleanHtml(r.customerPhone)}`; info.appendChild(pd); }
+                if (r.customerPref) { const prd = document.createElement('div'); prd.className = 'record-details'; prd.innerHTML = `❤️ 喜好：${cleanHtml(r.customerPref)}`; info.appendChild(prd); }
+                if (r.note) { const nd = document.createElement('div'); nd.className = 'record-details'; nd.innerHTML = `📝 備註：${cleanHtml(r.note)}`; info.appendChild(nd); }
+                item.appendChild(info);
             } else {
-                const infoDiv = document.createElement('div');
-                infoDiv.className = 'record-info';
-                const mainDiv = document.createElement('div');
-                mainDiv.className = 'record-main';
-                
-                const titleSpan = document.createElement('span');
-                titleSpan.className = 'record-title';
-                titleSpan.innerText = r.note || '日常項目支出';
-                mainDiv.appendChild(titleSpan);
-
-                if (r.expenseMerchant) {
-                    const merchantSpan = document.createElement('span');
-                    merchantSpan.className = 'tag expense-tag';
-                    merchantSpan.innerText = `🛒 ${r.expenseMerchant}`;
-                    mainDiv.appendChild(merchantSpan);
-                }
-
-                infoDiv.appendChild(mainDiv);
-                item.appendChild(infoDiv);
+                const info = document.createElement('div'); info.className = 'record-info'; const main = document.createElement('div'); main.className = 'record-main';
+                const title = document.createElement('span'); title.className = 'record-title'; title.innerText = r.note || '項目支出'; main.appendChild(title);
+                if (r.expenseMerchant) { const ms = document.createElement('span'); ms.className = 'tag expense-tag'; ms.innerText = `🛒 ${r.expenseMerchant}`; main.appendChild(ms); }
+                info.appendChild(main); item.appendChild(info);
             }
-
-            const amtZone = document.createElement('div');
-            amtZone.className = 'record-amount-zone';
-            
-            const amtSpan = document.createElement('span');
-            amtSpan.className = 'record-amount';
-            amtSpan.innerText = `${sign}${r.amount}`;
-            amtZone.appendChild(amtSpan);
-
-            const btnGroup = document.createElement('div');
-            btnGroup.className = 'action-btns';
-
-            const editBtn = document.createElement('button');
-            editBtn.className = 'btn-action';
-            editBtn.innerText = '✏️';
-            editBtn.onclick = () => startEditRecord(r.id);
-            btnGroup.appendChild(editBtn);
-
-            const delBtn = document.createElement('button');
-            delBtn.className = 'btn-action';
-            delBtn.innerText = '🗑️';
-            delBtn.onclick = () => removeRecord(r.id, 'day');
-            btnGroup.appendChild(delBtn);
-
-            amtZone.appendChild(btnGroup);
-            item.appendChild(amtZone);
-
-            return item;
-        }
-
-        function sortRecordsByTime(records) {
-            return records.sort((a, b) => {
-                if (a.type !== 'income' && b.type !== 'income') return 0;
-                if (a.type !== 'income') return 1;
-                if (b.type !== 'income') return -1;
-                
-                const timeA = formatTo24Hour(a.customerTime) || "99:99";
-                const timeB = formatTo24Hour(b.customerTime) || "99:99";
-                return timeA.localeCompare(timeB);
-            });
+            const zone = document.createElement('div'); zone.className = 'record-amount-zone';
+            const as = document.createElement('span'); as.className = 'record-amount'; as.innerText = `${sign}${r.amount}`; zone.appendChild(as);
+            const btns = document.createElement('div'); btns.className = 'action-btns';
+            const eb = document.createElement('button'); eb.className = 'btn-action'; eb.innerText = '✏️'; eb.onclick = () => startEditRecord(r.id); btns.appendChild(eb);
+            const db = document.createElement('button'); db.className = 'btn-action'; db.innerText = '🗑️'; db.onclick = () => removeRecord(r.id, 'day'); btns.appendChild(db);
+            zone.appendChild(btns); item.appendChild(zone); return item;
         }
 
         function renderDayRecordsView() {
-            const sStr = toDateStr(window.chosenDate);
-            const dayBoxDate = document.getElementById('day-box-date');
-            if(!dayBoxDate) return;
-            dayBoxDate.innerText = sStr;
-            
-            const todayStr = toDateStr(new Date());
-            document.getElementById('day-box-title').innerText = (sStr === todayStr) ? '本日收支紀錄' : '該日收支紀錄';
-
-            const list = document.getElementById('day-records-list');
-            list.innerHTML = '';
-
+            const sStr = toDateStr(window.chosenDate); document.getElementById('day-box-date').innerText = sStr;
+            const list = document.getElementById('day-records-list'); list.innerHTML = '';
             const matches = window.appData.filter(r => r.date === sStr);
-            if (matches.length === 0) {
-                list.innerHTML = '<div class="no-data">這天沒有任何預約記帳紀錄喔 ☕</div>';
-                return;
-            }
-
-            const sortedMatches = sortRecordsByTime(matches);
-            sortedMatches.forEach(r => {
-                list.appendChild(createRecordRowNode(r));
-            });
+            if (matches.length === 0) { list.innerHTML = '<div class="no-data">這天沒有任何預約記帳紀錄喔 ☕</div>'; return; }
+            sortRecordsByTime(matches).forEach(r => list.appendChild(createRecordRowNode(r)));
         }
 
         function startEditRecord(id) {
-            const target = window.appData.find(r => r.id === id);
-            if (!target) return;
+            const target = window.appData.find(r => r.id === id); if (!target) return;
+            switchPage('calendar'); window.editingRecordId = id;
+            window.existingCalendarEventId = target.calendarEventId || null; // 【重要】載入原先存好的日曆身分證ID
 
-            switchPage('calendar');
-            window.editingRecordId = id;
+            const parts = target.date.split('-'); window.chosenDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            window.viewYear = window.chosenDate.getFullYear(); window.viewMonth = window.chosenDate.getMonth();
+            renderCalendarView(); renderDayRecordsView();
 
-            const parts = target.date.split('-');
-            window.chosenDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-            window.viewYear = window.chosenDate.getFullYear();
-            window.viewMonth = window.chosenDate.getMonth();
-            renderCalendarView();
-            renderDayRecordsView();
-
-            document.getElementById('add-amount').value = target.amount;
-            document.getElementById('add-type').value = target.type;
-            document.getElementById('add-note').value = target.note || '';
-
-            toggleFormFields();
+            document.getElementById('add-amount').value = target.amount; document.getElementById('add-type').value = target.type;
+            document.getElementById('add-note').value = target.note || ''; toggleFormFields();
 
             if (target.type === 'income') {
-                document.getElementById('add-customer').value = target.customer || '';
-                document.getElementById('add-customer-pref').value = target.customerPref || '';
-                document.getElementById('add-customer-handle').value = target.customerHandle || '';
-                document.getElementById('add-customer-phone').value = target.customerPhone || '';
+                document.getElementById('add-customer').value = target.customer || ''; document.getElementById('add-customer-pref').value = target.customerPref || '';
+                document.getElementById('add-customer-handle').value = target.customerHandle || ''; document.getElementById('add-customer-phone').value = target.customerPhone || '';
                 document.getElementById('add-customer-atmosphere').value = target.customerAtmosphere || '都可以';
-                
                 if (target.customerTime && target.customerTime.includes(':')) {
-                    const tParts = target.customerTime.split(':');
-                    document.getElementById('add-time-hour').value = String(tParts[0]).padStart(2, '0');
-                    document.getElementById('add-time-minute').value = String(tParts[1]).padStart(2, '0');
-                } else {
-                    document.getElementById('add-time-hour').value = '';
-                    document.getElementById('add-time-minute').value = '';
+                    const t = target.customerTime.split(':');
+                    document.getElementById('add-time-hour').value = String(t[0]).padStart(2, '0'); document.getElementById('add-time-minute').value = String(t[1]).padStart(2, '0');
                 }
-                
-                document.getElementById('add-birthday-month').value = target.customerBirthMonth || '';
-                document.getElementById('add-birthday-day').value = target.customerBirthDay || '';
-                updateZodiacHint();
+                document.getElementById('add-birthday-month').value = target.customerBirthMonth || ''; document.getElementById('add-birthday-day').value = target.customerBirthDay || ''; updateZodiacHint();
+                const sR = document.querySelector(`input[name="cust-status"][value="${target.customerStatus || '新客'}"]`); if(sR) sR.checked = true;
+                const srcR = document.querySelector(`input[name="cust-source"][value="${target.customerSource || 'IG'}"]`); if(srcR) srcR.checked = true;
+                const gR = document.querySelector(`input[name="cust-gender"][value="${target.customerGender || '女'}"]`); if(gR) gR.checked = true;
+                document.querySelectorAll('input[name="nail-item"]').forEach(cb => cb.checked = target.items && target.items.includes(cb.value));
+            } else { document.getElementById('add-expense-merchant').value = target.expenseMerchant || ''; }
 
-                const statusRadio = document.querySelector(`input[name="cust-status"][value="${target.customerStatus || '新客'}"]`);
-                if(statusRadio) statusRadio.checked = true;
-
-                const sourceRadio = document.querySelector(`input[name="cust-source"][value="${target.customerSource || 'IG'}"]`);
-                if(sourceRadio) sourceRadio.checked = true;
-                
-                const genderRadio = document.querySelector(`input[name="cust-gender"][value="${target.customerGender || '女'}"]`);
-                if(genderRadio) genderRadio.checked = true;
-
-                document.querySelectorAll('input[name="nail-item"]').forEach(cb => {
-                    cb.checked = target.items && target.items.includes(cb.value);
-                });
-                document.getElementById('pref-hint-box').style.display = 'none';
-            } else {
-                document.getElementById('add-expense-merchant').value = target.expenseMerchant || '';
-            }
-
-            const submitBtn = document.getElementById('btn-submit-main');
-            submitBtn.innerText = '確認更新此筆紀錄 ✏️';
-            submitBtn.classList.add('editing-mode');
+            const submitBtn = document.getElementById('btn-submit-main'); submitBtn.innerText = '確認更新此筆紀錄 ✏️'; submitBtn.classList.add('editing-mode');
             document.getElementById('accounting-form-anchor').scrollIntoView({ behavior: 'smooth' });
         }
 
-        function removeRecord(id, refPage) {
-            if (window.editingRecordId === id) {
-                alert('這筆資料正在下方的編輯面板中修改，請先完成更新或清空唷！');
-                return;
-            }
-            if (confirm('確定要刪除這筆明細紀錄嗎？')) {
-                window.deleteDataFromCloud(id);
-            }
-        }
+        function removeRecord(id, refPage) { if (window.editingRecordId === id) { alert('修改中請先清空唷！'); return; } if (confirm('確定要刪除這筆紀錄嗎？')) window.deleteDataFromCloud(id); }
 
         function renderAllRecordsView() {
-            const list = document.getElementById('all-records-list');
-            if(!list) return;
-            list.innerHTML = '';
-
-            if (window.appData.length === 0) {
-                list.innerHTML = '<div class="no-data">目前雲端沒有任何歷史帳目</div>';
-                return;
-            }
-
-            const sorted = [...window.appData].sort((a, b) => {
-                if (a.date !== b.date) return b.date.localeCompare(a.date);
-                if (a.type !== 'income' && b.type !== 'income') return 0;
-                if (a.type !== 'income') return 1;
-                if (b.type !== 'income') return -1;
-                return (formatTo24Hour(a.customerTime) || "99:99").localeCompare(formatTo24Hour(b.customerTime) || "99:99");
-            });
-
-            let lastDate = '';
-            let subContainer = null;
-
+            const list = document.getElementById('all-records-list'); if(!list) return; list.innerHTML = '';
+            if (window.appData.length === 0) { list.innerHTML = '<div class="no-data">目前沒有任何歷史帳目</div>'; return; }
+            const sorted = [...window.appData].sort((a, b) => a.date !== b.date ? b.date.localeCompare(a.date) : (formatTo24Hour(a.customerTime) || "99:99").localeCompare(formatTo24Hour(b.customerTime) || "99:99"));
+            let lastD = ''; let sub = null;
             sorted.forEach(r => {
-                if (r.date !== lastDate) {
-                    lastDate = r.date;
-                    const title = document.createElement('div');
-                    title.className = 'record-group-title';
-                    title.innerText = lastDate;
-                    list.appendChild(title);
-
-                    subContainer = document.createElement('div');
-                    subContainer.className = 'record-list';
-                    list.appendChild(subContainer);
+                if (r.date !== lastD) {
+                    lastD = r.date; const title = document.createElement('div'); title.className = 'record-group-title'; title.innerText = lastD; list.appendChild(title);
+                    sub = document.createElement('div'); sub.className = 'record-list'; list.appendChild(sub);
                 }
-
-                const rowNode = createRecordRowNode(r);
-                const delBtn = rowNode.querySelector('.record-amount-zone .action-btns button:last-child');
-                if(delBtn) delBtn.onclick = () => removeRecord(r.id, 'all');
-                
-                subContainer.appendChild(rowNode);
+                const node = createRecordRowNode(r); const db = node.querySelector('.record-amount-zone .action-btns button:last-child'); if(db) db.onclick = () => removeRecord(r.id, 'all');
+                sub.appendChild(node);
             });
         }
 
         function setupReportDropdown() {
-            const dropdown = document.getElementById('report-month-select');
-            if(!dropdown) return;
-            
-            const currentSelected = dropdown.value;
-            dropdown.innerHTML = '';
-            
-            const set = new Set();
-            const todayStr = toDateStr(new Date());
-            set.add(todayStr.substring(0, 7));
-            window.appData.forEach(r => set.add(r.date.substring(0, 7)));
-
-            const sortedMonths = Array.from(set).sort((a, b) => b.localeCompare(a));
-            sortedMonths.forEach(m => {
-                const opt = document.createElement('option');
-                opt.value = m;
-                const p = m.split('-');
-                opt.innerText = `${p[0]} 年 ${p[1]} 月`;
-                dropdown.appendChild(opt);
-            });
-            
-            if(currentSelected && set.has(currentSelected)) {
-                dropdown.value = currentSelected;
-            }
+            const dropdown = document.getElementById('report-month-select'); if(!dropdown) return; const current = dropdown.value; dropdown.innerHTML = '';
+            const set = new Set(); set.add(toDateStr(new Date()).substring(0, 7)); window.appData.forEach(r => set.add(r.date.substring(0, 7)));
+            Array.from(set).sort((a, b) => b.localeCompare(a)).forEach(m => { const o = document.createElement('option'); o.value = m; const p = m.split('-'); o.innerText = `${p[0]} 年 ${p[1]} 月`; dropdown.appendChild(o); });
+            if(current && set.has(current)) dropdown.value = current;
         }
 
         function calculateReport() {
-            let allTimeInc = 0, allTimeExp = 0;
-            window.appData.forEach(r => {
-                if (r.type === 'income') allTimeInc += r.amount;
-                if (r.type === 'expense') allTimeExp += r.amount;
-            });
-            const allTimeNet = allTimeInc - allTimeExp;
-
-            document.getElementById('all-time-income-text').innerText = `$${allTimeInc.toLocaleString()}`;
-            document.getElementById('all-time-expense-text').innerText = `$${allTimeExp.toLocaleString()}`;
-            document.getElementById('all-time-profit-text').innerText = `${allTimeNet >= 0 ? '' : '-'}$${Math.abs(allTimeNet).toLocaleString()}`;
-            document.getElementById('all-time-profit-text').style.color = allTimeNet >= 0 ? 'var(--deep-mocha)' : '#A66363';
-
-            const dropdown = document.getElementById('report-month-select');
-            if(!dropdown) return;
-            const mo = dropdown.value;
-            if (!mo) return;
-
-            const targets = window.appData.filter(r => r.date.startsWith(mo));
-            let inc = 0, exp = 0;
-            let femaleCount = 0, maleCount = 0;
-
-            const merchantCostMap = new Map();
-
+            let allTimeInc = 0, allTimeExp = 0; window.appData.forEach(r => { if (r.type === 'income') allTimeInc += r.amount; if (r.type === 'expense') allTimeExp += r.amount; });
+            document.getElementById('all-time-income-text').innerText = `$${allTimeInc.toLocaleString()}`; document.getElementById('all-time-expense-text').innerText = `$${allTimeExp.toLocaleString()}`;
+            const allTimeNet = allTimeInc - allTimeExp; document.getElementById('all-time-profit-text').innerText = `${allTimeNet >= 0 ? '' : '-'}$${Math.abs(allTimeNet).toLocaleString()}`;
+            const dropdown = document.getElementById('report-month-select'); if(!dropdown) return; const mo = dropdown.value; if (!mo) return;
+            const targets = window.appData.filter(r => r.date.startsWith(mo)); let inc = 0, exp = 0, female = 0, male = 0; const merchantMap = new Map();
             targets.forEach(r => {
-                if (r.type === 'income') {
-                    inc += r.amount;
-                    const gender = r.customerGender || '女';
-                    if (gender === '女') femaleCount++;
-                    if (gender === '男') maleCount++;
-                }
-                if (r.type === 'expense') {
-                    exp += r.amount;
-                    const merchant = r.expenseMerchant || '未分類店家';
-                    const currentCost = merchantCostMap.get(merchant) || 0;
-                    merchantCostMap.set(merchant, currentCost + r.amount);
-                }
+                if (r.type === 'income') { inc += r.amount; if ((r.customerGender || '女') === '女') female++; else male++; }
+                if (r.type === 'expense') { exp += r.amount; const m = r.expenseMerchant || '未分類店家'; merchantMap.set(m, (merchantMap.get(m) || 0) + r.amount); }
             });
-
-            const net = inc - exp;
-            document.getElementById('rep-income-text').innerText = `$${inc.toLocaleString()}`;
-            document.getElementById('rep-expense-text').innerText = `$${exp.toLocaleString()}`;
+            const net = inc - exp; document.getElementById('rep-income-text').innerText = `$${inc.toLocaleString()}`; document.getElementById('rep-expense-text').innerText = `$${exp.toLocaleString()}`;
             document.getElementById('rep-profit-text').innerText = `${net >= 0 ? '' : '-'}$${Math.abs(net).toLocaleString()}`;
-            document.getElementById('rep-profit-text').style.color = net >= 0 ? 'var(--deep-mocha)' : '#A66363';
-
-            const financialSum = inc + exp;
-            let incPct = 0, expPct = 0;
-            if (financialSum > 0) {
-                incPct = Math.round((inc / financialSum) * 100);
-                expPct = Math.round((exp / financialSum) * 100);
-            }
-            document.getElementById('bar-income-fill').style.width = `${incPct}%`;
-            document.getElementById('bar-expense-fill').style.width = `${expPct}%`;
-            document.getElementById('pct-income-text').innerText = `${incPct}%`;
-            document.getElementById('pct-expense-text').innerText = `${expPct}%`;
-
-            const totalCustomers = femaleCount + maleCount;
-            let femalePct = 0, malePct = 0;
-            if (totalCustomers > 0) {
-                femalePct = Math.round((femaleCount / totalCustomers) * 100);
-                malePct = Math.round((maleCount / totalCustomers) * 100);
-            }
-            document.getElementById('bar-female-fill').style.width = `${femalePct}%`;
-            document.getElementById('bar-male-fill').style.width = `${malePct}%`;
-            document.getElementById('pct-female-text').innerText = `${femalePct}% (共${femaleCount}人)`;
-            document.getElementById('pct-male-text').innerText = `${malePct}% (共${maleCount}人)`;
-
-            const merchantContainer = document.getElementById('merchant-report-container');
-            merchantContainer.innerHTML = '';
-
-            if (merchantCostMap.size === 0 || exp === 0) {
-                merchantContainer.innerHTML = '<div style="text-align:center; color:var(--warm-mocha); font-size:0.85rem; padding: 15px 0; font-style:italic;">這個月沒有支出，太棒了！</div>';
-                return;
-            }
-
-            const sortedMerchants = Array.from(merchantCostMap.entries()).sort((a, b) => b[1] - a[1]);
-
-            sortedMerchants.forEach(([merchantName, merchantAmount]) => {
-                const percentage = Math.round((merchantAmount / exp) * 100);
-                const row = document.createElement('div');
-                row.className = 'chart-row';
-                row.innerHTML = `
-                    <div class="chart-label" title="${cleanHtml(merchantName)}">🛒 ${cleanHtml(merchantName)}</div>
-                    <div class="chart-bar-bg">
-                        <div class="chart-bar-fill merchant-bar" style="width: ${percentage}%;"></div>
-                    </div>
-                    <div class="chart-val">${percentage}% ($${merchantAmount.toLocaleString()})</div>
-                `;
-                merchantContainer.appendChild(row);
+            const financialSum = inc + exp; let incPct = financialSum > 0 ? Math.round((inc / financialSum) * 100) : 0; let expPct = financialSum > 0 ? Math.round((exp / financialSum) * 100) : 0;
+            document.getElementById('bar-income-fill').style.width = `${incPct}%`; document.getElementById('bar-expense-fill').style.width = `${expPct}%`;
+            document.getElementById('pct-income-text').innerText = `${incPct}%`; document.getElementById('pct-expense-text').innerText = `${expPct}%`;
+            const totalCust = female + male; let fPct = totalCust > 0 ? Math.round((female / totalCust) * 100) : 0; let mPct = totalCust > 0 ? Math.round((male / totalCust) * 100) : 0;
+            document.getElementById('bar-female-fill').style.width = `${fPct}%`; document.getElementById('bar-male-fill').style.width = `${mPct}%`;
+            document.getElementById('pct-female-text').innerText = `${fPct}% (共${female}人)`; document.getElementById('pct-male-text').innerText = `${mPct}% (共${male}人)`;
+            const container = document.getElementById('merchant-report-container'); container.innerHTML = '';
+            if (merchantMap.size === 0 || exp === 0) { container.innerHTML = '<div style="text-align:center; color:var(--warm-mocha); font-size:0.85rem; padding: 15px 0;">無支出</div>'; return; }
+            Array.from(merchantMap.entries()).sort((a, b) => b[1] - a[1]).forEach(([mName, mAmount]) => {
+                const percentage = Math.round((mAmount / exp) * 100); const row = document.createElement('div'); row.className = 'chart-row';
+                row.innerHTML = `<div class="chart-label" title="${cleanHtml(mName)}">🛒 ${cleanHtml(mName)}</div><div class="chart-bar-bg"><div class="chart-bar-fill merchant-bar" style="width: ${percentage}%;"></div></div><div class="chart-val">${percentage}% ($${mAmount.toLocaleString()})</div>`;
+                container.appendChild(row);
             });
         }
 
-        function cleanHtml(str) {
-            if(!str) return '';
-            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-        }
+        function cleanHtml(str) { if(!str) return ''; return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
     </script>
 </body>
 </html>
