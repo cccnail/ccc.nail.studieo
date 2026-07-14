@@ -99,13 +99,21 @@
         .summary-box h3 { font-size: 1.2rem; color: var(--deep-mocha); }
         .summary-box.profit { grid-column: span 2; background-color: var(--card-cream); }
         
-        /* ⭕ 新增：新舊客比例視覺化樣式 */
-        .ratio-container { display: flex; align-items: center; gap: 15px; background-color: var(--bg-cream); padding: 15px; border-radius: 16px; margin-top: 15px; }
-        .ratio-bar-wrapper { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+        /* ⭕ 報表比例圖表樣式 */
+        .ratio-container { display: flex; flex-direction: column; gap: 12px; background-color: var(--bg-cream); padding: 15px; border-radius: 16px; margin-top: 15px; }
+        .ratio-bar-wrapper { display: flex; flex-direction: column; gap: 6px; width: 100%; }
         .ratio-bar { display: flex; height: 16px; border-radius: 8px; overflow: hidden; background-color: #EBE6E1; }
         .ratio-new { background-color: var(--tag-new); height: 100%; transition: width 0.3s ease; }
         .ratio-old { background-color: var(--tag-old); height: 100%; transition: width 0.3s ease; }
+        .ratio-female { background-color: #F2D5D5; height: 100%; transition: width 0.3s ease; }
+        .ratio-male { background-color: #D5E4F2; height: 100%; transition: width 0.3s ease; }
         .ratio-legend { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 600; }
+        
+        /* ⭕ 支出店家清單樣式 */
+        .merchant-list { display: flex; flex-direction: column; gap: 8px; margin-top: 5px; }
+        .merchant-item { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-dark); padding: 6px 12px; background-color: var(--white); border-radius: 8px; border-left: 3.5px solid var(--warm-mocha); }
+        .merchant-name { font-weight: 600; }
+        .merchant-cost { font-weight: 700; color: #A66363; }
     </style>
 </head>
 <body>
@@ -291,6 +299,7 @@
                 <div class="summary-box profit"><p>歷史總淨利潤</p><h3 id="all-time-profit-text" style="color: var(--deep-mocha); font-size: 1.3rem;">$0</h3></div>
             </div>
         </div>
+        
         <div class="content-card">
             <div class="card-title">
                 <span>📅 單月營運數據報表</span>
@@ -302,10 +311,11 @@
                 <div class="summary-box profit"><p>當月淨利潤</p><h3 id="rep-profit-text">$0</h3></div>
             </div>
 
-            <!-- ⭕ 新增：新舊客比例看板 -->
+            <!-- 📊 客群比例大統計 -->
             <div class="ratio-container">
+                <!-- 1. 新舊客比例 -->
                 <div class="ratio-bar-wrapper">
-                    <span class="form-label" style="font-size: 0.85rem;">📊 當月預約客群比例統計</span>
+                    <span class="form-label" style="font-size: 0.82rem; color: var(--deep-mocha);">👥 新舊客預約比例</span>
                     <div class="ratio-bar">
                         <div id="ratio-new-bar" class="ratio-new" style="width: 50%;"></div>
                         <div id="ratio-old-bar" class="ratio-old" style="width: 50%;"></div>
@@ -315,6 +325,27 @@
                         <span id="ratio-old-legend" style="color: #3A5440;">🐈‍⬛ 舊客：0人 (0%)</span>
                     </div>
                 </div>
+
+                <!-- 2. 男女比比例 -->
+                <div class="ratio-bar-wrapper" style="margin-top: 10px;">
+                    <span class="form-label" style="font-size: 0.82rem; color: var(--deep-mocha);">🚻 顧客性別比例</span>
+                    <div class="ratio-bar" style="background-color: #E2E2E2;">
+                        <div id="ratio-female-bar" class="ratio-female" style="width: 50%;"></div>
+                        <div id="ratio-male-bar" class="ratio-male" style="width: 50%;"></div>
+                    </div>
+                    <div class="ratio-legend">
+                        <span id="ratio-female-legend" style="color: #A06464;">👩 女生：0人 (0%)</span>
+                        <span id="ratio-male-legend" style="color: #506A85;">👨 男生：0人 (0%)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🛒 支出明細看板（列出所有消費店家金額） -->
+        <div class="content-card">
+            <div class="card-title">🛒 當月消費明細 (店家 & 金額)</div>
+            <div id="merchant-list-box" class="merchant-list">
+                <!-- 店家明細會動態塞入到這裡 -->
             </div>
         </div>
     </div>
@@ -619,10 +650,37 @@
         function removeRecord(id, refPage) { if (window.editingRecordId === id) { alert('修改中請先清空唷！'); return; } if (confirm('確定要刪除這筆紀錄嗎？')) window.deleteDataFromCloud(id); }
         function renderAllRecordsView() { const list = document.getElementById('all-records-list'); if(!list) return; list.innerHTML = ''; if (window.appData.length === 0) { list.innerHTML = '<div class="no-data">目前沒有任何歷史帳目</div>'; return; } const sorted = [...window.appData].sort((a, b) => a.date !== b.date ? b.date.localeCompare(a.date) : (formatTo24Hour(a.customerTime) || "99:99").localeCompare(formatTo24Hour(b.customerTime) || "99:99")); let lastD = ''; let sub = null; sorted.forEach(r => { if (r.date !== lastD) { lastD = r.date; const title = document.createElement('div'); title.className = 'record-group-title'; title.innerText = lastD; list.appendChild(title); sub = document.createElement('div'); sub.className = 'record-list'; list.appendChild(sub); } const node = createRecordRowNode(r); const db = node.querySelector('.record-amount-zone .action-btns button:last-child'); if(db) db.onclick = () => removeRecord(r.id, 'all'); sub.appendChild(node); }); }
         function setupReportDropdown() { const dropdown = document.getElementById('report-month-select'); if(!dropdown) return; const current = dropdown.value; dropdown.innerHTML = ''; const set = new Set(); set.add(toDateStr(new Date()).substring(0, 7)); window.appData.forEach(r => set.add(r.date.substring(0, 7))); Array.from(set).sort((a, b) => b.localeCompare(a)).forEach(m => { const o = document.createElement('option'); o.value = m; const p = m.split('-'); o.innerText = `${p[0]} 年 ${p[1]} 月`; dropdown.appendChild(o); }); if(current && set.has(current)) dropdown.value = current; }
-        function calculateReport() { let allTimeInc = 0, allTimeExp = 0; window.appData.forEach(r => { if (r.type === 'income') allTimeInc += r.amount; if (r.type === 'expense') allTimeExp += r.amount; }); document.getElementById('all-time-income-text').innerText = `$${allTimeInc.toLocaleString()}`; document.getElementById('all-time-expense-text').innerText = `$${allTimeExp.toLocaleString()}`; const allTimeNet = allTimeInc - allTimeExp; document.getElementById('all-time-profit-text').innerText = `${allTimeNet >= 0 ? '' : '-'}$${Math.abs(allTimeNet).toLocaleString()}`; const dropdown = document.getElementById('report-month-select'); if(!dropdown) return; const mo = dropdown.value; if (!mo) return; const targets = window.appData.filter(r => r.date.startsWith(mo)); let inc = 0, exp = 0; targets.forEach(r => { if (r.type === 'income') inc += r.amount; if (r.type === 'expense') exp += r.amount; }); const net = inc - exp; document.getElementById('rep-income-text').innerText = `$${inc.toLocaleString()}`; document.getElementById('rep-expense-text').innerText = `$${exp.toLocaleString()}`; document.getElementById('rep-profit-text').innerText = `${net >= 0 ? '' : '-'}$${Math.abs(net).toLocaleString()}`; 
         
-            // ⭕ 核心新增：計算新舊客比例與渲染
+        function calculateReport() { 
+            let allTimeInc = 0, allTimeExp = 0; 
+            window.appData.forEach(r => { 
+                if (r.type === 'income') allTimeInc += r.amount; 
+                if (r.type === 'expense') allTimeExp += r.amount; 
+            }); 
+            document.getElementById('all-time-income-text').innerText = `$${allTimeInc.toLocaleString()}`; 
+            document.getElementById('all-time-expense-text').innerText = `$${allTimeExp.toLocaleString()}`; 
+            const allTimeNet = allTimeInc - allTimeExp; 
+            document.getElementById('all-time-profit-text').innerText = `${allTimeNet >= 0 ? '' : '-'}$${Math.abs(allTimeNet).toLocaleString()}`; 
+            
+            const dropdown = document.getElementById('report-month-select'); 
+            if(!dropdown) return; 
+            const mo = dropdown.value; 
+            if (!mo) return; 
+            const targets = window.appData.filter(r => r.date.startsWith(mo)); 
+            let inc = 0, exp = 0; 
+            targets.forEach(r => { 
+                if (r.type === 'income') inc += r.amount; 
+                if (r.type === 'expense') exp += r.amount; 
+            }); 
+            const net = inc - exp; 
+            document.getElementById('rep-income-text').innerText = `$${inc.toLocaleString()}`; 
+            document.getElementById('rep-expense-text').innerText = `$${exp.toLocaleString()}`; 
+            document.getElementById('rep-profit-text').innerText = `${net >= 0 ? '' : '-'}$${Math.abs(net).toLocaleString()}`; 
+        
             const incomeTargets = targets.filter(r => r.type === 'income');
+            const expenseTargets = targets.filter(r => r.type === 'expense');
+
+            // 1. 計算新舊客比例與渲染
             let newCustCount = 0;
             let oldCustCount = 0;
             incomeTargets.forEach(r => {
@@ -632,7 +690,7 @@
             });
             const totalCust = newCustCount + oldCustCount;
             const newPercent = totalCust > 0 ? Math.round((newCustCount / totalCust) * 100) : 0;
-            const oldPercent = totalCust > 0 ? 100 - newPercent : 0; // 確保加總剛好 100%
+            const oldPercent = totalCust > 0 ? 100 - newPercent : 0;
 
             const newBar = document.getElementById('ratio-new-bar');
             const oldBar = document.getElementById('ratio-old-bar');
@@ -646,6 +704,59 @@
                 oldBar.style.width = `${oldPercent}%`;
                 document.getElementById('ratio-new-legend').innerText = `🐱 新客：${newCustCount}人 (${newPercent}%)`;
                 document.getElementById('ratio-old-legend').innerText = `🐈‍⬛ 舊客：${oldCustCount}人 (${oldPercent}%)`;
+            }
+
+            // 2. 🟢 完整找回：計算男女客比例與渲染
+            let femaleCount = 0;
+            let maleCount = 0;
+            incomeTargets.forEach(r => {
+                const gender = r.customerGender || '女';
+                if (gender === '女') femaleCount++;
+                else if (gender === '男') maleCount++;
+            });
+            const totalGender = femaleCount + maleCount;
+            const femalePercent = totalGender > 0 ? Math.round((femaleCount / totalGender) * 100) : 0;
+            const malePercent = totalGender > 0 ? 100 - femalePercent : 0;
+
+            const femaleBar = document.getElementById('ratio-female-bar');
+            const maleBar = document.getElementById('ratio-male-bar');
+            if (totalGender === 0) {
+                femaleBar.style.width = '0%';
+                maleBar.style.width = '0%';
+                document.getElementById('ratio-female-legend').innerText = `👩 女生：0人 (0%)`;
+                document.getElementById('ratio-male-legend').innerText = `👨 男生：0人 (0%)`;
+            } else {
+                femaleBar.style.width = `${femalePercent}%`;
+                maleBar.style.width = `${malePercent}%`;
+                document.getElementById('ratio-female-legend').innerText = `👩 女生：${femaleCount}人 (${femalePercent}%)`;
+                document.getElementById('ratio-male-legend').innerText = `👨 男生：${maleCount}人 (${malePercent}%)`;
+            }
+
+            // 3. 🟢 重新設計：統計每個店家消費了多少錢（不要排行，全部列出）
+            const merchantBox = document.getElementById('merchant-list-box');
+            merchantBox.innerHTML = '';
+            
+            const merchantMap = {};
+            expenseTargets.forEach(r => {
+                const name = r.expenseMerchant ? r.expenseMerchant.trim() : '未分類店家';
+                const amt = r.amount || 0;
+                merchantMap[name] = (merchantMap[name] || 0) + amt;
+            });
+
+            const merchantKeys = Object.keys(merchantMap);
+            if (merchantKeys.length === 0) {
+                merchantBox.innerHTML = '<div style="text-align: center; font-size: 0.85rem; color: var(--warm-mocha); font-style: italic; padding: 10px 0;">這個月沒有任何支出明細記錄 ☕</div>';
+            } else {
+                // 將所有店家與其總消費金額依序渲染在清單上
+                merchantKeys.forEach(name => {
+                    const item = document.createElement('div');
+                    item.className = 'merchant-item';
+                    item.innerHTML = `
+                        <span class="merchant-name">🛒 ${cleanHtml(name)}</span>
+                        <span class="merchant-cost">$${merchantMap[name].toLocaleString()}</span>
+                    `;
+                    merchantBox.appendChild(item);
+                });
             }
         }
         function cleanHtml(str) { if(!str) return ''; return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
