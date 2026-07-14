@@ -535,7 +535,12 @@
             const extension = document.querySelector('input[name="need-extension"]:checked').value;
             if(extension !== "無") items.push(extension);
 
+            // ⭕ 核心修復：把客人勾選的「單色」或「貓眼」也一起塞進項目的陣列裡，帶入後台！
             const hasDesign = document.querySelector('input[name="has-design"]:checked').value;
+            if (hasDesign === "單色" || hasDesign === "貓眼") {
+                items.push(hasDesign);
+            }
+
             const chatPref = document.querySelector('input[name="chat-pref"]:checked').value;
             const source = document.querySelector('input[name="cust-source"]:checked').value;
             
@@ -557,7 +562,7 @@
                 customerSource: source,
                 customerBirthMonth: document.getElementById('cust-birth-month').value,
                 customerBirthDay: document.getElementById('cust-birth-day').value,
-                items: items,
+                items: items, // ⭕ 這邊就會包含手、足、卸甲以及單色/貓眼了
                 customerPref: `✨【顧客線上預約】\n款式類型：${hasDesign}\n期望氛圍：${chatPref}`,
                 note: "⚠️ 顧客自助預約成功，待施作完補填金額"
             };
