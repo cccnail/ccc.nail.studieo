@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CCC.Nail.Studieo 預約記帳系統 (終極除錯版)</title>
+    <title>CCC.Nail.Studieo 預約記帳系統 (終極同步除錯版)</title>
     <style>
         :root {
             --bg-cream: #FDFBF7;
@@ -98,16 +98,6 @@
         .summary-box p { font-size: 0.8rem; color: var(--warm-mocha); margin-bottom: 5px; }
         .summary-box h3 { font-size: 1.2rem; color: var(--deep-mocha); }
         .summary-box.profit { grid-column: span 2; background-color: var(--card-cream); }
-        .chart-container { display: flex; flex-direction: column; gap: 14px; margin-top: 10px; }
-        .chart-row { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
-        .chart-label { width: 75px; color: var(--warm-mocha); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .chart-bar-bg { flex: 1; background-color: var(--bg-cream); height: 16px; border-radius: 8px; overflow: hidden; }
-        .chart-bar-fill { height: 100%; width: 0%; transition: width 0.4s ease; border-radius: 8px; }
-        .chart-bar-fill.income-bar { background-color: #C3D3C4; }
-        .chart-bar-fill.expense-bar { background-color: #E3C3C3; }
-        .chart-bar-fill.female-bar { background-color: #EAC7C7; }
-        .chart-bar-fill.male-bar { background-color: #C7D4EA; }
-        .chart-val { width: 110px; color: var(--deep-mocha); font-size: 0.8rem; font-weight: 500; text-align: right; white-space: nowrap; }
     </style>
 </head>
 <body>
@@ -348,7 +338,7 @@
                 ctx.fillStyle = "#E4ECF0"; ctx.beginPath(); ctx.arc(50, 50, 50, 0, Math.PI * 2); ctx.fill();
                 ctx.fillStyle = "#55606E"; ctx.beginPath(); ctx.arc(50, 42, 26, 0, Math.PI * 2); ctx.fill();
                 ctx.fillStyle = "#F5D6BD"; ctx.beginPath(); ctx.arc(50, 52, 20, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = "#434D59"; ctx.beginPath(); ctx.moveTo(28, 44); ctx.quadraticCurveTo(50, 26, 72, 44); ctx.quadraticCurveTo(50, 36, 28, 44); ctx.fill(); // 【✔️已完全修正疊字點】
+                ctx.fillStyle = "#434D59"; ctx.beginPath(); ctx.moveTo(28, 44); ctx.quadraticCurveTo(50, 26, 72, 44); ctx.quadraticCurveTo(50, 36, 28, 44); ctx.fill(); 
                 ctx.fillStyle = "#333E4A"; ctx.beginPath(); ctx.arc(43, 50, 2.5, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(57, 50, 2.5, 0, Math.PI * 2); ctx.fill();
                 ctx.fillStyle = "rgba(235, 160, 160, 0.6)"; ctx.beginPath(); ctx.ellipse(38, 54, 3, 1.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(62, 54, 3, 1.5, 0, 0, Math.PI * 2); ctx.fill();
                 ctx.strokeStyle = "#333E4A"; ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.beginPath(); ctx.arc(50, 55, 3, 0, Math.PI); ctx.stroke();
@@ -383,38 +373,66 @@
         function cleanTextForMatch(str) { if (!str) return ""; return str.toString().trim().replace(/[\s\-\(\)\+]/g, "").toLowerCase(); }
 
         window.addNewRecord = function() {
-            const amtIn = document.getElementById('add-amount'); const amt = parseInt(amtIn.value) || 0;
-            const type = document.getElementById('add-type').value; const noteIn = document.getElementById('add-note');
+            const amtIn = document.getElementById('add-amount');
+            const amt = parseInt(amtIn.value) || 0;
+            const type = document.getElementById('add-type').value;
+            const noteIn = document.getElementById('add-note');
+
             let docId = window.editingRecordId || 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+            let targetCalendarEventId = window.existingCalendarEventId || "";
+
             const inputDateStr = toDateStr(window.chosenDate);
-            let currentCustomer = ""; let currentPhone = "";
-            if (type === 'income') { currentCustomer = document.getElementById('add-customer').value.trim(); currentPhone = document.getElementById('add-customer-phone').value.trim(); }
-            const targetCustClean = cleanTextForMatch(currentCustomer); const targetPhoneClean = cleanTextForMatch(currentPhone);
+            let currentCustomer = "";
+            let currentPhone = "";
+            if (type === 'income') {
+                currentCustomer = document.getElementById('add-customer').value.trim();
+                currentPhone = document.getElementById('add-customer-phone').value.trim();
+            }
+
+            const targetCustClean = cleanTextForMatch(currentCustomer);
+            const targetPhoneClean = cleanTextForMatch(currentPhone);
 
             if (window.editingRecordId) {
-    // 如果現在是處於「點擊編輯」的模式下
-    const currentEditingDoc = window.appData.find(r => r.id === window.editingRecordId);
-    if (currentEditingDoc && currentEditingDoc.calendarEventId) {
-        // 強制借用並鎖定這一筆紀錄原本在 Firebase 裡的日曆 ID
-        window.existingCalendarEventId = currentEditingDoc.calendarEventId;
-        docId = window.editingRecordId;
-    }
-}
+                const matchedOld = window.appData.find(r => r.id === window.editingRecordId);
+                if (matchedOld && matchedOld.calendarEventId) {
+                    targetCalendarEventId = matchedOld.calendarEventId;
+                }
+            } else {
+                if (type === 'income' && targetCustClean !== "") {
+                    const matched = window.appData.find(r => {
+                        if (r.type !== 'income' || r.date !== inputDateStr) return false;
+                        return (cleanTextForMatch(r.customer) === targetCustClean && cleanTextForMatch(r.customerPhone) === targetPhoneClean && r.calendarEventId);
+                    });
+                    if (matched) {
+                        targetCalendarEventId = matched.calendarEventId;
+                        docId = matched.id;
+                    }
+                }
+            }
 
-            let dataPayload = { date: inputDateStr, type: type, amount: amt, note: noteIn.value.trim(), calendarEventId: window.existingCalendarEventId || "" };
+            let dataPayload = {
+                date: inputDateStr,
+                type: type,
+                amount: amt,
+                note: noteIn.value.trim(),
+                calendarEventId: targetCalendarEventId
+            };
 
             if (type === 'income') {
                 const checkedItems = []; document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => checkedItems.push(cb.value));
-                dataPayload.customer = currentCustomer; dataPayload.customerPhone = currentPhone;
+                dataPayload.customer = currentCustomer;
+                dataPayload.customerPhone = currentPhone;
                 dataPayload.customerStatus = document.querySelector('input[name="cust-status"]:checked').value;
                 dataPayload.customerSource = document.querySelector('input[name="cust-source"]:checked').value;
                 dataPayload.customerHandle = document.getElementById('add-customer-handle').value.trim();
                 dataPayload.customerGender = document.querySelector('input[name="cust-gender"]:checked').value;
-                dataPayload.items = checkedItems; dataPayload.customerPref = document.getElementById('add-customer-pref').value.trim();
+                dataPayload.items = checkedItems;
+                dataPayload.customerPref = document.getElementById('add-customer-pref').value.trim();
                 dataPayload.customerAtmosphere = document.getElementById('add-customer-atmosphere').value;
                 dataPayload.customerBirthMonth = document.getElementById('add-birthday-month').value;
                 dataPayload.customerBirthDay = document.getElementById('add-birthday-day').value;
-                const hVal = document.getElementById('add-time-hour').value; const mVal = document.getElementById('add-time-minute').value;
+                const hVal = document.getElementById('add-time-hour').value;
+                const mVal = document.getElementById('add-time-minute').value;
                 dataPayload.customerTime = (hVal && mVal) ? `${hVal}:${mVal}` : "";
             } else {
                 dataPayload.expenseMerchant = document.getElementById('add-expense-merchant').value.trim() || '未分類店家';
@@ -423,16 +441,28 @@
             window.saveDataToCloud(docId, dataPayload);
 
             if (type === 'income' && dataPayload.customerTime) {
-                // ⚠️【注意】：請在此更換為你在第一步重新部署拿到的最新 /exec 網址！
+                // ⚠️【注意】：請確保此處為你在 Google Apps Script 複製回來的最新 /exec 網址！
                 const googleScriptUrl = "https://script.google.com/macros/s/AKfycbz2184Q6nDJyYzMMQ7E6FHlvqq0iXqRX3y1hIiEX8_MUAJ7MdWTdghKOXYPHZJtRH5mNw/exec";
                 
                 const eventTitle = `💅 ${dataPayload.customer}`;
                 const eventNote = `客戶：${dataPayload.customer}\n電話：${dataPayload.customerPhone}\n項目：${dataPayload.items.join(', ')}`;
 
-                const postData = { date: dataPayload.date, time: dataPayload.customerTime, title: eventTitle, note: eventNote, calendarEventId: dataPayload.calendarEventId || "" };
+                const postData = {
+                    date: dataPayload.date,
+                    time: dataPayload.customerTime,
+                    title: eventTitle,
+                    note: eventNote,
+                    calendarEventId: targetCalendarEventId 
+                };
+
                 console.log("🚀 正向 Google 日曆發送訊號...", postData);
 
-                fetch(googleScriptUrl, { method: "POST", mode: "cors", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(postData) })
+                fetch(googleScriptUrl, {
+                    method: "POST",
+                    mode: "cors",
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify(postData)
+                })
                 .then(res => res.text())
                 .then(serverEventId => {
                     console.log("📥 日曆回應結果:", serverEventId);
@@ -445,19 +475,27 @@
                 .catch(err => console.error("❌ 日曆通訊異常:", err));
             }
 
-            window.editingRecordId = null; window.existingCalendarEventId = null;
-            amtIn.value = ''; noteIn.value = ''; document.getElementById('add-customer').value = '';
-            document.getElementById('add-customer-pref').value = ''; document.getElementById('add-customer-handle').value = '';
-            document.getElementById('add-customer-phone').value = ''; document.getElementById('add-time-hour').value = '';
-            document.getElementById('add-time-minute').value = ''; document.getElementById('add-expense-merchant').value = '';
-            document.getElementById('add-birthday-month').value = ''; document.getElementById('add-birthday-day').value = '';
+            window.editingRecordId = null;
+            window.existingCalendarEventId = null;
+            amtIn.value = ''; noteIn.value = '';
+            document.getElementById('add-customer').value = '';
+            document.getElementById('add-customer-pref').value = '';
+            document.getElementById('add-customer-handle').value = '';
+            document.getElementById('add-customer-phone').value = '';
+            document.getElementById('add-time-hour').value = '';
+            document.getElementById('add-time-minute').value = '';
+            document.getElementById('add-expense-merchant').value = '';
+            document.getElementById('add-birthday-month').value = '';
+            document.getElementById('add-birthday-day').value = '';
             document.getElementById('zodiac-live-hint').innerText = '';
             document.querySelectorAll('input[name="nail-item"]:checked').forEach(cb => cb.checked = false);
             document.querySelector('input[name="cust-status"][value="新客"]').checked = true;
             document.querySelector('input[name="cust-source"][value="IG"]').checked = true;
             document.querySelector('input[name="cust-gender"][value="女"]').checked = true;
             document.getElementById('pref-hint-box').style.display = 'none';
-            const submitBtn = document.getElementById('btn-submit-main'); submitBtn.innerText = '儲存此筆紀錄'; submitBtn.classList.remove('editing-mode');
+            const submitBtn = document.getElementById('btn-submit-main');
+            submitBtn.innerText = '儲存此筆紀錄';
+            submitBtn.classList.remove('editing-mode');
         };
 
         window.switchPage = switchPage; window.changeMonth = changeMonth; window.onCalendarSelectorChange = onCalendarSelectorChange;
@@ -507,7 +545,7 @@
                 if (r.items) { r.items.forEach(it => { const its = document.createElement('span'); its.className = 'tag-item'; its.innerText = it; main.appendChild(its); }); }
                 info.appendChild(main);
                 if (r.customerPhone) { const pd = document.createElement('div'); pd.className = 'record-details'; pd.innerHTML = `📞 電話：${cleanHtml(r.customerPhone)}`; info.appendChild(pd); }
-                if (r.customerPref) { const prd = document.createElement('div'); prd.className = 'record-details'; prd.innerHTML = `❤️ 喜好：${cleanHtml(r.customerPref)}`; info.appendChild(prd); } // 【✔️已除錯：完全修復為 prd】
+                if (r.customerPref) { const prd = document.createElement('div'); prd.className = 'record-details'; prd.innerHTML = `❤️ 喜好：${cleanHtml(r.customerPref)}`; info.appendChild(prd); } 
                 if (r.note) { const nd = document.createElement('div'); nd.className = 'record-details'; nd.innerHTML = `📝 備註：${cleanHtml(r.note)}`; info.appendChild(nd); }
                 item.appendChild(info);
             } else {
@@ -518,7 +556,7 @@
             const zone = document.createElement('div'); zone.className = 'record-amount-zone'; const as = document.createElement('span'); as.className = 'record-amount'; as.innerText = `${sign}${r.amount}`; zone.appendChild(as);
             const btns = document.createElement('div'); btns.className = 'action-btns'; const eb = document.createElement('button'); eb.className = 'btn-action'; eb.innerText = '✏️'; eb.onclick = () => startEditRecord(r.id); btns.appendChild(eb); const db = document.createElement('button'); db.className = 'btn-action'; db.innerText = '🗑️'; db.onclick = () => removeRecord(r.id, 'day'); btns.appendChild(db); zone.appendChild(btns); item.appendChild(zone); return item;
         }
-        function renderDayRecordsView() { const sStr = toDateStr(window.chosenDate); document.getElementById('day-box-date').innerText = sStr; const list = document.getElementById('day-records-list'); list.innerHTML = ''; const matches = window.appData.filter(r => r.date === sStr); if (matches.length === 0) { list.innerHTML = '<div class="no-data">這天沒有任何預約記帳紀錄喔 ☕</div>'; return; } sortRecordsByTime(matches).forEach(r => list.appendChild(createRecordRowNode(r))); }
+        function renderDayRecordsView() { const sStr = toDateStr(window.chosenDate); document.getElementById('day-box-date').innerText = sStr; const list = document.getElementById('day-records-list'); list.innerHTML = ''; const matches = window.appData.filter(r => r.date === sStr); if (matches.length === 0) { list.innerHTML = '<div class="no-data">這天沒有 any 預約記帳紀錄喔 ☕</div>'; return; } sortRecordsByTime(matches).forEach(r => list.appendChild(createRecordRowNode(r))); }
         function startEditRecord(id) {
             const target = window.appData.find(r => r.id === id); if (!target) return; switchPage('calendar'); window.editingRecordId = id; window.existingCalendarEventId = target.calendarEventId || null;
             const parts = target.date.split('-'); window.chosenDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])); window.viewYear = window.chosenDate.getFullYear(); window.viewMonth = window.chosenDate.getMonth(); renderCalendarView(); renderDayRecordsView();
