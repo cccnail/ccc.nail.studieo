@@ -391,15 +391,15 @@
             if (type === 'income') { currentCustomer = document.getElementById('add-customer').value.trim(); currentPhone = document.getElementById('add-customer-phone').value.trim(); }
             const targetCustClean = cleanTextForMatch(currentCustomer); const targetPhoneClean = cleanTextForMatch(currentPhone);
 
-            if (!window.existingCalendarEventId || window.existingCalendarEventId === "") {
-                if (type === 'income' && targetCustClean !== "") {
-                    const matched = window.appData.find(r => {
-                        if (r.type !== 'income' || r.date !== inputDateStr) return false;
-                        return (cleanTextForMatch(r.customer) === targetCustClean && cleanTextForMatch(r.customerPhone) === targetPhoneClean && r.calendarEventId);
-                    });
-                    if (matched) { window.existingCalendarEventId = matched.calendarEventId; docId = matched.id; }
-                }
-            }
+            if (window.editingRecordId) {
+    // 如果現在是處於「點擊編輯」的模式下
+    const currentEditingDoc = window.appData.find(r => r.id === window.editingRecordId);
+    if (currentEditingDoc && currentEditingDoc.calendarEventId) {
+        // 強制借用並鎖定這一筆紀錄原本在 Firebase 裡的日曆 ID
+        window.existingCalendarEventId = currentEditingDoc.calendarEventId;
+        docId = window.editingRecordId;
+    }
+}
 
             let dataPayload = { date: inputDateStr, type: type, amount: amt, note: noteIn.value.trim(), calendarEventId: window.existingCalendarEventId || "" };
 
