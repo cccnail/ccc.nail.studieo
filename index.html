@@ -99,7 +99,7 @@
         .summary-box h3 { font-size: 1.2rem; color: var(--deep-mocha); }
         .summary-box.profit { grid-column: span 2; background-color: var(--card-cream); }
         
-        /* ⭕ 報表比例圖表樣式 */
+        /* 📊 報表比例圖表樣式 */
         .ratio-container { display: flex; flex-direction: column; gap: 12px; background-color: var(--bg-cream); padding: 15px; border-radius: 16px; margin-top: 15px; }
         .ratio-bar-wrapper { display: flex; flex-direction: column; gap: 6px; width: 100%; }
         .ratio-bar { display: flex; height: 16px; border-radius: 8px; overflow: hidden; background-color: #EBE6E1; }
@@ -109,11 +109,13 @@
         .ratio-male { background-color: #D5E4F2; height: 100%; transition: width 0.3s ease; }
         .ratio-legend { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 600; }
         
-        /* ⭕ 支出店家清單樣式 */
-        .merchant-list { display: flex; flex-direction: column; gap: 8px; margin-top: 5px; }
-        .merchant-item { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-dark); padding: 6px 12px; background-color: var(--white); border-radius: 8px; border-left: 3.5px solid var(--warm-mocha); }
+        /* 🛒 支出店家清單樣式 */
+        .merchant-list { display: flex; flex-direction: column; gap: 8px; margin-top: 5px; margin-bottom: 15px; }
+        .merchant-item { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-dark); padding: 8px 12px; background-color: var(--white); border-radius: 8px; border-left: 4px solid var(--warm-mocha); }
         .merchant-name { font-weight: 600; }
         .merchant-cost { font-weight: 700; color: #A66363; }
+        .section-divider { margin: 15px 0 10px 0; border-top: 1px dashed var(--soft-oat); padding-top: 10px; }
+        .sub-section-title { font-size: 0.82rem; font-weight: 700; color: var(--warm-mocha); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
     </style>
 </head>
 <body>
@@ -341,11 +343,22 @@
             </div>
         </div>
 
-        <!-- 🛒 支出明細看板（列出所有消費店家金額） -->
+        <!-- 🛒 支出明細看板（同時看單月與歷史累計） -->
         <div class="content-card">
-            <div class="card-title">🛒 當月消費明細 (店家 & 金額)</div>
+            <div class="card-title">🛒 支出明細統計看板</div>
+            
+            <!-- A. 當月店家消費金額 -->
+            <div class="sub-section-title">📅 當月消費明細</div>
             <div id="merchant-list-box" class="merchant-list">
-                <!-- 店家明細會動態塞入到這裡 -->
+                <!-- 店家單月消費明細會塞入這裡 -->
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- B. 全歷史店家累計消費金額 -->
+            <div class="sub-section-title" style="color: var(--deep-mocha);">💎 歷史累積消費明細 (開工至今)</div>
+            <div id="all-time-merchant-list-box" class="merchant-list">
+                <!-- 店家歷史累計金額會塞入這裡 -->
             </div>
         </div>
     </div>
@@ -706,7 +719,7 @@
                 document.getElementById('ratio-old-legend').innerText = `🐈‍⬛ 舊客：${oldCustCount}人 (${oldPercent}%)`;
             }
 
-            // 2. 🟢 完整找回：計算男女客比例與渲染
+            // 2. 計算男女客比例與渲染
             let femaleCount = 0;
             let maleCount = 0;
             incomeTargets.forEach(r => {
@@ -732,7 +745,7 @@
                 document.getElementById('ratio-male-legend').innerText = `👨 男生：${maleCount}人 (${malePercent}%)`;
             }
 
-            // 3. 🟢 重新設計：統計每個店家消費了多少錢（不要排行，全部列出）
+            // 3. 統計當月店家的消費明細（直接列出）
             const merchantBox = document.getElementById('merchant-list-box');
             merchantBox.innerHTML = '';
             
@@ -747,7 +760,6 @@
             if (merchantKeys.length === 0) {
                 merchantBox.innerHTML = '<div style="text-align: center; font-size: 0.85rem; color: var(--warm-mocha); font-style: italic; padding: 10px 0;">這個月沒有任何支出明細記錄 ☕</div>';
             } else {
-                // 將所有店家與其總消費金額依序渲染在清單上
                 merchantKeys.forEach(name => {
                     const item = document.createElement('div');
                     item.className = 'merchant-item';
@@ -756,6 +768,35 @@
                         <span class="merchant-cost">$${merchantMap[name].toLocaleString()}</span>
                     `;
                     merchantBox.appendChild(item);
+                });
+            }
+
+            // 🟢 4. 核心新增：計算所有歷史紀錄中，各自店家的累積花費金額（全歷史累計）
+            const allTimeMerchantBox = document.getElementById('all-time-merchant-list-box');
+            allTimeMerchantBox.innerHTML = '';
+
+            const allTimeMerchantMap = {};
+            window.appData.forEach(r => {
+                if (r.type === 'expense') {
+                    const name = r.expenseMerchant ? r.expenseMerchant.trim() : '未分類店家';
+                    const amt = r.amount || 0;
+                    allTimeMerchantMap[name] = (allTimeMerchantMap[name] || 0) + amt;
+                }
+            });
+
+            const allTimeMerchantKeys = Object.keys(allTimeMerchantMap);
+            if (allTimeMerchantKeys.length === 0) {
+                allTimeMerchantBox.innerHTML = '<div style="text-align: center; font-size: 0.85rem; color: var(--warm-mocha); font-style: italic; padding: 10px 0;">目前無任何歷史支出店家紀錄 ☕</div>';
+            } else {
+                allTimeMerchantKeys.forEach(name => {
+                    const item = document.createElement('div');
+                    item.className = 'merchant-item';
+                    // 為了做出視覺區隔，歷史總累計加上了金色鑽石標誌與加粗字體
+                    item.innerHTML = `
+                        <span class="merchant-name" style="color: var(--deep-mocha);">💎 ${cleanHtml(name)}</span>
+                        <span class="merchant-cost" style="color: var(--warm-mocha); font-weight: 800;">$${allTimeMerchantMap[name].toLocaleString()}</span>
+                    `;
+                    allTimeMerchantBox.appendChild(item);
                 });
             }
         }
