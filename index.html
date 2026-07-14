@@ -444,8 +444,13 @@
                 // ⚠️【注意】：請確保此處為你在 Google Apps Script 複製回來的最新 /exec 網址！
                 const googleScriptUrl = "https://script.google.com/macros/s/AKfycbz2184Q6nDJyYzMMQ7E6FHlvqq0iXqRX3y1hIiEX8_MUAJ7MdWTdghKOXYPHZJtRH5mNw/exec";
                 
-                const eventTitle = `💅 ${dataPayload.customer}`;
-                const eventNote = `客戶：${dataPayload.customer}\n電話：${dataPayload.customerPhone}\n項目：${dataPayload.items.join(', ')}`;
+                // ⭕ 項目格式優化調整，轉換為字串連動至日曆中
+                const selectedItemsText = (dataPayload.items && dataPayload.items.length > 0) 
+                    ? dataPayload.items.join('、') 
+                    : '未勾選項目';
+
+                const eventTitle = `💅 ${dataPayload.customer} (${selectedItemsText})`;
+                const eventNote = `客戶姓名：${dataPayload.customer}\n聯絡電話：${dataPayload.customerPhone}\n施作項目：${selectedItemsText}\n現場氛圍：${dataPayload.customerAtmosphere}\n備註喜好：${dataPayload.customerPref || '無'}\n其他備註：${dataPayload.note || '無'}`;
 
                 const postData = {
                     date: dataPayload.date,
@@ -568,7 +573,27 @@
                 const sR = document.querySelector(`input[name="cust-status"][value="${target.customerStatus || '新客'}"]`); if(sR) sR.checked = true;
                 const srcR = document.querySelector(`input[name="cust-source"][value="${target.customerSource || 'IG'}"]`); if(srcR) srcR.checked = true;
                 const gR = document.querySelector(`input[name="cust-gender"][value="${target.customerGender || '女'}"]`); if(gR) gR.checked = true;
-                document.querySelectorAll('input[name="nail-item"]').forEach(cb => cb.checked = target.items && target.items.includes(cb.value));
+                
+                // ⭕ 終極同步修復：確保後端 items 與畫面上「單色/貓眼/延甲」各欄位核取狀態完美勾選
+                document.querySelectorAll('input[name="nail-item"]').forEach(cb => {
+                    cb.checked = target.items && target.items.includes(cb.value);
+                });
+
+                // 備用防呆：如果客人來自線上預約，且資訊存留在 pref 內文時，也一併自動勾選對應欄位
+                if (target.customerPref) {
+                    if (target.customerPref.includes("單色")) {
+                        const cbSingle = Array.from(document.querySelectorAll('input[name="nail-item"]')).find(cb => cb.value === "單色");
+                        if (cbSingle) cbSingle.checked = true;
+                    }
+                    if (target.customerPref.includes("貓眼")) {
+                        const cbCat = Array.from(document.querySelectorAll('input[name="nail-item"]')).find(cb => cb.value === "貓眼");
+                        if (cbCat) cbCat.checked = true;
+                    }
+                    if (target.customerPref.includes("延甲")) {
+                        const cbExt = Array.from(document.querySelectorAll('input[name="nail-item"]')).find(cb => cb.value === "延甲");
+                        if (cbExt) cbExt.checked = true;
+                    }
+                }
             } else { document.getElementById('add-expense-merchant').value = target.expenseMerchant || ''; }
             const submitBtn = document.getElementById('btn-submit-main'); submitBtn.innerText = '確認更新此筆紀錄 ✏️'; submitBtn.classList.add('editing-mode'); document.getElementById('accounting-form-anchor').scrollIntoView({ behavior: 'smooth' });
         }
