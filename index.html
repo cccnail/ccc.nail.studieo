@@ -98,6 +98,14 @@
         .summary-box p { font-size: 0.8rem; color: var(--warm-mocha); margin-bottom: 5px; }
         .summary-box h3 { font-size: 1.2rem; color: var(--deep-mocha); }
         .summary-box.profit { grid-column: span 2; background-color: var(--card-cream); }
+        
+        /* ⭕ 新增：新舊客比例視覺化樣式 */
+        .ratio-container { display: flex; align-items: center; gap: 15px; background-color: var(--bg-cream); padding: 15px; border-radius: 16px; margin-top: 15px; }
+        .ratio-bar-wrapper { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+        .ratio-bar { display: flex; height: 16px; border-radius: 8px; overflow: hidden; background-color: #EBE6E1; }
+        .ratio-new { background-color: var(--tag-new); height: 100%; transition: width 0.3s ease; }
+        .ratio-old { background-color: var(--tag-old); height: 100%; transition: width 0.3s ease; }
+        .ratio-legend { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -293,6 +301,21 @@
                 <div class="summary-box"><p>當月總支出</p><h3 id="rep-expense-text" style="color: #A66363;">$0</h3></div>
                 <div class="summary-box profit"><p>當月淨利潤</p><h3 id="rep-profit-text">$0</h3></div>
             </div>
+
+            <!-- ⭕ 新增：新舊客比例看板 -->
+            <div class="ratio-container">
+                <div class="ratio-bar-wrapper">
+                    <span class="form-label" style="font-size: 0.85rem;">📊 當月預約客群比例統計</span>
+                    <div class="ratio-bar">
+                        <div id="ratio-new-bar" class="ratio-new" style="width: 50%;"></div>
+                        <div id="ratio-old-bar" class="ratio-old" style="width: 50%;"></div>
+                    </div>
+                    <div class="ratio-legend">
+                        <span id="ratio-new-legend" style="color: #7A583A;">🐱 新客：0人 (0%)</span>
+                        <span id="ratio-old-legend" style="color: #3A5440;">🐈‍⬛ 舊客：0人 (0%)</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -441,10 +464,8 @@
             window.saveDataToCloud(docId, dataPayload);
 
             if (type === 'income' && dataPayload.customerTime) {
-                // ⚠️【注意】：請確保此處為你在 Google Apps Script 複製回來的最新 /exec 網址！
                 const googleScriptUrl = "https://script.google.com/macros/s/AKfycbz2184Q6nDJyYzMMQ7E6FHlvqq0iXqRX3y1hIiEX8_MUAJ7MdWTdghKOXYPHZJtRH5mNw/exec";
                 
-                // ⭕ 項目格式優化調整，轉換為字串連動至日曆中
                 const selectedItemsText = (dataPayload.items && dataPayload.items.length > 0) 
                     ? dataPayload.items.join('、') 
                     : '未勾選項目';
@@ -574,12 +595,10 @@
                 const srcR = document.querySelector(`input[name="cust-source"][value="${target.customerSource || 'IG'}"]`); if(srcR) srcR.checked = true;
                 const gR = document.querySelector(`input[name="cust-gender"][value="${target.customerGender || '女'}"]`); if(gR) gR.checked = true;
                 
-                // ⭕ 終極同步修復：確保後端 items 與畫面上「單色/貓眼/延甲」各欄位核取狀態完美勾選
                 document.querySelectorAll('input[name="nail-item"]').forEach(cb => {
                     cb.checked = target.items && target.items.includes(cb.value);
                 });
 
-                // 備用防呆：如果客人來自線上預約，且資訊存留在 pref 內文時，也一併自動勾選對應欄位
                 if (target.customerPref) {
                     if (target.customerPref.includes("單色")) {
                         const cbSingle = Array.from(document.querySelectorAll('input[name="nail-item"]')).find(cb => cb.value === "單色");
@@ -600,7 +619,35 @@
         function removeRecord(id, refPage) { if (window.editingRecordId === id) { alert('修改中請先清空唷！'); return; } if (confirm('確定要刪除這筆紀錄嗎？')) window.deleteDataFromCloud(id); }
         function renderAllRecordsView() { const list = document.getElementById('all-records-list'); if(!list) return; list.innerHTML = ''; if (window.appData.length === 0) { list.innerHTML = '<div class="no-data">目前沒有任何歷史帳目</div>'; return; } const sorted = [...window.appData].sort((a, b) => a.date !== b.date ? b.date.localeCompare(a.date) : (formatTo24Hour(a.customerTime) || "99:99").localeCompare(formatTo24Hour(b.customerTime) || "99:99")); let lastD = ''; let sub = null; sorted.forEach(r => { if (r.date !== lastD) { lastD = r.date; const title = document.createElement('div'); title.className = 'record-group-title'; title.innerText = lastD; list.appendChild(title); sub = document.createElement('div'); sub.className = 'record-list'; list.appendChild(sub); } const node = createRecordRowNode(r); const db = node.querySelector('.record-amount-zone .action-btns button:last-child'); if(db) db.onclick = () => removeRecord(r.id, 'all'); sub.appendChild(node); }); }
         function setupReportDropdown() { const dropdown = document.getElementById('report-month-select'); if(!dropdown) return; const current = dropdown.value; dropdown.innerHTML = ''; const set = new Set(); set.add(toDateStr(new Date()).substring(0, 7)); window.appData.forEach(r => set.add(r.date.substring(0, 7))); Array.from(set).sort((a, b) => b.localeCompare(a)).forEach(m => { const o = document.createElement('option'); o.value = m; const p = m.split('-'); o.innerText = `${p[0]} 年 ${p[1]} 月`; dropdown.appendChild(o); }); if(current && set.has(current)) dropdown.value = current; }
-        function calculateReport() { let allTimeInc = 0, allTimeExp = 0; window.appData.forEach(r => { if (r.type === 'income') allTimeInc += r.amount; if (r.type === 'expense') allTimeExp += r.amount; }); document.getElementById('all-time-income-text').innerText = `$${allTimeInc.toLocaleString()}`; document.getElementById('all-time-expense-text').innerText = `$${allTimeExp.toLocaleString()}`; const allTimeNet = allTimeInc - allTimeExp; document.getElementById('all-time-profit-text').innerText = `${allTimeNet >= 0 ? '' : '-'}$${Math.abs(allTimeNet).toLocaleString()}`; const dropdown = document.getElementById('report-month-select'); if(!dropdown) return; const mo = dropdown.value; if (!mo) return; const targets = window.appData.filter(r => r.date.startsWith(mo)); let inc = 0, exp = 0; targets.forEach(r => { if (r.type === 'income') inc += r.amount; if (r.type === 'expense') exp += r.amount; }); const net = inc - exp; document.getElementById('rep-income-text').innerText = `$${inc.toLocaleString()}`; document.getElementById('rep-expense-text').innerText = `$${exp.toLocaleString()}`; document.getElementById('rep-profit-text').innerText = `${net >= 0 ? '' : '-'}$${Math.abs(net).toLocaleString()}`; }
+        function calculateReport() { let allTimeInc = 0, allTimeExp = 0; window.appData.forEach(r => { if (r.type === 'income') allTimeInc += r.amount; if (r.type === 'expense') allTimeExp += r.amount; }); document.getElementById('all-time-income-text').innerText = `$${allTimeInc.toLocaleString()}`; document.getElementById('all-time-expense-text').innerText = `$${allTimeExp.toLocaleString()}`; const allTimeNet = allTimeInc - allTimeExp; document.getElementById('all-time-profit-text').innerText = `${allTimeNet >= 0 ? '' : '-'}$${Math.abs(allTimeNet).toLocaleString()}`; const dropdown = document.getElementById('report-month-select'); if(!dropdown) return; const mo = dropdown.value; if (!mo) return; const targets = window.appData.filter(r => r.date.startsWith(mo)); let inc = 0, exp = 0; targets.forEach(r => { if (r.type === 'income') inc += r.amount; if (r.type === 'expense') exp += r.amount; }); const net = inc - exp; document.getElementById('rep-income-text').innerText = `$${inc.toLocaleString()}`; document.getElementById('rep-expense-text').innerText = `$${exp.toLocaleString()}`; document.getElementById('rep-profit-text').innerText = `${net >= 0 ? '' : '-'}$${Math.abs(net).toLocaleString()}`; 
+        
+            // ⭕ 核心新增：計算新舊客比例與渲染
+            const incomeTargets = targets.filter(r => r.type === 'income');
+            let newCustCount = 0;
+            let oldCustCount = 0;
+            incomeTargets.forEach(r => {
+                const status = r.customerStatus || '新客';
+                if (status === '新客') newCustCount++;
+                else if (status === '舊客') oldCustCount++;
+            });
+            const totalCust = newCustCount + oldCustCount;
+            const newPercent = totalCust > 0 ? Math.round((newCustCount / totalCust) * 100) : 0;
+            const oldPercent = totalCust > 0 ? 100 - newPercent : 0; // 確保加總剛好 100%
+
+            const newBar = document.getElementById('ratio-new-bar');
+            const oldBar = document.getElementById('ratio-old-bar');
+            if (totalCust === 0) {
+                newBar.style.width = '0%';
+                oldBar.style.width = '0%';
+                document.getElementById('ratio-new-legend').innerText = `🐱 新客：0人 (0%)`;
+                document.getElementById('ratio-old-legend').innerText = `🐈‍⬛ 舊客：0人 (0%)`;
+            } else {
+                newBar.style.width = `${newPercent}%`;
+                oldBar.style.width = `${oldPercent}%`;
+                document.getElementById('ratio-new-legend').innerText = `🐱 新客：${newCustCount}人 (${newPercent}%)`;
+                document.getElementById('ratio-old-legend').innerText = `🐈‍⬛ 舊客：${oldCustCount}人 (${oldPercent}%)`;
+            }
+        }
         function cleanHtml(str) { if(!str) return ''; return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
     </script>
 </body>
