@@ -304,7 +304,15 @@
     <!-- 總紀錄 -->
     <div id="page-all-records" class="page">
         <div class="content-card">
-            <div class="card-title">歷史明細總覽</div>
+            <div class="card-title" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                <span>歷史明細總覽</span>
+                <div style="display: flex; gap: 8px; width: 100%;">
+                    <select id="all-records-customer-select" onchange="renderAllRecordsView()" style="flex: 1; padding: 6px 10px; font-size: 0.85rem; border-radius: 8px;">
+                        <option value="">-- 所有客戶 (全部顯示) --</option>
+                    </select>
+                    <input type="text" id="all-records-search-input" placeholder="🔍 搜尋姓名、電話、備註..." oninput="renderAllRecordsView()" style="flex: 1.2; padding: 6px 10px; font-size: 0.85rem; border-radius: 8px;">
+                </div>
+            </div>
             <div class="all-records-container" id="all-records-list"></div>
         </div>
     </div>
@@ -473,7 +481,7 @@
             window.appData = [];
             snapshot.forEach((doc) => { window.appData.push({ id: doc.id, ...doc.data() }); });
             document.getElementById('loading-banner').innerText = "🟢 雲端連線成功：資料已即時同步";
-            renderCalendarView(); renderDayRecordsView(); renderAllRecordsView(); setupReportDropdown(); calculateReport(); renderCustomerTableView();
+            renderCalendarView(); renderDayRecordsView(); setupAllRecordsCustomerDropdown(); renderAllRecordsView(); setupReportDropdown(); calculateReport(); renderCustomerTableView();
         }, (error) => {
             console.error(error); document.getElementById('loading-banner').innerText = "🔴 雲端同步失敗";
         });
@@ -674,7 +682,7 @@
             const btnMap = { 'calendar': 0, 'all-records': 1, 'report': 2, 'customers': 3 }; 
             document.querySelectorAll('.tool-btn')[btnMap[targetPage]].classList.add('active'); 
             if (targetPage === 'calendar') { renderCalendarView(); renderDayRecordsView(); } 
-            else if (targetPage === 'all-records') { renderAllRecordsView(); } 
+            else if (targetPage === 'all-records') { setupAllRecordsCustomerDropdown(); renderAllRecordsView(); } 
             else if (targetPage === 'report') { setupReportDropdown(); calculateReport(); }
             else if (targetPage === 'customers') { renderCustomerTableView(); }
         }
@@ -749,7 +757,96 @@
             const submitBtn = document.getElementById('btn-submit-main'); submitBtn.innerText = '確認更新此筆紀錄 ✏️'; submitBtn.classList.add('editing-mode'); document.getElementById('accounting-form-anchor').scrollIntoView({ behavior: 'smooth' });
         }
         function removeRecord(id, refPage) { if (window.editingRecordId === id) { alert('修改中請先清空唷！'); return; } if (confirm('確定要刪除這筆紀錄嗎？')) window.deleteDataFromCloud(id); }
-        function renderAllRecordsView() { const list = document.getElementById('all-records-list'); if(!list) return; list.innerHTML = ''; if (window.appData.length === 0) { list.innerHTML = '<div class="no-data">目前沒有任何歷史帳目</div>'; return; } const sorted = [...window.appData].sort((a, b) => a.date !== b.date ? b.date.localeCompare(a.date) : (formatTo24Hour(a.customerTime) || "99:99").localeCompare(formatTo24Hour(b.customerTime) || "99:99")); let lastD = ''; let sub = null; sorted.forEach(r => { if (r.date !== lastD) { lastD = r.date; const title = document.createElement('div'); title.className = 'record-group-title'; title.innerText = lastD; list.appendChild(title); sub = document.createElement('div'); sub.className = 'record-list'; list.appendChild(sub); } const node = createRecordRowNode(r); const db = node.querySelector('.record-amount-zone .action-btns button:last-child'); if(db) db.onclick = () => removeRecord(r.id, 'all'); sub.appendChild(node); }); }
+        
+        // 📋 總紀錄頁面的客戶快速下拉選單初始化
+        function setupAllRecordsCustomerDropdown() {
+            const dropdown = document.getElementById('all-records-customer-select');
+            if (!dropdown) return;
+            const currentVal = dropdown.value;
+            dropdown.innerHTML = '<option value="">-- 所有客戶 (全部顯示) --</option>';
+            
+            const clientNames = new Set();
+            window.appData.forEach(r => {
+                if (r.type === 'income' && r.customer) {
+                    clientNames.add(r.customer.trim());
+                }
+            });
+
+            Array.from(clientNames).sort().forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.innerText = `👤 ${name}`;
+                dropdown.appendChild(opt);
+            });
+
+            if (currentVal && clientNames.has(currentVal)) {
+                dropdown.value = currentVal;
+            }
+        }
+
+        // 📋 總紀錄頁面渲染（結合下拉選單篩選與關鍵字即時搜尋）
+        function renderAllRecordsView() { 
+            const list = document.getElementById('all-records-list'); 
+            const customerDropdown = document.getElementById('all-records-customer-select');
+            const searchInput = document.getElementById('all-records-search-input');
+            if(!list) return; 
+
+            list.innerHTML = ''; 
+            if (window.appData.length === 0) { 
+                list.innerHTML = '<div class="no-data">目前沒有任何歷史帳目</div>'; 
+                return; 
+            } 
+
+            const selectedCustomer = customerDropdown ? customerDropdown.value : '';
+            const keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+            // 根據下拉選單與關鍵字進行過濾
+            const filteredData = window.appData.filter(r => {
+                // 客戶下拉篩選
+                if (selectedCustomer && (r.type !== 'income' || !r.customer || r.customer.trim() !== selectedCustomer)) {
+                    return false;
+                }
+                // 關鍵字搜尋 (對姓名、電話、備註、項目、店家等全面比對)
+                if (keyword) {
+                    const cust = (r.customer || '').toLowerCase();
+                    const phone = (r.customerPhone || '').toLowerCase();
+                    const note = (r.note || '').toLowerCase();
+                    const merchant = (r.expenseMerchant || '').toLowerCase();
+                    const itemsStr = (r.items || []).join(' ').toLowerCase();
+                    
+                    if (!cust.includes(keyword) && !phone.includes(keyword) && !note.includes(keyword) && !merchant.includes(keyword) && !itemsStr.includes(keyword)) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            if (filteredData.length === 0) {
+                list.innerHTML = '<div class="no-data">沒有找到符合條件的紀錄 ☕</div>';
+                return;
+            }
+
+            const sorted = [...filteredData].sort((a, b) => a.date !== b.date ? b.date.localeCompare(a.date) : (formatTo24Hour(a.customerTime) || "99:99").localeCompare(formatTo24Hour(b.customerTime) || "99:99")); 
+            let lastD = ''; 
+            let sub = null; 
+            sorted.forEach(r => { 
+                if (r.date !== lastD) { 
+                    lastD = r.date; 
+                    const title = document.createElement('div'); 
+                    title.className = 'record-group-title'; 
+                    title.innerText = lastD; 
+                    list.appendChild(title); 
+                    sub = document.createElement('div'); 
+                    sub.className = 'record-list'; 
+                    list.appendChild(sub); 
+                } 
+                const node = createRecordRowNode(r); 
+                const db = node.querySelector('.record-amount-zone .action-btns button:last-child'); 
+                if(db) db.onclick = () => removeRecord(r.id, 'all'); 
+                sub.appendChild(node); 
+            }); 
+        }
+
         function setupReportDropdown() { const dropdown = document.getElementById('report-month-select'); if(!dropdown) return; const current = dropdown.value; dropdown.innerHTML = ''; const set = new Set(); set.add(toDateStr(new Date()).substring(0, 7)); window.appData.forEach(r => set.add(r.date.substring(0, 7))); Array.from(set).sort((a, b) => b.localeCompare(a)).forEach(m => { const o = document.createElement('option'); o.value = m; const p = m.split('-'); o.innerText = `${p[0]} 年 ${p[1]} 月`; dropdown.appendChild(o); }); if(current && set.has(current)) dropdown.value = current; }
         
         function calculateReport() { 
