@@ -126,6 +126,13 @@
         .birthday-card { background-color: var(--bg-cream); border: 1px solid var(--accent-rose); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 2px 8px rgba(140,122,107,0.05); }
         .birthday-card-name { font-weight: 700; color: var(--deep-mocha); font-size: 0.95rem; }
         .birthday-card-info { font-size: 0.8rem; color: var(--warm-mocha); }
+        
+        /* ♈ 星座比例長條清單樣式 */
+        .astro-stat-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-top: 10px; }
+        .astro-stat-item { background-color: var(--bg-cream); padding: 10px 14px; border-radius: 12px; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--soft-oat); }
+        .astro-stat-header { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; color: var(--deep-mocha); }
+        .astro-bar-bg { width: 100%; height: 8px; background-color: #EBE6E1; border-radius: 4px; overflow: hidden; margin-top: 2px; }
+        .astro-bar-fill { height: 100%; background-color: var(--warm-mocha); transition: width 0.3s ease; }
     </style>
 </head>
 <body>
@@ -376,11 +383,35 @@
 
     <!-- 頁面 4: 客戶資料表 -->
     <div id="page-customers" class="page">
-        <!-- 當月壽星專區 -->
+        <!-- 壽星專區（含月份下拉選單） -->
         <div class="content-card" style="background-color: #FAF4EE; border: 1.5px solid var(--accent-rose);">
-            <div class="card-title"><span>🎉 本月壽星專區 (<span id="current-month-display">7</span>月)</span></div>
+            <div class="card-title">
+                <span>🎉 壽星專區</span>
+                <select id="birthday-month-select" onchange="renderCustomerTableView()" style="width: auto; padding: 4px 10px; font-size: 0.85rem; border-radius: 8px;">
+                    <option value="1">1 月壽星</option>
+                    <option value="2">2 月壽星</option>
+                    <option value="3">3 月壽星</option>
+                    <option value="4">4 月壽星</option>
+                    <option value="5">5 月壽星</option>
+                    <option value="6">6 月壽星</option>
+                    <option value="7" selected>7 月壽星</option>
+                    <option value="8">8 月壽星</option>
+                    <option value="9">9 月壽星</option>
+                    <option value="10">10 月壽星</option>
+                    <option value="11">11 月壽星</option>
+                    <option value="12">12 月壽星</option>
+                </select>
+            </div>
             <div id="birthday-cards-box" class="birthday-cards-grid">
-                <!-- 動態載入本月壽星 -->
+                <!-- 動態載入選擇月份的壽星 -->
+            </div>
+        </div>
+
+        <!-- ♈ 12星座比例統計看板 -->
+        <div class="content-card">
+            <div class="card-title"><span>♈ 12星座客戶分佈比例</span></div>
+            <div id="astro-stats-box" class="astro-stat-list">
+                <!-- 動態載入12星座比例條 -->
             </div>
         </div>
 
@@ -853,24 +884,27 @@
             }
         }
 
-        // 📋 渲染客戶資料表與當月壽星專區
+        // 📋 渲染客戶資料表、指定月份壽星與12星座比例
         function renderCustomerTableView() {
             const tableBody = document.getElementById('customer-table-body');
             const birthdayBox = document.getElementById('birthday-cards-box');
             const searchInput = document.getElementById('customer-search-input');
-            const currentMonthDisplay = document.getElementById('current-month-display');
+            const monthSelect = document.getElementById('birthday-month-select');
+            const astroStatsBox = document.getElementById('astro-stats-box');
             
-            if (!tableBody || !birthdayBox) return;
+            if (!tableBody || !birthdayBox || !astroStatsBox) return;
 
-            const currentMonth = new Date().getMonth() + 1;
-            currentMonthDisplay.innerText = currentMonth;
+            // 預設選中當前月份（若初次載入）
+            if (monthSelect && !monthSelect.value) {
+                monthSelect.value = new Date().getMonth() + 1;
+            }
+            const selectedMonth = monthSelect ? parseInt(monthSelect.value, 10) : (new Date().getMonth() + 1);
 
-            // 1. 整理客戶總名單（以姓名+電話為唯一識別合併，保留最新資料）
+            // 1. 整理客戶總名單（以姓名+電話為唯一識別合併）
             const customerMap = new Map();
             window.appData.forEach(r => {
                 if (r.type === 'income' && r.customer) {
                     const key = `${r.customer.trim()}_${r.customerPhone || ''}`;
-                    // 若尚未存在或此筆資料更新，則覆蓋
                     customerMap.set(key, {
                         name: r.customer.trim(),
                         gender: r.customerGender || '女',
@@ -887,7 +921,7 @@
             const customersList = Array.from(customerMap.values());
             const keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
-            // 2. 篩選與渲染表格
+            // 2. 篩選與渲染客戶總表
             tableBody.innerHTML = '';
             const filteredCustomers = customersList.filter(c => 
                 c.name.toLowerCase().includes(keyword) || c.phone.includes(keyword)
@@ -914,15 +948,15 @@
                 });
             }
 
-            // 3. 篩選與渲染當月壽星專區
+            // 3. 根據下拉選單渲染指定月份壽星專區
             birthdayBox.innerHTML = '';
             const birthdayStars = customersList.filter(c => {
                 if (!c.birthMonth) return false;
-                return parseInt(c.birthMonth, 10) === currentMonth;
+                return parseInt(c.birthMonth, 10) === selectedMonth;
             });
 
             if (birthdayStars.length === 0) {
-                birthdayBox.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--warm-mocha); font-style: italic; padding: 10px 0;">本月（${currentMonth}月）沒有登記生日的壽星客戶 🎂</div>`;
+                birthdayBox.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--warm-mocha); font-style: italic; padding: 10px 0;">${selectedMonth}月沒有登記生日的壽星客戶 🎂</div>`;
             } else {
                 birthdayStars.forEach(c => {
                     const card = document.createElement('div');
@@ -935,6 +969,46 @@
                     birthdayBox.appendChild(card);
                 });
             }
+
+            // 4. 計算與渲染 12 星座比例統計看板
+            astroStatsBox.innerHTML = '';
+            const zodiacList = [
+                "♈ 牡羊座", "♉ 金牛座", "♊ 雙子座", "♋ 巨蟹座", 
+                "♌ 獅子座", "♍ 處女座", "♎ 天秤座", "♏ 天蠍座", 
+                "♐ 射手座", "♑ 魔羯座", "♒ 水瓶座", "♓ 雙魚座"
+            ];
+            
+            const zodiacCounts = {};
+            zodiacList.forEach(z => zodiacCounts[z] = 0);
+            let totalWithZodiac = 0;
+
+            customersList.forEach(c => {
+                if (c.birthMonth && c.birthDay) {
+                    const z = getZodiacSign(c.birthMonth, c.birthDay);
+                    if (z && zodiacCounts[z] !== undefined) {
+                        zodiacCounts[z]++;
+                        totalWithZodiac++;
+                    }
+                }
+            });
+
+            zodiacList.forEach(z => {
+                const count = zodiacCounts[z];
+                const percent = totalWithZodiac > 0 ? Math.round((count / totalWithZodiac) * 100) : 0;
+                
+                const statItem = document.createElement('div');
+                statItem.className = 'astro-stat-item';
+                statItem.innerHTML = `
+                    <div class="astro-stat-header">
+                        <span>${z}</span>
+                        <span>${count}人 (${percent}%)</span>
+                    </div>
+                    <div class="astro-bar-bg">
+                        <div class="astro-bar-fill" style="width: ${percent}%;"></div>
+                    </div>
+                `;
+                astroStatsBox.appendChild(statItem);
+            });
         }
 
         function cleanHtml(str) { if(!str) return ''; return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
