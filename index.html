@@ -116,6 +116,16 @@
         .merchant-cost { font-weight: 700; color: #A66363; }
         .section-divider { margin: 15px 0 10px 0; border-top: 1px dashed var(--soft-oat); padding-top: 10px; }
         .sub-section-title { font-size: 0.82rem; font-weight: 700; color: var(--warm-mocha); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* 📋 客戶資料表專屬樣式 */
+        .customer-table-container { width: 100%; overflow-x: auto; margin-top: 10px; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left; }
+        .data-table th, .data-table td { padding: 12px 10px; border-bottom: 1px solid var(--soft-oat); white-space: nowrap; }
+        .data-table th { background-color: var(--card-cream); color: var(--deep-mocha); font-weight: 600; }
+        .birthday-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 10px; }
+        .birthday-card { background-color: var(--bg-cream); border: 1px solid var(--accent-rose); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 2px 8px rgba(140,122,107,0.05); }
+        .birthday-card-name { font-weight: 700; color: var(--deep-mocha); font-size: 0.95rem; }
+        .birthday-card-info { font-size: 0.8rem; color: var(--warm-mocha); }
     </style>
 </head>
 <body>
@@ -131,6 +141,7 @@
         <button class="tool-btn active" onclick="switchPage('calendar')">年月日曆</button>
         <button class="tool-btn" onclick="switchPage('all-records')">總紀錄</button>
         <button class="tool-btn" onclick="switchPage('report')">報表</button>
+        <button class="tool-btn" onclick="switchPage('customers')">客戶資料表</button>
     </div>
 
     <!-- 頁面 1: 月曆頁面 -->
@@ -363,6 +374,44 @@
         </div>
     </div>
 
+    <!-- 頁面 4: 客戶資料表 -->
+    <div id="page-customers" class="page">
+        <!-- 當月壽星專區 -->
+        <div class="content-card" style="background-color: #FAF4EE; border: 1.5px solid var(--accent-rose);">
+            <div class="card-title"><span>🎉 本月壽星專區 (<span id="current-month-display">7</span>月)</span></div>
+            <div id="birthday-cards-box" class="birthday-cards-grid">
+                <!-- 動態載入本月壽星 -->
+            </div>
+        </div>
+
+        <!-- 客戶資料總表 -->
+        <div class="content-card">
+            <div class="card-title">
+                <span>📋 客戶資料總表</span>
+                <input type="text" id="customer-search-input" placeholder="搜尋姓名、電話..." oninput="renderCustomerTableView()" style="width: 160px; padding: 4px 10px; font-size: 0.85rem; border-radius: 8px;">
+            </div>
+            <div class="customer-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>姓名</th>
+                            <th>性別</th>
+                            <th>電話</th>
+                            <th>生日</th>
+                            <th>星座</th>
+                            <th>社群帳號</th>
+                            <th>來源</th>
+                            <th>喜好備註</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customer-table-body">
+                        <!-- 動態載入客戶表格式資料 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -393,7 +442,7 @@
             window.appData = [];
             snapshot.forEach((doc) => { window.appData.push({ id: doc.id, ...doc.data() }); });
             document.getElementById('loading-banner').innerText = "🟢 雲端連線成功：資料已即時同步";
-            renderCalendarView(); renderDayRecordsView(); renderAllRecordsView(); setupReportDropdown(); calculateReport();
+            renderCalendarView(); renderDayRecordsView(); renderAllRecordsView(); setupReportDropdown(); calculateReport(); renderCustomerTableView();
         }, (error) => {
             console.error(error); document.getElementById('loading-banner').innerText = "🔴 雲端同步失敗";
         });
@@ -525,8 +574,6 @@
                     calendarEventId: targetCalendarEventId 
                 };
 
-                console.log("🚀 正向 Google 日曆發送訊號...", postData);
-
                 fetch(googleScriptUrl, {
                     method: "POST",
                     mode: "cors",
@@ -535,11 +582,9 @@
                 })
                 .then(res => res.text())
                 .then(serverEventId => {
-                    console.log("📥 日曆回應結果:", serverEventId);
                     if (serverEventId && !serverEventId.startsWith("Error")) {
                         dataPayload.calendarEventId = serverEventId.trim();
                         window.saveDataToCloud(docId, dataPayload);
-                        console.log("🟢 [日曆同步成功：ID 鎖定完畢]");
                     }
                 })
                 .catch(err => console.error("❌ 日曆通訊異常:", err));
@@ -590,7 +635,19 @@
         function formatTo24Hour(timeStr) { if (!timeStr) return ""; const parts = timeStr.split(':'); if (parts.length < 2) return timeStr; return `${String(parts[0]).padStart(2, '0')}:${String(parts[1]).padStart(2, '0')}`; }
         function setupBirthdayDaysDropdown() { const daySelect = document.getElementById('add-birthday-day'); if(!daySelect) return; daySelect.innerHTML = '<option value="">-- 日 --</option>'; for(let d=1; d<=31; d++) { const opt = document.createElement('option'); opt.value = d; opt.innerText = `${d} 日`; daySelect.appendChild(opt); } }
         function updateZodiacHint() { const m = document.getElementById('add-birthday-month').value; const d = document.getElementById('add-birthday-day').value; document.getElementById('zodiac-live-hint').innerText = (m && d) ? getZodiacSign(m, d) : ''; }
-        function switchPage(targetPage) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active')); document.getElementById(`page-${targetPage}`).classList.add('active'); const btnMap = { 'calendar': 0, 'all-records': 1, 'report': 2 }; document.querySelectorAll('.tool-btn')[btnMap[targetPage]].classList.add('active'); if (targetPage === 'calendar') { renderCalendarView(); renderDayRecordsView(); } else if (targetPage === 'all-records') { renderAllRecordsView(); } else if (targetPage === 'report') { setupReportDropdown(); calculateReport(); } }
+        
+        function switchPage(targetPage) { 
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); 
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active')); 
+            document.getElementById(`page-${targetPage}`).classList.add('active'); 
+            const btnMap = { 'calendar': 0, 'all-records': 1, 'report': 2, 'customers': 3 }; 
+            document.querySelectorAll('.tool-btn')[btnMap[targetPage]].classList.add('active'); 
+            if (targetPage === 'calendar') { renderCalendarView(); renderDayRecordsView(); } 
+            else if (targetPage === 'all-records') { renderAllRecordsView(); } 
+            else if (targetPage === 'report') { setupReportDropdown(); calculateReport(); }
+            else if (targetPage === 'customers') { renderCustomerTableView(); }
+        }
+
         function toggleFormFields() { const type = document.getElementById('add-type').value; document.getElementById('income-fields-group').style.display = type === 'income' ? 'block' : 'none'; document.getElementById('expense-fields-group').style.display = type === 'expense' ? 'block' : 'none'; document.getElementById('note-label').innerText = type === 'income' ? '其他備註' : '支出項目說明'; if(type !== 'income') document.getElementById('pref-hint-box').style.display = 'none'; }
         function showCustomDropdown() { const inputVal = document.getElementById('add-customer').value.trim().toLowerCase(); const dropdown = document.getElementById('custom-dropdown'); dropdown.innerHTML = ''; const clientMap = new Map(); window.appData.forEach(r => { if (r.type === 'income' && r.customer) { const n = r.customer.trim(); const h = r.customerHandle ? r.customerHandle.trim() : ''; clientMap.set(`${n}_____${h}`, { name: n, handle: h, gender: r.customerGender || '女' }); } }); let count = 0; clientMap.forEach((info) => { if (inputVal === '' || info.name.toLowerCase().includes(inputVal) || info.handle.toLowerCase().includes(inputVal)) { count++; const item = document.createElement('div'); item.className = 'custom-dropdown-item'; const left = document.createElement('div'); left.className = 'dropdown-item-info'; left.appendChild(window.createAvatarCanvasElement(info.gender)); const ns = document.createElement('span'); ns.innerHTML = `<b>${cleanHtml(info.name)}</b>`; left.appendChild(ns); item.appendChild(left); const rh = document.createElement('span'); rh.className = 'dropdown-item-handle'; rh.innerText = info.handle ? `(${info.handle})` : '(無帳號)'; item.appendChild(rh); item.onclick = function() { document.getElementById('add-customer').value = info.name; dropdown.style.display = 'none'; autoLoadCustomerPreference(info.name, info.handle); }; dropdown.appendChild(item); } }); dropdown.style.display = count > 0 ? 'block' : 'none'; }
         function showExpenseMerchantDropdown() { const inputVal = document.getElementById('add-expense-merchant').value.trim().toLowerCase(); const dropdown = document.getElementById('expense-merchant-dropdown'); dropdown.innerHTML = ''; const merchantSet = new Set(); window.appData.forEach(r => { if (r.type === 'expense' && r.expenseMerchant) merchantSet.add(r.expenseMerchant.trim()); }); let count = 0; merchantSet.forEach(m => { if (inputVal === '' || m.toLowerCase().includes(inputVal)) { count++; const item = document.createElement('div'); item.className = 'custom-dropdown-item'; item.style.padding = '12px 14px'; item.innerHTML = `<div class="dropdown-item-info"><span>🛒 <b>${cleanHtml(m)}</b></span></div>`; item.onclick = function() { document.getElementById('add-expense-merchant').value = m; dropdown.style.display = 'none'; }; dropdown.appendChild(item); } }); dropdown.style.display = count > 0 ? 'block' : 'none'; }
@@ -693,7 +750,6 @@
             const incomeTargets = targets.filter(r => r.type === 'income');
             const expenseTargets = targets.filter(r => r.type === 'expense');
 
-            // 1. 計算新舊客比例與渲染
             let newCustCount = 0;
             let oldCustCount = 0;
             incomeTargets.forEach(r => {
@@ -719,7 +775,6 @@
                 document.getElementById('ratio-old-legend').innerText = `🐈‍⬛ 舊客：${oldCustCount}人 (${oldPercent}%)`;
             }
 
-            // 2. 計算男女客比例與渲染
             let femaleCount = 0;
             let maleCount = 0;
             incomeTargets.forEach(r => {
@@ -745,7 +800,6 @@
                 document.getElementById('ratio-male-legend').innerText = `👨 男生：${maleCount}人 (${malePercent}%)`;
             }
 
-            // 3. 統計當月店家的消費明細（直接列出）
             const merchantBox = document.getElementById('merchant-list-box');
             merchantBox.innerHTML = '';
             
@@ -771,7 +825,6 @@
                 });
             }
 
-            // 🟢 4. 核心新增：計算所有歷史紀錄中，各自店家的累積花費金額（全歷史累計）
             const allTimeMerchantBox = document.getElementById('all-time-merchant-list-box');
             allTimeMerchantBox.innerHTML = '';
 
@@ -791,7 +844,6 @@
                 allTimeMerchantKeys.forEach(name => {
                     const item = document.createElement('div');
                     item.className = 'merchant-item';
-                    // 為了做出視覺區隔，歷史總累計加上了金色鑽石標誌與加粗字體
                     item.innerHTML = `
                         <span class="merchant-name" style="color: var(--deep-mocha);">💎 ${cleanHtml(name)}</span>
                         <span class="merchant-cost" style="color: var(--warm-mocha); font-weight: 800;">$${allTimeMerchantMap[name].toLocaleString()}</span>
@@ -800,6 +852,91 @@
                 });
             }
         }
+
+        // 📋 渲染客戶資料表與當月壽星專區
+        function renderCustomerTableView() {
+            const tableBody = document.getElementById('customer-table-body');
+            const birthdayBox = document.getElementById('birthday-cards-box');
+            const searchInput = document.getElementById('customer-search-input');
+            const currentMonthDisplay = document.getElementById('current-month-display');
+            
+            if (!tableBody || !birthdayBox) return;
+
+            const currentMonth = new Date().getMonth() + 1;
+            currentMonthDisplay.innerText = currentMonth;
+
+            // 1. 整理客戶總名單（以姓名+電話為唯一識別合併，保留最新資料）
+            const customerMap = new Map();
+            window.appData.forEach(r => {
+                if (r.type === 'income' && r.customer) {
+                    const key = `${r.customer.trim()}_${r.customerPhone || ''}`;
+                    // 若尚未存在或此筆資料更新，則覆蓋
+                    customerMap.set(key, {
+                        name: r.customer.trim(),
+                        gender: r.customerGender || '女',
+                        phone: r.customerPhone || '未填寫',
+                        birthMonth: r.customerBirthMonth || '',
+                        birthDay: r.customerBirthDay || '',
+                        handle: r.customerHandle || '-',
+                        source: r.customerSource || '-',
+                        pref: r.customerPref || '-'
+                    });
+                }
+            });
+
+            const customersList = Array.from(customerMap.values());
+            const keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+            // 2. 篩選與渲染表格
+            tableBody.innerHTML = '';
+            const filteredCustomers = customersList.filter(c => 
+                c.name.toLowerCase().includes(keyword) || c.phone.includes(keyword)
+            );
+
+            if (filteredCustomers.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--warm-mocha); font-style: italic;">沒有找到符合的客戶資料 ☕</td></tr>`;
+            } else {
+                filteredCustomers.forEach(c => {
+                    const zodiac = (c.birthMonth && c.birthDay) ? getZodiacSign(c.birthMonth, c.birthDay) : '-';
+                    const bStr = (c.birthMonth && c.birthDay) ? `${c.birthMonth}月${c.birthDay}日` : '-';
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${cleanHtml(c.name)}</strong></td>
+                        <td>${c.gender}</td>
+                        <td>${cleanHtml(c.phone)}</td>
+                        <td>${bStr}</td>
+                        <td>${zodiac}</td>
+                        <td>${cleanHtml(c.handle)}</td>
+                        <td>${c.source}</td>
+                        <td>${cleanHtml(c.pref)}</td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            }
+
+            // 3. 篩選與渲染當月壽星專區
+            birthdayBox.innerHTML = '';
+            const birthdayStars = customersList.filter(c => {
+                if (!c.birthMonth) return false;
+                return parseInt(c.birthMonth, 10) === currentMonth;
+            });
+
+            if (birthdayStars.length === 0) {
+                birthdayBox.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--warm-mocha); font-style: italic; padding: 10px 0;">本月（${currentMonth}月）沒有登記生日的壽星客戶 🎂</div>`;
+            } else {
+                birthdayStars.forEach(c => {
+                    const card = document.createElement('div');
+                    card.className = 'birthday-card';
+                    card.innerHTML = `
+                        <div class="birthday-card-name">🎉 ${cleanHtml(c.name)}</div>
+                        <div class="birthday-card-info">🎂 生日：${c.birthMonth}/${c.birthDay} (${getZodiacSign(c.birthMonth, c.birthDay)})</div>
+                        <div class="birthday-card-info">📞 電話：${cleanHtml(c.phone)}</div>
+                    `;
+                    birthdayBox.appendChild(card);
+                });
+            }
+        }
+
         function cleanHtml(str) { if(!str) return ''; return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
     </script>
 </body>
